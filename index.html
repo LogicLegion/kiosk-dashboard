@@ -1,0 +1,198 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiosk Fleet Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #0f172a, #1e3a5f); color: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; text-align: center; }
+        .header h1 { font-size: 28px; }
+        .live-badge { background: #10b981; display: inline-block; padding: 5px 15px; border-radius: 30px; font-size: 12px; margin-top: 10px; }
+        .upload-area { background: white; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 50px; text-align: center; margin-bottom: 20px; cursor: pointer; }
+        .upload-area:hover { border-color: #1e3a5f; background: #f8fafc; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 18px; border-radius: 16px; text-align: center; }
+        .stat-number { font-size: 32px; font-weight: 800; color: #1e3a5f; }
+        .filters { background: white; padding: 18px; border-radius: 16px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; min-width: 130px; flex: 1; }
+        .filter-group label { font-size: 11px; font-weight: 700; color: #475569; }
+        select, input, button { padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 13px; }
+        button { background: #1e3a5f; color: white; border: none; cursor: pointer; font-weight: 600; }
+        .table-wrapper { background: white; border-radius: 16px; overflow: auto; max-height: 55vh; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 950px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8fafc; position: sticky; top: 0; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
+        .badge-Attract { background: #dbeafe; color: #1e40af; }
+        .badge-Full { background: #fed7aa; color: #9a3412; }
+        .badge-Offline { background: #fee2e2; color: #b91c1c; }
+        .fill-bar { background: #e2e8f0; border-radius: 10px; height: 5px; width: 70px; margin-top: 4px; }
+        .fill-bar-fill { height: 100%; border-radius: 10px; background: #22c55e; }
+        .fill-bar-fill.warning { background: #f97316; }
+        .fill-bar-fill.critical { background: #ef4444; }
+        .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #64748b; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🇨🇦 Canada Kiosk Fleet Command Center</h1>
+        <p>Upload your CSV file to see real-time kiosk status</p>
+        <div class="live-badge">🔴 LIVE DASHBOARD - No installation needed</div>
+    </div>
+
+    <div class="upload-area" onclick="document.getElementById('csvFile').click()">
+        <div style="font-size: 48px;">📊</div>
+        <h3>Click to load your data</h3>
+        <p style="color: #64748b;">Select your Canada Kiosk Status.csv file</p>
+        <input type="file" id="csvFile" accept=".csv" style="display:none">
+    </div>
+
+    <div id="dashboard" style="display:none">
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="filters">
+            <div class="filter-group"><label>📍 Province</label><select id="provinceFilter"><option value="all">All</option></select></div>
+            <div class="filter-group"><label>⚙️ Status</label><select id="statusFilter"><option value="all">All</option></select></div>
+            <div class="filter-group"><label>🔍 Search</label><input type="text" id="searchInput" placeholder="Store or city..."></div>
+            <div class="filter-group"><label>📊 Bin Full</label><select id="binFilter"><option value="all">All</option><option value="80">>80%</option><option value="95">>95%</option></select></div>
+            <button id="resetBtn">Reset</button>
+        </div>
+        <div class="table-wrapper">
+            <table id="dataTable">
+                <thead><tr><th>Store</th><th>City</th><th>Province</th><th>Status</th><th>1D TX</th><th>1D Reject%</th><th>7D Uptime%</th><th>Bin Full%</th><th>Est. Fill Date</th><th>Last Report</th></tr></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+        <div class="footer">📌 Your data stays on your device - Nothing is uploaded to any server</div>
+    </div>
+</div>
+
+<script>
+    let allData = [];
+    
+    document.getElementById('csvFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) { parseCSV(event.target.result); };
+            reader.readAsText(file, 'UTF-8');
+        }
+    });
+    
+    function parseCSV(csvText) {
+        const lines = csvText.split(/\r?\n/);
+        const headers = lines[0].split(',').map(h => h.replace(/^\uFEFF/, '').replace(/"/g, '').trim());
+        allData = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue;
+            const row = {};
+            let inQuote = false, current = '', col = 0;
+            for (let ch of lines[i]) {
+                if (ch === '"') inQuote = !inQuote;
+                else if (ch === ',' && !inQuote) {
+                    row[headers[col]] = current.trim().replace(/"/g, '');
+                    current = '';
+                    col++;
+                } else current += ch;
+            }
+            if (col < headers.length) row[headers[col]] = current.trim().replace(/"/g, '');
+            if (Object.keys(row).length) allData.push(row);
+        }
+        
+        document.getElementById('dashboard').style.display = 'block';
+        document.querySelector('.upload-area').style.display = 'none';
+        populateFilters();
+        renderTable();
+    }
+    
+    function getProvince(row) { return row.State || row.Province || 'Unknown'; }
+    
+    function populateFilters() {
+        const provinces = [...new Set(allData.map(r => getProvince(r)))].filter(p => p && p !== 'Unknown' && p !== 'Canada');
+        const statuses = [...new Set(allData.map(r => r['Kiosk State']))].filter(s => s);
+        
+        const pSel = document.getElementById('provinceFilter');
+        pSel.innerHTML = '<option value="all">🌎 All Provinces</option>';
+        provinces.sort().forEach(p => pSel.innerHTML += `<option value="${p}">${p}</option>`);
+        
+        const sSel = document.getElementById('statusFilter');
+        sSel.innerHTML = '<option value="all">📋 All Statuses</option>';
+        statuses.sort().forEach(s => sSel.innerHTML += `<option value="${s}">${s}</option>`);
+        
+        document.getElementById('provinceFilter').onchange = () => renderTable();
+        document.getElementById('statusFilter').onchange = () => renderTable();
+        document.getElementById('searchInput').oninput = () => renderTable();
+        document.getElementById('binFilter').onchange = () => renderTable();
+        document.getElementById('resetBtn').onclick = () => {
+            document.getElementById('provinceFilter').value = 'all';
+            document.getElementById('statusFilter').value = 'all';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('binFilter').value = 'all';
+            renderTable();
+        };
+    }
+    
+    function renderTable() {
+        let filtered = [...allData];
+        const province = document.getElementById('provinceFilter').value;
+        if (province !== 'all') filtered = filtered.filter(r => getProvince(r) === province);
+        const status = document.getElementById('statusFilter').value;
+        if (status !== 'all') filtered = filtered.filter(r => r['Kiosk State'] === status);
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        if (search) filtered = filtered.filter(r => (r.Store || '').toLowerCase().includes(search) || (r.City || '').toLowerCase().includes(search));
+        const binVal = document.getElementById('binFilter').value;
+        if (binVal !== 'all') filtered = filtered.filter(r => parseFloat(r['Total Bin Full %'] || 0) >= parseInt(binVal));
+        
+        const total = filtered.length;
+        const critical = filtered.filter(r => r['Kiosk State'] === 'Full' || parseFloat(r['Total Bin Full %'] || 0) >= 95).length;
+        const offline = filtered.filter(r => r['Kiosk State'] === 'Offline').length;
+        const highReject = filtered.filter(r => parseFloat(r['1 Day Reject %'] || 0) > 8).length;
+        const avgUptime = filtered.reduce((s, r) => s + (parseFloat(r['7 Day Uptime %']) || 0), 0) / (filtered.length || 1);
+        
+        document.getElementById('statsGrid').innerHTML = `
+            <div class="stat-card"><h3>Total Kiosks</h3><div class="stat-number">${total}</div></div>
+            <div class="stat-card"><h3>🪣 Critical Full</h3><div class="stat-number">${critical}</div></div>
+            <div class="stat-card"><h3>📡 Offline</h3><div class="stat-number">${offline}</div></div>
+            <div class="stat-card"><h3>⚠️ High Reject</h3><div class="stat-number">${highReject}</div></div>
+            <div class="stat-card"><h3>📈 Avg Uptime</h3><div class="stat-number">${avgUptime.toFixed(1)}%</div></div>
+        `;
+        
+        const tbody = document.getElementById('tableBody');
+        if (!filtered.length) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;">No matching kiosks</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = filtered.slice(0, 500).map(r => {
+            const reject = parseFloat(r['1 Day Reject %'] || 0);
+            const binFull = parseFloat(r['Total Bin Full %'] || 0);
+            const state = r['Kiosk State'] || 'Attract';
+            let barClass = binFull > 95 ? 'critical' : (binFull > 80 ? 'warning' : '');
+            let badgeClass = 'badge-Attract';
+            if (state === 'Full') badgeClass = 'badge-Full';
+            else if (state === 'Offline') badgeClass = 'badge-Offline';
+            
+            return `<tr>
+                <td><strong>${escapeHtml(r.Store || '—')}</strong></td>
+                <td>${escapeHtml(r.City || '—')}</td>
+                <td>${getProvince(r)}</td>
+                <td><span class="badge ${badgeClass}">${escapeHtml(state)}</span></td>
+                <td>${r['1 Day TX'] || 0}</td>
+                <td style="color:${reject>8?'#dc2626':'#16a34a'};font-weight:bold;">${reject.toFixed(1)}%</td>
+                <td>${(parseFloat(r['7 Day Uptime %']) || 0).toFixed(1)}%</td>
+                <td>${binFull.toFixed(0)}%<div class="fill-bar"><div class="fill-bar-fill ${barClass}" style="width:${Math.min(binFull,100)}%"></div></div></td>
+                <td>${r['Estimated Fill Date'] || '—'}</td>
+                <td>${(r['Last Reported Date'] || '—').substring(0,16)}</td>
+            </tr>`;
+        }).join('');
+    }
+    
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+</script>
+</body>
+</html>
