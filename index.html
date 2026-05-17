@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kiosk Intelligence Platform</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; padding: 20px; }
@@ -84,7 +85,7 @@
         <div class="action-buttons" id="actionButtons" style="display:none;">
             <button class="action-btn upload-btn" id="showUploadBtn">📂 Upload New CSV</button>
             <button class="action-btn" onclick="exportToCSV()">📎 Export to Excel</button>
-            <button class="action-btn" onclick="exportPDF()">📄 Print Report</button>
+            <button class="action-btn" onclick="takeScreenshot()">📸 Copy Snapshot</button>
         </div>
     </div>
 
@@ -132,7 +133,7 @@
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
-        <div class="footer">💡 Hover over <strong>?</strong> for help | Click column headers to sort | Export to Excel for reports</div>
+        <div class="footer">💡 Hover over <strong>?</strong> for help | Click column headers to sort | 📸 Snapshot button copies dashboard to clipboard</div>
     </div>
 </div>
 <div id="toast" class="toast"></div>
@@ -418,7 +419,34 @@
         showToast(`📎 Exported ${filtered.length} kiosks to CSV`);
     }
     
-    function exportPDF() { window.print(); showToast('📄 Report ready to print/save as PDF'); }
+    async function takeScreenshot() {
+        showToast('📸 Capturing dashboard...');
+        try {
+            const element = document.querySelector('.container');
+            const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#f0f2f5' });
+            canvas.toBlob(async (blob) => {
+                try {
+                    await navigator.clipboard.write([
+                        new ClipboardItem({
+                            [blob.type]: blob
+                        })
+                    ]);
+                    showToast('✅ Screenshot copied to clipboard! Paste anywhere (Ctrl+V)');
+                } catch (err) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `kiosk_snapshot_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    showToast('📸 Screenshot downloaded as PNG');
+                }
+            });
+        } catch (err) {
+            showToast('❌ Could not capture screenshot');
+            console.error(err);
+        }
+    }
     
     function escapeCsv(str) { if (!str) return ''; return str.replace(/"/g, '""'); }
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
