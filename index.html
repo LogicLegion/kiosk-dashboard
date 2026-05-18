@@ -6,12 +6,13 @@
     <title>Kiosk Intelligence Platform</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; padding: 20px; }
         .container { max-width: 1600px; margin: 0 auto; }
         
-        .header { background: linear-gradient(135deg, #0f2b44, #1e3a5f); border-radius: 24px; padding: 20px 28px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .header { background: linear-gradient(135deg, #0f2b44, #1e3a5f); border-radius: 24px; padding: 20px 28px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
         .header h1 { font-size: 22px; font-weight: 700; color: white; }
         .header p { color: #cbd5e1; font-size: 12px; margin-top: 5px; }
         .live-tag { background: #10b981; padding: 3px 10px; border-radius: 30px; font-size: 10px; font-weight: 600; margin-left: 12px; color: white; display: inline-block; }
@@ -19,6 +20,9 @@
         .action-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s; }
         .action-btn:hover { background: rgba(255,255,255,0.2); }
         .upload-btn { background: #10b981; border: none; }
+        .powerbi-btn { background: linear-gradient(135deg, #f7b731, #e67e22); border: none; }
+        .tableau-btn { background: linear-gradient(135deg, #3b82f6, #1d4ed8); border: none; }
+        .snapshot-btn { background: linear-gradient(135deg, #8b5cf6, #6d28d9); border: none; }
         
         .upload-area { background: white; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 40px; text-align: center; margin-bottom: 24px; cursor: pointer; transition: all 0.3s; }
         .upload-area:hover { border-color: #1e3a5f; background: #f8fafc; }
@@ -29,8 +33,6 @@
         .help-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: #e2e8f0; color: #64748b; border-radius: 50%; font-size: 10px; font-weight: bold; cursor: help; position: relative; }
         .help-icon:hover::after { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; font-size: 11px; font-weight: normal; padding: 6px 10px; border-radius: 8px; white-space: nowrap; z-index: 100; margin-bottom: 8px; }
         .kpi-value { font-size: 32px; font-weight: 800; color: #1e293b; margin-top: 8px; }
-        .kpi-savings { font-size: 28px; font-weight: 800; color: #10b981; }
-        .kpi-trend { font-size: 11px; margin-top: 6px; color: #64748b; }
         
         .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
         .chart-card { background: white; border-radius: 16px; padding: 16px; border: 1px solid #e2e8f0; }
@@ -54,9 +56,8 @@
         .table-wrapper { background: white; border-radius: 16px; overflow: auto; max-height: 500px; border: 1px solid #e2e8f0; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1100px; }
         th { text-align: left; padding: 14px 12px; background: #f8fafc; color: #475569; font-weight: 700; border-bottom: 2px solid #e2e8f0; cursor: pointer; user-select: none; position: sticky; top: 0; z-index: 10; }
-        th:hover { background: #e2e8f0; color: #1e3a5f; }
+        th:hover { background: #e2e8f0; }
         .sort-indicator { font-size: 10px; margin-left: 5px; opacity: 0.5; }
-        th.active .sort-indicator { opacity: 1; }
         td { padding: 12px; color: #334155; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
         tr:hover td { background: #f8fafc; }
         
@@ -64,19 +65,23 @@
         .badge-high { background: #fee2e2; color: #dc2626; }
         .badge-medium { background: #fed7aa; color: #c2410c; }
         .badge-low { background: #dcfce7; color: #16a34a; }
-        
         .risk-score { font-weight: 700; margin-left: 6px; font-size: 11px; color: #64748b; white-space: nowrap; }
         .fill-bar { background: #e2e8f0; border-radius: 10px; height: 6px; width: 70px; margin-top: 5px; }
         .fill-bar-fill { height: 100%; border-radius: 10px; }
         .footer { text-align: center; margin-top: 16px; font-size: 10px; color: #64748b; }
         .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; z-index: 1000; display: none; }
         .hidden-upload { display: none; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-content { background: white; border-radius: 20px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal-content h3 { margin-bottom: 16px; color: #1e293b; }
+        .modal-content p { margin-bottom: 12px; color: #475569; line-height: 1.5; }
+        .modal-content code { background: #f1f5f9; padding: 2px 6px; border-radius: 6px; font-family: monospace; font-size: 12px; }
+        .modal-close { background: #1e3a5f; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; margin-top: 16px; width: 100%; }
         
         @media (max-width: 768px) {
             .header h1 { font-size: 16px; }
             .kpi-value { font-size: 24px; }
             .charts-row { grid-template-columns: 1fr; }
-            th, td { padding: 8px 6px; font-size: 10px; }
         }
     </style>
 </head>
@@ -89,8 +94,18 @@
         </div>
         <div class="action-buttons" id="actionButtons" style="display:none;">
             <button class="action-btn upload-btn" id="showUploadBtn">📂 Upload New CSV</button>
-            <button class="action-btn" onclick="exportToCSV()">📎 Export to Excel</button>
-            <button class="action-btn" onclick="takeScreenshot()">📸 Copy Snapshot</button>
+            <button class="action-btn powerbi-btn" id="powerBIExportBtn">📊 Export for Power BI</button>
+            <button class="action-btn tableau-btn" id="tableauExportBtn">📈 Export for Tableau</button>
+            <button class="action-btn snapshot-btn" id="snapshotBtn">📸 Copy Snapshot</button>
+        </div>
+    </div>
+
+    <!-- Modal for instructions -->
+    <div id="instructionModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Instructions</h3>
+            <div id="modalBody"></div>
+            <button class="modal-close" onclick="closeModal()">Got it</button>
         </div>
     </div>
 
@@ -112,8 +127,8 @@
                 <canvas id="riskChart"></canvas>
             </div>
             <div class="chart-card">
-                <div class="chart-title"><span>💰 Potential Monthly Savings</span><span class="help-icon" data-tooltip="Estimated savings if we fix all High Risk kiosks">?</span></div>
-                <canvas id="savingsChart"></canvas>
+                <div class="chart-title"><span>📍 Top 5 Provinces by Kiosk Count</span><span class="help-icon" data-tooltip="Shows which provinces have the most kiosks">?</span></div>
+                <canvas id="provinceChart"></canvas>
             </div>
         </div>
         
@@ -151,30 +166,32 @@
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
-        <div class="footer">💡 Click any column header to sort | Hover over <strong>?</strong> for help | 📸 Snapshot button copies dashboard to clipboard</div>
+        <div class="footer">💡 Click any column header to sort | Export for Power BI or Tableau creates Excel files with instructions</div>
     </div>
 </div>
 <div id="toast" class="toast"></div>
 
 <script>
     let allData = [];
-    let riskChart = null, savingsChart = null;
+    let riskChart = null, provinceChart = null;
     let refreshInterval = null;
     let currentSort = { column: 'reject', direction: 'desc' };
-    
-    const tooltips = {
-        total: "Total number of kiosks currently in your fleet",
-        highRisk: "Kiosks with Risk Score above 60 - fix these FIRST",
-        offline: "Kiosks that are completely offline - generating ZERO revenue",
-        avgUptime: "Average uptime across all kiosks - higher is better",
-        monthlySavings: "Estimated monthly revenue recoverable by fixing all high-risk issues"
-    };
     
     function showToast(msg) {
         const toast = document.getElementById('toast');
         toast.textContent = msg;
         toast.style.display = 'block';
         setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+    
+    function showModal(title, content) {
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalBody').innerHTML = content;
+        document.getElementById('instructionModal').style.display = 'flex';
+    }
+    
+    function closeModal() {
+        document.getElementById('instructionModal').style.display = 'none';
     }
     
     document.getElementById('showUploadBtn')?.addEventListener('click', () => {
@@ -224,7 +241,6 @@
     
     function saveToLocalStorage() {
         localStorage.setItem('kioskData', JSON.stringify(allData));
-        localStorage.setItem('kioskDataTime', new Date().toISOString());
     }
     
     function loadFromLocalStorage() {
@@ -261,15 +277,6 @@
         if (score >= 60) return 'High Risk';
         if (score >= 30) return 'Medium Risk';
         return 'Low Risk';
-    }
-    
-    function calculateDailyLoss(row) {
-        const tx = parseFloat(row['1 Day TX'] || 0);
-        const reject = parseFloat(row['1 Day Reject %'] || 0);
-        const uptime = parseFloat(row['7 Day Uptime %'] || 0);
-        const lostTx = tx * (reject / 100);
-        const downtimeLoss = tx * ((100 - uptime) / 100) * 0.5;
-        return (lostTx + downtimeLoss) * 5;
     }
     
     function populateFilters() {
@@ -361,14 +368,13 @@
         const offline = data.filter(r => r['Kiosk State'] === 'Offline').length;
         const highReject = data.filter(r => parseFloat(r['1 Day Reject %'] || 0) > 8).length;
         const avgUptime = data.reduce((s, r) => s + (parseFloat(r['7 Day Uptime %']) || 0), 0) / (data.length || 1);
-        const criticalFull = data.filter(r => r['Kiosk State'] === 'Full' || parseFloat(r['Total Bin Full %'] || 0) >= 95).length;
         
         document.getElementById('kpiGrid').innerHTML = `
-            <div class="kpi-card"><div class="kpi-label">📊 Total Kiosks <span class="help-icon" data-tooltip="${tooltips.total}">?</span></div><div class="kpi-value">${total}</div></div>
-            <div class="kpi-card"><div class="kpi-label">⚠️ High Risk <span class="help-icon" data-tooltip="${tooltips.highRisk}">?</span></div><div class="kpi-value" style="color:#dc2626;">${highRisk}</div></div>
-            <div class="kpi-card"><div class="kpi-label">📡 Offline <span class="help-icon" data-tooltip="${tooltips.offline}">?</span></div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div>
-            <div class="kpi-card"><div class="kpi-label">⚠️ High Reject <span class="help-icon" data-tooltip="Kiosks with >8% reject rate - customers can't complete transactions">?</span></div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div>
-            <div class="kpi-card"><div class="kpi-label">📈 Avg Uptime <span class="help-icon" data-tooltip="${tooltips.avgUptime}">?</span></div><div class="kpi-value">${avgUptime.toFixed(1)}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">📊 Total Kiosks</div><div class="kpi-value">${total}</div></div>
+            <div class="kpi-card"><div class="kpi-label">⚠️ High Risk</div><div class="kpi-value" style="color:#dc2626;">${highRisk}</div></div>
+            <div class="kpi-card"><div class="kpi-label">📡 Offline</div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div>
+            <div class="kpi-card"><div class="kpi-label">⚠️ High Reject (>8%)</div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div>
+            <div class="kpi-card"><div class="kpi-label">📈 Avg Uptime</div><div class="kpi-value">${avgUptime.toFixed(1)}%</div></div>
         `;
     }
     
@@ -384,7 +390,7 @@
         const topProvinces = Object.entries(provinceCount).sort((a,b) => b[1] - a[1]).slice(0,5);
         
         if (riskChart) riskChart.destroy();
-        if (savingsChart) savingsChart.destroy();
+        if (provinceChart) provinceChart.destroy();
         
         const ctx1 = document.getElementById('riskChart').getContext('2d');
         riskChart = new Chart(ctx1, {
@@ -393,11 +399,11 @@
             options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } } }
         });
         
-        const ctx2 = document.getElementById('savingsChart').getContext('2d');
-        savingsChart = new Chart(ctx2, {
+        const ctx2 = document.getElementById('provinceChart').getContext('2d');
+        provinceChart = new Chart(ctx2, {
             type: 'bar',
             data: { labels: topProvinces.map(p => p[0]), datasets: [{ label: 'Number of Kiosks', data: topProvinces.map(p => p[1]), backgroundColor: '#8b5cf6', borderRadius: 8 }] },
-            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } }, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' }, ticks: { color: '#475569' } }, x: { ticks: { color: '#475569' } } } }
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } }, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { ticks: { font: { size: 10 } } } } }
         });
     }
     
@@ -445,23 +451,65 @@
         }).join('');
     }
     
-    function exportToCSV() {
+    function exportToExcelForBI(tool) {
         const filtered = filterData();
-        let csv = "Store,City,Province/State,Status,1D TX,Reject%,Uptime%,Bin%,Risk Score,Risk Level,Est. Fill Date\n";
-        filtered.forEach(r => {
-            const riskScore = calculateRiskScore(r);
-            const riskLevel = getRiskLevel(riskScore);
-            csv += `"${escapeCsv(r.Store || '—')}","${escapeCsv(r.City || '—')}","${getRegion(r)}","${r['Kiosk State'] || 'Attract'}","${r['1 Day TX'] || 0}","${parseFloat(r['1 Day Reject %'] || 0).toFixed(1)}","${(parseFloat(r['7 Day Uptime %']) || 0).toFixed(1)}","${parseFloat(r['Total Bin Full %'] || 0).toFixed(0)}","${riskScore.toFixed(0)}","${riskLevel}","${r['Estimated Fill Date'] || '—'}"\n`;
-        });
+        const exportData = filtered.map(r => ({
+            'Store': r.Store || '',
+            'City': r.City || '',
+            'Province/State': getRegion(r),
+            'Status': r['Kiosk State'] || '',
+            '1 Day TX': parseFloat(r['1 Day TX'] || 0),
+            'Reject %': parseFloat(r['1 Day Reject %'] || 0),
+            '7 Day Uptime %': parseFloat(r['7 Day Uptime %'] || 0),
+            'Bin Full %': parseFloat(r['Total Bin Full %'] || 0),
+            'Risk Score': calculateRiskScore(r),
+            'Risk Level': getRiskLevel(calculateRiskScore(r)),
+            'Estimated Fill Date': r['Estimated Fill Date'] || '',
+            'Last Reported Date': r['Last Reported Date'] || '',
+            'Store ID': r.StoreId || '',
+            'Address': r.Address || '',
+            'Postal Code': r.Zip || ''
+        }));
         
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `kiosk_export_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast(`📎 Exported ${filtered.length} kiosks to CSV`);
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Kiosk_Data');
+        
+        const fileName = `kiosk_export_${tool.toLowerCase().replace(' ', '_')}_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+        
+        let instructions = '';
+        if (tool === 'Power BI') {
+            instructions = `
+                <p><strong>📊 To import this data into Power BI:</strong></p>
+                <ol style="margin-left: 20px; margin-bottom: 16px;">
+                    <li>Open <strong>Power BI Desktop</strong></li>
+                    <li>Click <strong>Get Data</strong> → <strong>Excel</strong></li>
+                    <li>Navigate to and select the downloaded Excel file</li>
+                    <li>Select the <strong>Kiosk_Data</strong> sheet</li>
+                    <li>Click <strong>Load</strong></li>
+                    <li>Use the data to create dashboards, reports, and visuals</li>
+                </ol>
+                <p><strong>💡 Pro tip:</strong> You can also set up automatic refresh by saving the Excel file to OneDrive or SharePoint and connecting Power BI to that location.</p>
+                <p><strong>📁 File saved as:</strong> <code>${fileName}</code></p>
+            `;
+        } else {
+            instructions = `
+                <p><strong>📈 To import this data into Tableau:</strong></p>
+                <ol style="margin-left: 20px; margin-bottom: 16px;">
+                    <li>Open <strong>Tableau Desktop</strong></li>
+                    <li>Under <strong>Connect</strong>, click <strong>Microsoft Excel</strong></li>
+                    <li>Navigate to and select the downloaded Excel file</li>
+                    <li>Drag the <strong>Kiosk_Data</strong> sheet to the canvas</li>
+                    <li>Start building your worksheets and dashboards</li>
+                </ol>
+                <p><strong>💡 Pro tip:</strong> You can also use Tableau Prep to clean and shape the data before analysis.</p>
+                <p><strong>📁 File saved as:</strong> <code>${fileName}</code></p>
+            `;
+        }
+        
+        showModal(`${tool} Export Complete`, instructions);
+        showToast(`📎 Exported ${filtered.length} kiosks for ${tool}`);
     }
     
     async function takeScreenshot() {
@@ -471,9 +519,7 @@
             const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#f0f2f5' });
             canvas.toBlob(async (blob) => {
                 try {
-                    await navigator.clipboard.write([
-                        new ClipboardItem({ [blob.type]: blob })
-                    ]);
+                    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
                     showToast('✅ Screenshot copied! Paste anywhere (Ctrl+V)');
                 } catch (err) {
                     const url = URL.createObjectURL(blob);
@@ -490,7 +536,10 @@
         }
     }
     
-    function escapeCsv(str) { if (!str) return ''; return str.replace(/"/g, '""'); }
+    document.getElementById('powerBIExportBtn')?.addEventListener('click', () => exportToExcelForBI('Power BI'));
+    document.getElementById('tableauExportBtn')?.addEventListener('click', () => exportToExcelForBI('Tableau'));
+    document.getElementById('snapshotBtn')?.addEventListener('click', takeScreenshot);
+    
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
     
     loadFromLocalStorage();
