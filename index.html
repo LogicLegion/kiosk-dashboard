@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiosk Intelligence Platform | Canada</title>
+    <title>Kiosk Intelligence Platform | Canada Only</title>
     <!-- 
       ============================================
       © 2025 LogicLegion (JE)
@@ -24,7 +24,7 @@
         .header { background: linear-gradient(135deg, #0f2b44, #1e3a5f); border-radius: 24px; padding: 20px 28px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
         .header h1 { font-size: 22px; color: white; }
         .live-tag { background: #10b981; padding: 3px 10px; border-radius: 30px; font-size: 10px; color: white; display: inline-block; margin-left: 10px; }
-        .region-badge { background: #3b82f6; padding: 3px 10px; border-radius: 30px; font-size: 10px; color: white; display: inline-block; margin-left: 10px; }
+        .region-badge { background: #dc2626; padding: 3px 10px; border-radius: 30px; font-size: 10px; color: white; display: inline-block; margin-left: 10px; }
         .copyright { font-size: 10px; color: #64748b; text-align: center; margin-top: 16px; padding: 8px; border-top: 1px solid #e2e8f0; }
         .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
         .action-btn { background: rgba(255,255,255,0.15); border: none; padding: 8px 16px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; }
@@ -71,7 +71,7 @@
 <div class="container">
     <div class="header">
         <div>
-            <h1>🗺️ Canada Kiosk Intelligence <span class="live-tag">LIVE</span><span class="region-badge">🇨🇦 CANADA ONLY</span></h1>
+            <h1>🗺️ Canada Kiosk Intelligence <span class="live-tag">LIVE</span><span class="region-badge">🇨🇦 STRICT CANADA - NO USA</span></h1>
         </div>
         <div class="action-buttons" id="actionButtons" style="display:none;">
             <button class="action-btn upload-btn" id="showUploadBtn">📂 Upload CSV</button>
@@ -87,7 +87,7 @@
         <div class="kpi-grid" id="kpiGrid"></div>
         <div class="info-bar"><div>🕐 Last updated: <span id="lastUpdateTime">-</span></div><div>📍 🔴=High Risk 🟡=Medium 🟢=Low</div></div>
         <div class="chip-bar" id="chipBar"></div>
-        <div class="map-container"><div class="map-title">🗺️ Canada Kiosk Locations (Strict Canada Filter)</div><div id="map"></div></div>
+        <div class="map-container"><div class="map-title">🗺️ Canada Kiosk Locations (Strict Province Filter)</div><div id="map"></div></div>
         <div class="filters">
             <div class="filter-group"><label>📍 Province</label><select id="provinceFilter"><option value="all">All</option></select></div>
             <div class="filter-group"><label>⚠️ Risk Level</label><select id="riskFilter"><option value="all">All</option><option value="high">High Risk Only</option></select></div>
@@ -112,10 +112,10 @@
                         <th data-sort="fill">Est. Fill ↕️</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody"><tr><td colspan="11">No data loaded. Upload a CSV file.<th>Est. Fill ↕️</th> </tbody>
+                <tbody id="tableBody"><tr><td colspan="11">No data loaded. Upload a CSV file. </tbody>
             </table>
         </div>
-        <div class="footer">💡 Click column headers to sort | Export to Power BI or Tableau | 🇨🇦 Strict Canada filter (lat/lng + province)</div>
+        <div class="footer">💡 Click column headers to sort | Export to Power BI or Tableau | 🇨🇦 STRICT: Only Canadian provinces shown</div>
         <div class="copyright">© 2025 LogicLegion (JE) | Built by Jean Eljaalouk | All rights reserved</div>
     </div>
 </div>
@@ -123,29 +123,31 @@
 <script>
     let allData = [], map = null, markers = [], currentSort = { column: 'reject', direction: 'desc' }, activeChips = { highRisk: false, offline: false, fullBins: false };
     
-    // Canadian provinces and territories
-    const CANADIAN_PROVINCES = ['ON', 'QC', 'BC', 'AB', 'MB', 'SK', 'NS', 'NB', 'NL', 'PE', 'NT', 'YT', 'NU', 'Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba', 'Saskatchewan', 'Nova Scotia', 'New Brunswick', 'Newfoundland', 'Prince Edward Island', 'Northwest Territories', 'Yukon', 'Nunavut'];
+    // ONLY these are allowed - Canadian provinces (2-letter codes and full names)
+    const CANADIAN_PROVINCES = [
+        'ON', 'QC', 'BC', 'AB', 'MB', 'SK', 'NS', 'NB', 'NL', 'PE', 'NT', 'YT', 'NU',
+        'Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba', 'Saskatchewan', 
+        'Nova Scotia', 'New Brunswick', 'Newfoundland', 'Prince Edward Island', 
+        'Northwest Territories', 'Yukon', 'Nunavut'
+    ];
     
-    // Strict Canada bounding box (no USA overlap)
-    // Latitude: 41.5° to 84° (southern Canada to northern Canada, excludes most USA)
-    // Longitude: -141° to -52° (Canada only, excludes USA east/west)
-    function isCanadianCoordinates(lat, lng) {
-        // Canada bounding box - strict
-        return lat >= 41.5 && lat <= 84 && lng >= -141 && lng <= -52;
-    }
+    // US state codes (to explicitly EXCLUDE)
+    const US_STATES = [
+        'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+        'California', 'Texas', 'Florida', 'New York', 'Illinois', 'Pennsylvania', 'Ohio', 'Georgia', 'North Carolina', 'Michigan'
+    ];
     
     function isCanadian(row) {
-        // Check by province name first
-        let prov = row.State || row.Province || '';
-        let provinceMatch = CANADIAN_PROVINCES.includes(prov) || CANADIAN_PROVINCES.includes(prov.toUpperCase());
+        let prov = (row.State || row.Province || '').trim();
+        if (!prov) return false;
         
-        // Also check coordinates if available
-        let lat = parseFloat(row.Latitude);
-        let lng = parseFloat(row.Longitude);
-        let coordMatch = !isNaN(lat) && !isNaN(lng) && isCanadianCoordinates(lat, lng);
+        // Explicitly exclude US states
+        if (US_STATES.includes(prov) || US_STATES.includes(prov.toUpperCase())) {
+            return false;
+        }
         
-        // Must pass EITHER province check OR coordinate check (but prefer both)
-        return provinceMatch || coordMatch;
+        // Check if it's a Canadian province
+        return CANADIAN_PROVINCES.includes(prov) || CANADIAN_PROVINCES.includes(prov.toUpperCase());
     }
     
     function showToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
@@ -171,14 +173,15 @@
             if (Object.keys(row).length) allData.push(row);
         }
         if (allData.length === 0) { showToast('Error: No valid data rows'); return; }
+        
+        // Count Canada vs non-Canada
+        let canadaCount = allData.filter(r => isCanadian(r)).length;
+        
         document.getElementById('dashboard').style.display = 'block';
         document.getElementById('uploadArea').style.display = 'none';
         document.getElementById('actionButtons').style.display = 'flex';
         populateFilters(); setupSorting(); setupChips(); renderAll();
-        
-        // Count how many were filtered out
-        let canadaCount = allData.filter(r => isCanadian(r)).length;
-        showToast(`✅ Loaded ${canadaCount} Canadian kiosts (${allData.length - canadaCount} non-Canada filtered out)`);
+        showToast(`✅ Loaded ${canadaCount} Canadian kiosks (${allData.length - canadaCount} non-Canada filtered out)`);
     }
     
     function getRegion(r) { return r.State || r.Province || 'Unknown'; }
@@ -212,7 +215,7 @@
     
     function filterData() {
         let f = [...allData];
-        // STRICT Canada filter
+        // STRICT Canada filter - only by province
         f = f.filter(r => isCanadian(r));
         let prov = document.getElementById('provinceFilter')?.value || 'all';
         if (prov !== 'all') f = f.filter(r => getRegion(r) === prov);
@@ -230,14 +233,8 @@
         if (!map) { map = L.map('map').setView([56.1304, -106.3468], 4); L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>' }).addTo(map); }
         markers.forEach(m => map.removeLayer(m)); markers = [];
         
-        // STRICT Canada filter for map - both province AND coordinates
-        let canadaOnly = data.filter(r => {
-            let prov = r.State || r.Province || '';
-            let provinceMatch = CANADIAN_PROVINCES.includes(prov) || CANADIAN_PROVINCES.includes(prov.toUpperCase());
-            let lat = parseFloat(r.Latitude), lng = parseFloat(r.Longitude);
-            let coordMatch = !isNaN(lat) && !isNaN(lng) && isCanadianCoordinates(lat, lng);
-            return provinceMatch || coordMatch;
-        });
+        // Only show Canadian kiosks by province
+        let canadaOnly = data.filter(r => isCanadian(r));
         
         canadaOnly.forEach(r => { 
             let lat = parseFloat(r.Latitude), lng = parseFloat(r.Longitude);
@@ -250,13 +247,14 @@
         });
         
         if (markers.length > 0) map.fitBounds(markers.map(m => m.getLatLng()));
+        else map.setView([56.1304, -106.3468], 4);
     }
     
     function renderAll() {
         if (!allData.length) return;
         let f = filterData(); f = sortData(f);
         let total = f.length, highRisk = f.filter(r => getRiskLevel(calcRisk(r)) === 'High Risk').length, offline = f.filter(r => r['Kiosk State'] === 'Offline').length, highReject = f.filter(r => parseFloat(r['1 Day Reject %'] || 0) > 8).length, avgUptime = f.reduce((s, r) => s + (parseFloat(r['7 Day Uptime %'] || 0)), 0) / (f.length || 1);
-        document.getElementById('kpiGrid').innerHTML = `<div class="kpi-card"><div class="kpi-label">Total Kiosks (Canada)</div><div class="kpi-value">${total}</div></div><div class="kpi-card"><div class="kpi-label">High Risk</div><div class="kpi-value" style="color:#dc2626;">${highRisk}</div></div><div class="kpi-card"><div class="kpi-label">Offline</div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div><div class="kpi-card"><div class="kpi-label">High Reject</div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div><div class="kpi-card"><div class="kpi-label">Avg Uptime</div><div class="kpi-value">${avgUptime.toFixed(1)}%</div></div>`;
+        document.getElementById('kpiGrid').innerHTML = `<div class="kpi-card"><div class="kpi-label">Total Kiosks (Canada)</div><div class="kpi-value">${total}</div></div><div class="kpi-card"><div class="kpi-label">High Risk</div><div class="kpi-value" style="color:#dc2626;">${highRisk}</div></div><div class="kpi-card"><div class="kpi-label">Offline</div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div><div class="kpi-card"><div class="kpi-label">High Reject (>8%)</div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div><div class="kpi-card"><div class="kpi-label">Avg Uptime</div><div class="kpi-value">${avgUptime.toFixed(1)}%</div></div>`;
         updateMap(f);
         let tbody = document.getElementById('tableBody');
         if (!f.length) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;">No matching kiosks in Canada</td></tr>'; return; }
@@ -293,7 +291,7 @@
     document.getElementById('snapshotBtn')?.addEventListener('click', takeScreenshot);
     function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
     
-    console.log('Strict Canada-only dashboard ready. Upload your CSV file.');
+    console.log('Strict Canada-only dashboard ready. Only Canadian provinces will appear.');
 </script>
 </body>
 </html>
