@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiosk Intelligence Platform | Canada Map</title>
+    <title>Kiosk Intelligence Platform | Canada</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -11,10 +11,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
+        body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; padding: 20px; }
         .container { max-width: 1600px; margin: 0 auto; }
+        
         .header { background: linear-gradient(135deg, #0f2b44, #1e3a5f); border-radius: 24px; padding: 20px 28px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
         .header h1 { font-size: 22px; font-weight: 700; color: white; }
+        .header p { color: #cbd5e1; font-size: 12px; margin-top: 5px; }
         .live-tag { background: #10b981; padding: 3px 10px; border-radius: 30px; font-size: 10px; font-weight: 600; margin-left: 12px; color: white; display: inline-block; }
         .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
         .action-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; transition: all 0.2s; }
@@ -23,43 +25,68 @@
         .powerbi-btn { background: linear-gradient(135deg, #f7b731, #e67e22); border: none; }
         .tableau-btn { background: linear-gradient(135deg, #3b82f6, #1d4ed8); border: none; }
         .snapshot-btn { background: linear-gradient(135deg, #8b5cf6, #6d28d9); border: none; }
-        .upload-area { background: white; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 40px; text-align: center; margin-bottom: 24px; cursor: pointer; }
+        
+        .upload-area { background: white; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 40px; text-align: center; margin-bottom: 24px; cursor: pointer; transition: all 0.3s; }
         .upload-area:hover { border-color: #1e3a5f; background: #f8fafc; }
+        
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .kpi-card { background: white; border-radius: 16px; padding: 16px; border: 1px solid #e2e8f0; }
+        .kpi-card { background: white; border-radius: 16px; padding: 16px; border: 1px solid #e2e8f0; transition: transform 0.2s; }
+        .kpi-card:hover { transform: translateY(-2px); }
         .kpi-label { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600; }
         .kpi-value { font-size: 32px; font-weight: 800; color: #1e293b; margin-top: 8px; }
+        
         .info-bar { background: white; border-radius: 12px; padding: 10px 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; font-size: 12px; border: 1px solid #e2e8f0; }
         .chip-bar { background: white; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; border: 1px solid #e2e8f0; }
-        .chip { background: #f1f5f9; padding: 6px 14px; border-radius: 30px; font-size: 12px; cursor: pointer; }
+        .chip { background: #f1f5f9; padding: 6px 14px; border-radius: 30px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .chip:hover { background: #e2e8f0; }
         .chip-active { background: #1e3a5f; color: white; }
         .chip-clear { background: #fee2e2; color: #dc2626; }
+        .chip-clear:hover { background: #fecaca; }
+        
         .map-container { background: white; border-radius: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
-        .map-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
-        #map { height: 400px; width: 100%; border-radius: 12px; background: #e2e8f0; }
-        .filters { background: white; border-radius: 16px; padding: 16px 20px; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 12px; border: 1px solid #e2e8f0; }
+        .map-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        #map { height: 400px; width: 100%; border-radius: 12px; background: #e2e8f0; z-index: 1; }
+        
+        .filters { background: white; border-radius: 16px; padding: 16px 20px; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; border: 1px solid #e2e8f0; }
         .filter-group { display: flex; flex-direction: column; gap: 5px; min-width: 120px; flex: 1; }
-        .filter-group label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        select, input, button { padding: 8px 12px; border-radius: 10px; font-size: 12px; background: white; border: 1px solid #e2e8f0; }
+        .filter-group label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        select, input, button { padding: 8px 12px; border-radius: 10px; font-size: 12px; background: white; border: 1px solid #e2e8f0; color: #1e293b; }
         button { background: linear-gradient(135deg, #1e3a5f, #0f2b44); border: none; cursor: pointer; font-weight: 600; color: white; }
-        .table-wrapper { background: white; border-radius: 16px; overflow: auto; max-height: 450px; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1000px; }
-        th { text-align: left; padding: 14px 12px; background: #f8fafc; font-weight: 700; border-bottom: 2px solid #e2e8f0; cursor: pointer; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        button:hover { opacity: 0.9; }
+        
+        .table-wrapper { background: white; border-radius: 16px; overflow: auto; max-height: 500px; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1100px; }
+        th { text-align: left; padding: 14px 12px; background: #f8fafc; color: #475569; font-weight: 700; border-bottom: 2px solid #e2e8f0; cursor: pointer; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
+        th:hover { background: #e2e8f0; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; white-space: nowrap; }
+        tr:hover td { background: #f8fafc; }
         .high-risk-row { background-color: #fee2e2 !important; }
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .high-risk-row:hover { background-color: #fecaca !important; }
+        
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
         .badge-high { background: #fee2e2; color: #dc2626; }
         .badge-medium { background: #fed7aa; color: #c2410c; }
         .badge-low { background: #dcfce7; color: #16a34a; }
-        .fill-bar { background: #e2e8f0; border-radius: 10px; height: 6px; width: 70px; margin-top: 5px; }
+        
+        .risk-score { display: inline-block; margin-left: 6px; font-size: 11px; color: #64748b; font-weight: 500; white-space: nowrap; }
+        .fill-bar { background: #e2e8f0; border-radius: 10px; height: 6px; width: 70px; margin-top: 5px; display: inline-block; }
         .fill-bar-fill { height: 100%; border-radius: 10px; }
+        
         .footer { text-align: center; margin-top: 16px; font-size: 10px; color: #64748b; }
         .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; z-index: 1000; display: none; }
         .hidden-upload { display: none; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-content { background: white; border-radius: 20px; padding: 24px; max-width: 500px; }
+        .modal-content { background: white; border-radius: 20px; padding: 24px; max-width: 500px; width: 90%; }
         .modal-close { background: #1e3a5f; color: white; border: none; padding: 10px; border-radius: 30px; cursor: pointer; margin-top: 16px; width: 100%; }
-        @media (max-width: 768px) { .kpi-value { font-size: 24px; } #map { height: 300px; } }
+        
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .header h1 { font-size: 18px; }
+            .kpi-value { font-size: 24px; }
+            #map { height: 300px; }
+            th, td { padding: 8px 6px; font-size: 11px; }
+            .badge { font-size: 10px; padding: 2px 6px; }
+        }
     </style>
 </head>
 <body>
@@ -75,31 +102,44 @@
     </div>
     <input type="file" id="csvFile" accept=".csv" class="hidden-upload">
     <div id="instructionModal" class="modal"><div class="modal-content"><h3 id="modalTitle"></h3><div id="modalBody"></div><button class="modal-close" onclick="closeModal()">Got it</button></div></div>
-    <div class="upload-area" id="uploadArea" onclick="document.getElementById('csvFile').click()"><div style="font-size: 48px;">📊</div><h3>Upload Fleet Data</h3><p>Click to select your CSV file</p></div>
+    <div class="upload-area" id="uploadArea" onclick="document.getElementById('csvFile').click()"><div style="font-size: 48px;">📊</div><h3>Upload Fleet Data</h3><p>Click to select your CSV file</p><p style="font-size: 11px; margin-top: 8px; color: #64748b;">💡 Data stays in your browser</p></div>
     <div id="dashboard" style="display:none">
         <div class="kpi-grid" id="kpiGrid"></div>
-        <div class="info-bar"><div class="last-updated">🕐 Last updated: <span id="lastUpdateTime">Not loaded</span></div><div>📍 Map pins: 🔴 High Risk &nbsp; 🟡 Medium &nbsp; 🟢 Low</div></div>
-        <div class="chip-bar" id="chipBar"><div class="chip chip-clear" id="clearChips">✖ Clear all</div></div>
-        <div class="map-container"><div class="map-title">🗺️ Canada Kiosk Locations</div><div id="map"></div></div>
+        <div class="info-bar"><div>🕐 Last updated: <span id="lastUpdateTime">Not loaded</span></div><div>📍 Map: 🔴 High Risk &nbsp; 🟡 Medium &nbsp; 🟢 Low</div></div>
+        <div class="chip-bar" id="chipBar"></div>
+        <div class="map-container"><div class="map-title">🗺️ Canada Kiosk Locations (color-coded by risk)</div><div id="map"></div></div>
         <div class="filters">
             <div class="filter-group"><label>📍 Province</label><select id="provinceFilter"><option value="all">All</option></select></div>
             <div class="filter-group"><label>⚠️ Risk Level</label><select id="riskFilter"><option value="all">All</option><option value="high">High Risk Only</option></select></div>
             <div class="filter-group"><label>🔍 Search</label><input type="text" id="searchInput" placeholder="Store or city..."></div>
+            <div class="filter-group"><label>🔄 Auto Refresh</label><select id="autoRefreshSelect"><option value="off">Off</option><option value="60">Every 1 min</option><option value="300">Every 5 min</option></select></div>
             <button id="manualRefreshBtn">🔄 Refresh</button>
             <button id="resetBtn">Reset</button>
         </div>
-        <div class="table-wrapper"><table id="dataTable"><thead><tr><th data-sort="store">Store ↕️</th><th data-sort="city">City ↕️</th><th data-sort="province">Province ↕️</th><th data-sort="status">Status ↕️</th><th data-sort="tx">1D TX ↕️</th><th data-sort="reject">Reject% ↕️</th><th data-sort="uptime">Uptime% ↕️</th><th data-sort="bin">Bin% ↕️</th><th data-sort="risk">Risk ↕️</th><th data-sort="fill">Est. Fill ↕️</th></tr></thead><tbody id="tableBody"></tbody></table></div>
+        <div class="table-wrapper">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th data-sort="store">Store ↕️</th><th data-sort="city">City ↕️</th><th data-sort="province">Province ↕️</th><th data-sort="status">Status ↕️</th><th data-sort="tx">1D TX ↕️</th><th data-sort="reject">Reject% ↕️</th><th data-sort="uptime">Uptime% ↕️</th><th data-sort="bin">Bin% ↕️</th><th data-sort="risk">Risk Level ↕️</th><th data-sort="fill">Est. Fill ↕️</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
         <div class="footer">💡 Click column headers to sort | Map shows only Canada locations | Export to Power BI or Tableau</div>
     </div>
 </div>
 <div id="toast" class="toast"></div>
 <script>
-    let allData = [], map = null, markers = [], currentSort = { column: 'reject', direction: 'desc' }, activeChips = { highRisk: false, offline: false, fullBins: false };
+    let allData = [], map = null, markers = [], currentSort = { column: 'reject', direction: 'desc' }, refreshInterval = null, activeChips = { highRisk: false, offline: false, fullBins: false };
+    
     function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
     function showModal(title, content) { document.getElementById('modalTitle').textContent = title; document.getElementById('modalBody').innerHTML = content; document.getElementById('instructionModal').style.display = 'flex'; }
     function closeModal() { document.getElementById('instructionModal').style.display = 'none'; }
+    
     document.getElementById('showUploadBtn')?.addEventListener('click', () => document.getElementById('csvFile').click());
     document.getElementById('csvFile').addEventListener('change', e => { if(e.target.files[0]){ const r=new FileReader(); r.onload=ev=>parseCSV(ev.target.result); r.readAsText(e.target.files[0]); } });
+    
     function parseCSV(t){
         const lines=t.split(/\r?\n/), headers=lines[0].split(',').map(h=>h.replace(/^\uFEFF/,'').replace(/"/g,'').trim());
         allData=[];
@@ -110,13 +150,15 @@
             if(Object.keys(row).length) allData.push(row);
         }
         document.getElementById('dashboard').style.display='block'; document.getElementById('uploadArea').style.display='none'; document.getElementById('actionButtons').style.display='flex';
-        populateFilters(); setupSorting(); setupChips(); renderAll(); saveToLocalStorage(); showToast(`Loaded ${allData.length} kiosks`);
+        populateFilters(); setupSorting(); setupChips(); renderAll(); saveToLocalStorage(); showToast(`✅ Loaded ${allData.length} kiosks`);
     }
+    
     function saveToLocalStorage(){ localStorage.setItem('kioskData',JSON.stringify(allData)); localStorage.setItem('kioskDataTime',new Date().toISOString()); }
     function loadFromLocalStorage(){
         const d=localStorage.getItem('kioskData');
-        if(d&&d!=='undefined'){ try{ allData=JSON.parse(d); if(allData.length){ document.getElementById('dashboard').style.display='block'; document.getElementById('uploadArea').style.display='none'; document.getElementById('actionButtons').style.display='flex'; populateFilters(); setupSorting(); setupChips(); renderAll(); showToast(`Loaded ${allData.length} from memory`); } } catch(e){} }
+        if(d&&d!=='undefined'){ try{ allData=JSON.parse(d); if(allData.length){ document.getElementById('dashboard').style.display='block'; document.getElementById('uploadArea').style.display='none'; document.getElementById('actionButtons').style.display='flex'; populateFilters(); setupSorting(); setupChips(); renderAll(); showToast(`💾 Loaded ${allData.length} kiosks from memory`); } } catch(e){} }
     }
+    
     function getRegion(r){ return r.State||r.Province||'Unknown'; }
     function calcRisk(r){
         const rej=parseFloat(r['1 Day Reject %']||0), up=parseFloat(r['7 Day Uptime %']||0), bin=parseFloat(r['Total Bin Full %']||0), off=r['Kiosk State']==='Offline';
@@ -124,16 +166,19 @@
     }
     function getRiskLevel(s){ if(s>=60) return 'High Risk'; if(s>=30) return 'Medium Risk'; return 'Low Risk'; }
     function getRiskColor(s){ if(s>=60) return '#dc2626'; if(s>=30) return '#f97316'; return '#10b981'; }
+    
     function populateFilters(){
         const reg=[...new Set(allData.map(r=>getRegion(r)))].filter(r=>r&&r!=='Unknown');
-        const sel=document.getElementById('provinceFilter'); sel.innerHTML='<option value="all">All</option>';
+        const sel=document.getElementById('provinceFilter'); sel.innerHTML='<option value="all">🌎 All Regions</option>';
         reg.sort().forEach(r=>sel.innerHTML+=`<option value="${r}">${r}</option>`);
         document.getElementById('provinceFilter').onchange=()=>renderAll();
         document.getElementById('riskFilter').onchange=()=>renderAll();
         document.getElementById('searchInput').oninput=()=>renderAll();
         document.getElementById('manualRefreshBtn').onclick=()=>renderAll();
         document.getElementById('resetBtn').onclick=()=>{ document.getElementById('provinceFilter').value='all'; document.getElementById('riskFilter').value='all'; document.getElementById('searchInput').value=''; activeChips={highRisk:false,offline:false,fullBins:false}; updateChipUI(); renderAll(); };
+        document.getElementById('autoRefreshSelect').addEventListener('change',function(e){ if(refreshInterval) clearInterval(refreshInterval); const sec=parseInt(e.target.value); if(!isNaN(sec)) refreshInterval=setInterval(()=>renderAll(),sec*1000); });
     }
+    
     function setupChips(){
         const bar=document.getElementById('chipBar');
         bar.innerHTML=`<div class="chip ${activeChips.highRisk?'chip-active':''}" data-chip="highRisk">🔴 High Risk Only</div><div class="chip ${activeChips.offline?'chip-active':''}" data-chip="offline">📡 Offline Only</div><div class="chip ${activeChips.fullBins?'chip-active':''}" data-chip="fullBins">🪣 Full Bins (>90%)</div><div class="chip chip-clear" id="clearChips">✖ Clear all</div>`;
@@ -141,7 +186,11 @@
         document.getElementById('clearChips')?.addEventListener('click',()=>{ activeChips={highRisk:false,offline:false,fullBins:false}; updateChipUI(); renderAll(); });
     }
     function updateChipUI(){ document.querySelectorAll('.chip[data-chip]').forEach(c=>{ const k=c.getAttribute('data-chip'); if(activeChips[k]) c.classList.add('chip-active'); else c.classList.remove('chip-active'); }); }
-    function setupSorting(){ document.querySelectorAll('#dataTable th').forEach(th=>th.addEventListener('click',()=>{ const k=th.getAttribute('data-sort'); if(currentSort.column===k) currentSort.direction=currentSort.direction==='desc'?'asc':'desc'; else{ currentSort.column=k; currentSort.direction='desc'; } renderAll(); })); }
+    
+    function setupSorting(){
+        document.querySelectorAll('#dataTable th').forEach(th=>th.addEventListener('click',()=>{ const k=th.getAttribute('data-sort'); if(currentSort.column===k) currentSort.direction=currentSort.direction==='desc'?'asc':'desc'; else{ currentSort.column=k; currentSort.direction='desc'; } renderAll(); }));
+    }
+    
     function filterData(){
         let f=[...allData];
         const prov=document.getElementById('provinceFilter')?.value||'all';
@@ -155,6 +204,7 @@
         if(activeChips.fullBins) f=f.filter(r=>parseFloat(r['Total Bin Full %']||0)>90);
         return f;
     }
+    
     function sortData(d){
         return [...d].sort((a,b)=>{ let va,vb;
             switch(currentSort.column){
@@ -173,41 +223,68 @@
             return currentSort.direction==='desc'?vb.localeCompare(va):va.localeCompare(vb);
         });
     }
+    
     function updateMap(data){
         if(!map){ map=L.map('map').setView([56.1304,-106.3468],4); L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'}).addTo(map); }
         markers.forEach(m=>map.removeLayer(m)); markers=[];
         const canadaOnly=data.filter(r=>{ const lat=parseFloat(r.Latitude), lng=parseFloat(r.Longitude); return !isNaN(lat)&&!isNaN(lng)&&lat>=41&&lat<=84&&lng>=-141&&lng<=-52; });
         canadaOnly.forEach(r=>{ const lat=parseFloat(r.Latitude), lng=parseFloat(r.Longitude), risk=calcRisk(r), color=getRiskColor(risk);
             const m=L.circleMarker([lat,lng],{radius:8,fillColor:color,color:'#fff',weight:2,fillOpacity:0.8}).addTo(map);
-            m.bindPopup(`<b>${escapeHtml(r.Store||'Unknown')}</b><br>${escapeHtml(r.City||'')}, ${getRegion(r)}<br>Risk: ${risk.toFixed(0)}<br>Status: ${r['Kiosk State']||'Attract'}`);
+            m.bindPopup(`<b>${escapeHtml(r.Store||'Unknown')}</b><br>${escapeHtml(r.City||'')}, ${getRegion(r)}<br>Risk Score: ${risk.toFixed(0)}<br>Status: ${r['Kiosk State']||'Attract'}<br>Bin: ${r['Total Bin Full %']||0}%`);
             markers.push(m);
         });
         if(markers.length>0) map.fitBounds(markers.map(m=>m.getLatLng()));
         else if(data.length>0) map.setView([56.1304,-106.3468],4);
     }
+    
     function renderAll(){
         if(!allData.length) return;
         let f=filterData(); f=sortData(f);
         const total=f.length, highRisk=f.filter(r=>getRiskLevel(calcRisk(r))==='High Risk').length, offline=f.filter(r=>r['Kiosk State']==='Offline').length, highReject=f.filter(r=>parseFloat(r['1 Day Reject %']||0)>8).length, avgUptime=f.reduce((s,r)=>s+(parseFloat(r['7 Day Uptime %']||0)),0)/(f.length||1);
-        document.getElementById('kpiGrid').innerHTML=`<div class="kpi-card"><div class="kpi-label">📊 Total</div><div class="kpi-value">${total}</div></div><div class="kpi-card"><div class="kpi-label">⚠️ High Risk</div><div class="kpi-value" style="color:#dc2626;">${highRisk}</div></div><div class="kpi-card"><div class="kpi-label">📡 Offline</div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div><div class="kpi-card"><div class="kpi-label">⚠️ High Reject</div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div><div class="kpi-card"><div class="kpi-label">📈 Avg Uptime</div><div class="kpi-value">${avgUptime.toFixed(1)}%</div></div>`;
+        document.getElementById('kpiGrid').innerHTML=`
+            <div class="kpi-card"><div class="kpi-label">📊 Total Kiosks</div><div class="kpi-value">${total}</div></div>
+            <div class="kpi-card"><div class="kpi-label">⚠️ High Risk</div><div class="kpi-value" style="color:#dc2626;">${highRisk}</div></div>
+            <div class="kpi-card"><div class="kpi-label">📡 Offline</div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div>
+            <div class="kpi-card"><div class="kpi-label">⚠️ High Reject (>8%)</div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div>
+            <div class="kpi-card"><div class="kpi-label">📈 Avg Uptime</div><div class="kpi-value">${avgUptime.toFixed(1)}%</div></div>
+        `;
         updateMap(f);
         const tbody=document.getElementById('tableBody');
         if(!f.length){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:40px;">No matching kiosks</td></tr>'; return; }
-        tbody.innerHTML=f.slice(0,500).map(r=>{ const rej=parseFloat(r['1 Day Reject %']||0), bin=parseFloat(r['Total Bin Full %']||0), up=parseFloat(r['7 Day Uptime %']||0), risk=calcRisk(r), level=getRiskLevel(risk), cls=level==='High Risk'?'badge-high':(level==='Medium Risk'?'badge-medium':'badge-low'), isHigh=level==='High Risk'; let barC=bin>95?'#dc2626':(bin>80?'#f97316':'#10b981');
-            return `<tr class="${isHigh?'high-risk-row':''}"><td><strong>${escapeHtml(r.Store||'—')}</strong></td><td>${escapeHtml(r.City||'—')}</td><td>${getRegion(r)}</td><td>${r['Kiosk State']||'Attract'}</td><td>${r['1 Day TX']||0}</td><td style="color:${rej>8?'#dc2626':'#16a34a'};font-weight:600;">${rej.toFixed(1)}%</td><td>${up.toFixed(1)}%</td><td>${bin.toFixed(0)}%<div class="fill-bar"><div class="fill-bar-fill" style="width:${Math.min(bin,100)}%;background:${barC};"></div></div></td><td><span class="badge ${cls}">${level}</span> (${risk.toFixed(0)})</td><td>${r['Estimated Fill Date']||'—'}</td></tr>`;
+        tbody.innerHTML=f.slice(0,500).map(r=>{ 
+            const rej=parseFloat(r['1 Day Reject %']||0), bin=parseFloat(r['Total Bin Full %']||0), up=parseFloat(r['7 Day Uptime %']||0), risk=calcRisk(r), level=getRiskLevel(risk); 
+            const cls=level==='High Risk'?'badge-high':(level==='Medium Risk'?'badge-medium':'badge-low'); 
+            const isHigh=level==='High Risk'; 
+            let barC=bin>95?'#dc2626':(bin>80?'#f97316':'#10b981');
+            return `<tr class="${isHigh?'high-risk-row':''}">
+                <td><strong>${escapeHtml(r.Store||'—')}</strong></td>
+                <td>${escapeHtml(r.City||'—')}</td>
+                <td>${getRegion(r)}</td>
+                <td>${r['Kiosk State']||'Attract'}</td>
+                <td>${r['1 Day TX']||0}</td>
+                <td style="color:${rej>8?'#dc2626':'#16a34a'};font-weight:600;">${rej.toFixed(1)}%</td>
+                <td>${up.toFixed(1)}%</td>
+                <td>${bin.toFixed(0)}%<div class="fill-bar"><div class="fill-bar-fill" style="width:${Math.min(bin,100)}%;background:${barC};"></div></div></td>
+                <td><span class="badge ${cls}">${level}</span> <span class="risk-score">(${risk.toFixed(0)})</span></td>
+                <td>${r['Estimated Fill Date']||'—'}</td>
+            </tr>`;
         }).join('');
         document.getElementById('lastUpdateTime').innerHTML=new Date().toLocaleString();
     }
+    
     function exportToExcelForBI(tool){
         const f=filterData(), data=f.map(r=>({Store:r.Store||'',City:r.City||'',Province:getRegion(r),Status:r['Kiosk State']||'', '1 Day TX':parseFloat(r['1 Day TX']||0),'Reject %':parseFloat(r['1 Day Reject %']||0),'7 Day Uptime %':parseFloat(r['7 Day Uptime %']||0),'Bin Full %':parseFloat(r['Total Bin Full %']||0),'Risk Score':calcRisk(r),'Risk Level':getRiskLevel(calcRisk(r))}));
         const ws=XLSX.utils.json_to_sheet(data); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Kiosk_Data'); XLSX.writeFile(wb,`kiosk_export_${tool.toLowerCase().replace(' ','_')}_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.xlsx`);
-        showModal(`${tool} Export Complete`,`<p>File downloaded. Open in ${tool} to create dashboards.</p>`); showToast(`Exported for ${tool}`);
+        showModal(`${tool} Export Complete`,`<p>File downloaded. Open in ${tool} to create dashboards.</p><p>📁 File saved to your Downloads folder.</p>`); showToast(`📎 Exported for ${tool}`);
     }
-    async function takeScreenshot(){ showToast('Capturing...'); try{ const el=document.querySelector('.container'), canvas=await html2canvas(el,{scale:2,backgroundColor:'#f0f2f5'}); canvas.toBlob(async b=>{ try{ await navigator.clipboard.write([new ClipboardItem({[b.type]:b})]); showToast('Screenshot copied!'); }catch{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`kiosk_snapshot_${Date.now()}.png`; a.click(); showToast('Screenshot saved'); } }); }catch(e){ showToast('Failed'); } }
+    
+    async function takeScreenshot(){ showToast('📸 Capturing...'); try{ const el=document.querySelector('.container'), canvas=await html2canvas(el,{scale:2,backgroundColor:'#f0f2f5'}); canvas.toBlob(async b=>{ try{ await navigator.clipboard.write([new ClipboardItem({[b.type]:b})]); showToast('✅ Screenshot copied!'); }catch{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`kiosk_snapshot_${Date.now()}.png`; a.click(); showToast('📸 Screenshot saved'); } }); }catch(e){ showToast('❌ Failed'); } }
+    
     document.getElementById('powerBIExportBtn')?.addEventListener('click',()=>exportToExcelForBI('Power BI'));
     document.getElementById('tableauExportBtn')?.addEventListener('click',()=>exportToExcelForBI('Tableau'));
     document.getElementById('snapshotBtn')?.addEventListener('click',takeScreenshot);
     function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+    
     loadFromLocalStorage();
 </script>
 </body>
