@@ -3,15 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiosk Intelligence Platform | Canada Only</title>
-    <!-- 
-      ============================================
-      © 2025 LogicLegion (JE)
-      Kiosk Intelligence Platform
-      All rights reserved.
-      Built by Jean Eljaalouk
-      ============================================
-    -->
+    <title>Kiosk Intelligence Platform | Canada</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -24,7 +16,6 @@
         .header { background: linear-gradient(135deg, #0f2b44, #1e3a5f); border-radius: 24px; padding: 20px 28px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
         .header h1 { font-size: 22px; color: white; }
         .live-tag { background: #10b981; padding: 3px 10px; border-radius: 30px; font-size: 10px; color: white; display: inline-block; margin-left: 10px; }
-        .region-badge { background: #dc2626; padding: 3px 10px; border-radius: 30px; font-size: 10px; color: white; display: inline-block; margin-left: 10px; }
         .copyright { font-size: 10px; color: #64748b; text-align: center; margin-top: 16px; padding: 8px; border-top: 1px solid #e2e8f0; }
         .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
         .action-btn { background: rgba(255,255,255,0.15); border: none; padding: 8px 16px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; }
@@ -49,7 +40,7 @@
         select, input, button { padding: 8px 12px; border-radius: 10px; font-size: 12px; background: white; border: 1px solid #e2e8f0; }
         button { background: #1e3a5f; color: white; border: none; cursor: pointer; font-weight: 600; }
         .table-wrapper { background: white; border-radius: 16px; overflow: auto; max-height: 450px; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1100px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1000px; }
         th { text-align: left; padding: 14px 12px; background: #f8fafc; font-weight: 700; border-bottom: 2px solid #e2e8f0; cursor: pointer; position: sticky; top: 0; }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
         .high-risk-row { background-color: #fee2e2; }
@@ -70,9 +61,7 @@
 <body>
 <div class="container">
     <div class="header">
-        <div>
-            <h1>🗺️ Canada Kiosk Intelligence <span class="live-tag">LIVE</span><span class="region-badge">🇨🇦 STRICT CANADA - NO USA</span></h1>
-        </div>
+        <div><h1>🗺️ Kiosk Intelligence Platform <span class="live-tag">LIVE</span></h1></div>
         <div class="action-buttons" id="actionButtons" style="display:none;">
             <button class="action-btn upload-btn" id="showUploadBtn">📂 Upload CSV</button>
             <button class="action-btn" id="powerBIExportBtn">📊 Power BI</button>
@@ -87,11 +76,11 @@
         <div class="kpi-grid" id="kpiGrid"></div>
         <div class="info-bar"><div>🕐 Last updated: <span id="lastUpdateTime">-</span></div><div>📍 🔴=High Risk 🟡=Medium 🟢=Low</div></div>
         <div class="chip-bar" id="chipBar"></div>
-        <div class="map-container"><div class="map-title">🗺️ Canada Kiosk Locations (Strict Province Filter)</div><div id="map"></div></div>
+        <div class="map-container"><div class="map-title">🗺️ Kiosk Locations</div><div id="map"></div></div>
         <div class="filters">
-            <div class="filter-group"><label>📍 Province</label><select id="provinceFilter"><option value="all">All</option></select></div>
+            <div class="filter-group"><label>📍 Province/State</label><select id="provinceFilter"><option value="all">All</option></select></div>
             <div class="filter-group"><label>⚠️ Risk Level</label><select id="riskFilter"><option value="all">All</option><option value="high">High Risk Only</option></select></div>
-            <div class="filter-group"><label>🔍 Search</label><input type="text" id="searchInput" placeholder="Store, city, or address..."></div>
+            <div class="filter-group"><label>🔍 Search</label><input type="text" id="searchInput" placeholder="Store or city..."></div>
             <button id="manualRefreshBtn">🔄 Refresh</button>
             <button id="resetBtn">Reset</button>
         </div>
@@ -102,7 +91,7 @@
                         <th data-sort="store">Store ↕️</th>
                         <th data-sort="address">Address ↕️</th>
                         <th data-sort="city">City ↕️</th>
-                        <th data-sort="province">Province ↕️</th>
+                        <th data-sort="province">Province/State ↕️</th>
                         <th data-sort="status">Status ↕️</th>
                         <th data-sort="tx">1D TX ↕️</th>
                         <th data-sort="reject">Reject% ↕️</th>
@@ -112,43 +101,16 @@
                         <th data-sort="fill">Est. Fill ↕️</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody"><tr><td colspan="11">No data loaded. Upload a CSV file. </tbody>
+                <tbody id="tableBody"></tbody>
             </table>
         </div>
-        <div class="footer">💡 Click column headers to sort | Export to Power BI or Tableau | 🇨🇦 STRICT: Only Canadian provinces shown</div>
-        <div class="copyright">© 2025 LogicLegion (JE) | Built by Jean Eljaalouk | All rights reserved</div>
+        <div class="footer">💡 Click column headers to sort | Export to Power BI or Tableau</div>
+        <div class="copyright">© 2025 LogicLegion (JE) | Built by Jean Eljaalouk</div>
     </div>
 </div>
 <div id="toast" class="toast"></div>
 <script>
-    let allData = [], map = null, markers = [], currentSort = { column: 'reject', direction: 'desc' }, activeChips = { highRisk: false, offline: false, fullBins: false };
-    
-    // ONLY these are allowed - Canadian provinces (2-letter codes and full names)
-    const CANADIAN_PROVINCES = [
-        'ON', 'QC', 'BC', 'AB', 'MB', 'SK', 'NS', 'NB', 'NL', 'PE', 'NT', 'YT', 'NU',
-        'Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba', 'Saskatchewan', 
-        'Nova Scotia', 'New Brunswick', 'Newfoundland', 'Prince Edward Island', 
-        'Northwest Territories', 'Yukon', 'Nunavut'
-    ];
-    
-    // US state codes (to explicitly EXCLUDE)
-    const US_STATES = [
-        'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
-        'California', 'Texas', 'Florida', 'New York', 'Illinois', 'Pennsylvania', 'Ohio', 'Georgia', 'North Carolina', 'Michigan'
-    ];
-    
-    function isCanadian(row) {
-        let prov = (row.State || row.Province || '').trim();
-        if (!prov) return false;
-        
-        // Explicitly exclude US states
-        if (US_STATES.includes(prov) || US_STATES.includes(prov.toUpperCase())) {
-            return false;
-        }
-        
-        // Check if it's a Canadian province
-        return CANADIAN_PROVINCES.includes(prov) || CANADIAN_PROVINCES.includes(prov.toUpperCase());
-    }
+    let allData = [], map = null, markers = [], currentSort = { column: 'reject', direction: 'desc' }, refreshInterval = null, activeChips = { highRisk: false, offline: false, fullBins: false };
     
     function showToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
     function showModal(t, c) { document.getElementById('modalTitle').textContent = t; document.getElementById('modalBody').innerHTML = c; document.getElementById('instructionModal').style.display = 'flex'; }
@@ -174,17 +136,22 @@
         }
         if (allData.length === 0) { showToast('Error: No valid data rows'); return; }
         
-        // Count Canada vs non-Canada
-        let canadaCount = allData.filter(r => isCanadian(r)).length;
+        // Debug: Show first row's State/Province value
+        console.log('First row State:', allData[0].State);
+        console.log('First row Province:', allData[0].Province);
         
         document.getElementById('dashboard').style.display = 'block';
         document.getElementById('uploadArea').style.display = 'none';
         document.getElementById('actionButtons').style.display = 'flex';
         populateFilters(); setupSorting(); setupChips(); renderAll();
-        showToast(`✅ Loaded ${canadaCount} Canadian kiosks (${allData.length - canadaCount} non-Canada filtered out)`);
+        showToast(`✅ Loaded ${allData.length} kiosks`);
     }
     
-    function getRegion(r) { return r.State || r.Province || 'Unknown'; }
+    function getRegion(r) { 
+        // Try multiple possible column names
+        return r.State || r.Province || r['Province/State'] || r.Region || 'Unknown';
+    }
+    
     function calcRisk(r) {
         let rej = parseFloat(r['1 Day Reject %'] || 0), up = parseFloat(r['7 Day Uptime %'] || 0), bin = parseFloat(r['Total Bin Full %'] || 0), off = r['Kiosk State'] === 'Offline';
         let s = (rej * 2.5) + (100 - up) * 1.5 + (bin / 2); if (off) s += 60; return Math.min(Math.max(s, 0), 100);
@@ -193,10 +160,13 @@
     function getRiskColor(s) { if (s >= 60) return '#dc2626'; if (s >= 30) return '#f97316'; return '#10b981'; }
     
     function populateFilters() {
-        let regions = [...new Set(allData.map(r => getRegion(r)))].filter(r => r && r !== 'Unknown' && isCanadian(r));
+        let regions = [...new Set(allData.map(r => getRegion(r)))].filter(r => r && r !== 'Unknown');
         let sel = document.getElementById('provinceFilter');
-        sel.innerHTML = '<option value="all">All Provinces</option>';
+        sel.innerHTML = '<option value="all">🌎 All Regions</option>';
         regions.sort().forEach(r => sel.innerHTML += `<option value="${r}">${r}</option>`);
+        
+        console.log('Regions found:', regions);
+        
         document.getElementById('provinceFilter').onchange = () => renderAll();
         document.getElementById('riskFilter').onchange = () => renderAll();
         document.getElementById('searchInput').oninput = () => renderAll();
@@ -215,8 +185,6 @@
     
     function filterData() {
         let f = [...allData];
-        // STRICT Canada filter - only by province
-        f = f.filter(r => isCanadian(r));
         let prov = document.getElementById('provinceFilter')?.value || 'all';
         if (prov !== 'all') f = f.filter(r => getRegion(r) === prov);
         let s = document.getElementById('searchInput')?.value.toLowerCase() || '';
@@ -233,10 +201,7 @@
         if (!map) { map = L.map('map').setView([56.1304, -106.3468], 4); L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>' }).addTo(map); }
         markers.forEach(m => map.removeLayer(m)); markers = [];
         
-        // Only show Canadian kiosks by province
-        let canadaOnly = data.filter(r => isCanadian(r));
-        
-        canadaOnly.forEach(r => { 
+        data.forEach(r => { 
             let lat = parseFloat(r.Latitude), lng = parseFloat(r.Longitude);
             if (isNaN(lat) || isNaN(lng)) return;
             let risk = calcRisk(r), color = getRiskColor(risk);
@@ -247,17 +212,16 @@
         });
         
         if (markers.length > 0) map.fitBounds(markers.map(m => m.getLatLng()));
-        else map.setView([56.1304, -106.3468], 4);
     }
     
     function renderAll() {
         if (!allData.length) return;
         let f = filterData(); f = sortData(f);
         let total = f.length, highRisk = f.filter(r => getRiskLevel(calcRisk(r)) === 'High Risk').length, offline = f.filter(r => r['Kiosk State'] === 'Offline').length, highReject = f.filter(r => parseFloat(r['1 Day Reject %'] || 0) > 8).length, avgUptime = f.reduce((s, r) => s + (parseFloat(r['7 Day Uptime %'] || 0)), 0) / (f.length || 1);
-        document.getElementById('kpiGrid').innerHTML = `<div class="kpi-card"><div class="kpi-label">Total Kiosks (Canada)</div><div class="kpi-value">${total}</div></div><div class="kpi-card"><div class="kpi-label">High Risk</div><div class="kpi-value" style="color:#dc2626;">${highRisk}</div></div><div class="kpi-card"><div class="kpi-label">Offline</div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div><div class="kpi-card"><div class="kpi-label">High Reject (>8%)</div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div><div class="kpi-card"><div class="kpi-label">Avg Uptime</div><div class="kpi-value">${avgUptime.toFixed(1)}%</div></div>`;
+        document.getElementById('kpiGrid').innerHTML = `<div class="kpi-card"><div class="kpi-label">Total Kiosks</div><div class="kpi-value">${total}</div></div><div class="kpi-card"><div class="kpi-label">High Risk</div><div class="kpi-value" style="color:#dc2626;">${highRisk}</div></div><div class="kpi-card"><div class="kpi-label">Offline</div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div><div class="kpi-card"><div class="kpi-label">High Reject (>8%)</div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div><div class="kpi-card"><div class="kpi-label">Avg Uptime</div><div class="kpi-value">${avgUptime.toFixed(1)}%</div></div>`;
         updateMap(f);
         let tbody = document.getElementById('tableBody');
-        if (!f.length) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;">No matching kiosks in Canada</td></tr>'; return; }
+        if (!f.length) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;">No matching kiosks</tbody>'; return; }
         tbody.innerHTML = f.slice(0, 500).map(r => {
             let rej = parseFloat(r['1 Day Reject %'] || 0), bin = parseFloat(r['Total Bin Full %'] || 0), up = parseFloat(r['7 Day Uptime %'] || 0), risk = calcRisk(r), level = getRiskLevel(risk), cls = level === 'High Risk' ? 'badge-high' : (level === 'Medium Risk' ? 'badge-medium' : 'badge-low'), isHigh = level === 'High Risk';
             let barC = bin > 95 ? '#dc2626' : (bin > 80 ? '#f97316' : '#10b981');
@@ -273,25 +237,25 @@
                 <td>${bin.toFixed(0)}%<div class="fill-bar"><div class="fill-bar-fill" style="width:${Math.min(bin, 100)}%;background:${barC};"></div></div></td>
                 <td><span class="badge ${cls}">${level}</span> <span style="font-size:11px;color:#64748b;">(${risk.toFixed(0)})</span></td>
                 <td>${r['Estimated Fill Date'] || '—'}</td>
-             </tr>`;
+            </tr>`;
         }).join('');
         document.getElementById('lastUpdateTime').innerHTML = new Date().toLocaleString();
     }
     
     function exportToExcelForBI(tool) {
         let f = filterData(), data = f.map(r => ({ Store: r.Store || '', Address: r.Address || '', City: r.City || '', Province: getRegion(r), Status: r['Kiosk State'] || '', '1 Day TX': parseFloat(r['1 Day TX'] || 0), 'Reject %': parseFloat(r['1 Day Reject %'] || 0), '7 Day Uptime %': parseFloat(r['7 Day Uptime %'] || 0), 'Bin Full %': parseFloat(r['Total Bin Full %'] || 0), 'Risk Score': calcRisk(r), 'Risk Level': getRiskLevel(calcRisk(r)) }));
-        let ws = XLSX.utils.json_to_sheet(data), wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Canada_Kiosk_Data'); XLSX.writeFile(wb, `canada_kiosk_export_${tool.toLowerCase().replace(' ', '_')}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.xlsx`);
-        showModal(`${tool} Export Complete`, `<p>File downloaded.</p><p>🇨🇦 Data filtered to Canada only.</p>`); showToast(`Exported ${f.length} Canadian kiosks for ${tool}`);
+        let ws = XLSX.utils.json_to_sheet(data), wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Kiosk_Data'); XLSX.writeFile(wb, `kiosk_export_${tool.toLowerCase().replace(' ', '_')}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.xlsx`);
+        showModal(`${tool} Export Complete`, `<p>File downloaded. Open in ${tool}.</p>`); showToast(`Exported for ${tool}`);
     }
     
-    async function takeScreenshot() { showToast('Capturing...'); try { let el = document.querySelector('.container'), canvas = await html2canvas(el, { scale: 2, backgroundColor: '#f0f2f5' }); canvas.toBlob(async b => { try { await navigator.clipboard.write([new ClipboardItem({ [b.type]: b })]); showToast('Screenshot copied!'); } catch { let a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `canada_kiosk_snapshot_${Date.now()}.png`; a.click(); showToast('Screenshot saved'); } }); } catch (e) { showToast('Failed'); } }
+    async function takeScreenshot() { showToast('Capturing...'); try { let el = document.querySelector('.container'), canvas = await html2canvas(el, { scale: 2, backgroundColor: '#f0f2f5' }); canvas.toBlob(async b => { try { await navigator.clipboard.write([new ClipboardItem({ [b.type]: b })]); showToast('Screenshot copied!'); } catch { let a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `kiosk_snapshot_${Date.now()}.png`; a.click(); showToast('Screenshot saved'); } }); } catch (e) { showToast('Failed'); } }
     
     document.getElementById('powerBIExportBtn')?.addEventListener('click', () => exportToExcelForBI('Power BI'));
     document.getElementById('tableauExportBtn')?.addEventListener('click', () => exportToExcelForBI('Tableau'));
     document.getElementById('snapshotBtn')?.addEventListener('click', takeScreenshot);
     function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
     
-    console.log('Strict Canada-only dashboard ready. Only Canadian provinces will appear.');
+    console.log('Dashboard ready. Upload your CSV file.');
 </script>
 </body>
 </html>
