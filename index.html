@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kiosk Intelligence Platform | Canada</title>
+    <!-- 
+      ============================================
+      © 2025 LogicLegion (JE)
+      Kiosk Intelligence Platform
+      All rights reserved. Unauthorized copying,
+      modification, or distribution prohibited.
+      Built by Jean Eljaalouk - Coinstar Canada
+      ============================================
+    -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -17,6 +26,7 @@
         .header h1 { font-size: 22px; color: white; }
         .live-tag { background: #10b981; padding: 3px 10px; border-radius: 30px; font-size: 10px; color: white; display: inline-block; margin-left: 10px; }
         .region-badge { background: #3b82f6; padding: 3px 10px; border-radius: 30px; font-size: 10px; color: white; display: inline-block; margin-left: 10px; }
+        .copyright { font-size: 10px; color: #64748b; text-align: center; margin-top: 16px; padding: 8px; border-top: 1px solid #e2e8f0; }
         .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
         .action-btn { background: rgba(255,255,255,0.15); border: none; padding: 8px 16px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; }
         .action-btn:hover { background: rgba(255,255,255,0.25); }
@@ -103,17 +113,17 @@
                         <th data-sort="fill">Est. Fill ↕️</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody"><tr><td colspan="11">No data loaded. Upload a CSV file.</td></tr></tbody>
+                <tbody id="tableBody"><tr><td colspan="11">No data loaded. Upload a CSV file.<th>Est. Fill ↕️</th></td></tbody>
             </table>
         </div>
-        <div class="footer">💡 Click column headers to sort | Export to Power BI or Tableau | 🇨🇦 Currently showing CANADA only</div>
+        <div class="footer">💡 Click column headers to sort | Export to Power BI or Tableau | 🇨🇦 Canada only</div>
+        <div class="copyright">© 2025 LogicLegion (JE) | Built by Jean Eljaalouk | All rights reserved</div>
     </div>
 </div>
 <div id="toast" class="toast"></div>
 <script>
     let allData = [], map = null, markers = [], currentSort = { column: 'reject', direction: 'desc' }, activeChips = { highRisk: false, offline: false, fullBins: false };
     
-    // Canadian provinces and territories - used to filter map data
     const CANADIAN_PROVINCES = ['ON', 'QC', 'BC', 'AB', 'MB', 'SK', 'NS', 'NB', 'NL', 'PE', 'NT', 'YT', 'NU', 'Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba', 'Saskatchewan', 'Nova Scotia', 'New Brunswick', 'Newfoundland', 'Prince Edward Island', 'Northwest Territories', 'Yukon', 'Nunavut'];
     
     function isCanadian(row) {
@@ -126,6 +136,7 @@
     function closeModal() { document.getElementById('instructionModal').style.display = 'none'; }
     document.getElementById('showUploadBtn')?.addEventListener('click', () => document.getElementById('csvFile').click());
     document.getElementById('csvFile').addEventListener('change', e => { if (e.target.files[0]) { let r = new FileReader(); r.onload = ev => parseCSV(ev.target.result); r.readAsText(e.target.files[0]); showToast('Loading file...'); } });
+    
     function parseCSV(t) {
         let lines = t.split(/\r?\n/);
         if (lines.length < 2) { showToast('Error: Empty file'); return; }
@@ -147,8 +158,9 @@
         document.getElementById('uploadArea').style.display = 'none';
         document.getElementById('actionButtons').style.display = 'flex';
         populateFilters(); setupSorting(); setupChips(); renderAll();
-        showToast(`✅ Loaded ${allData.length} kiosks (Canada only)`);
+        showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
     }
+    
     function getRegion(r) { return r.State || r.Province || 'Unknown'; }
     function calcRisk(r) {
         let rej = parseFloat(r['1 Day Reject %'] || 0), up = parseFloat(r['7 Day Uptime %'] || 0), bin = parseFloat(r['Total Bin Full %'] || 0), off = r['Kiosk State'] === 'Offline';
@@ -156,6 +168,7 @@
     }
     function getRiskLevel(s) { if (s >= 60) return 'High Risk'; if (s >= 30) return 'Medium Risk'; return 'Low Risk'; }
     function getRiskColor(s) { if (s >= 60) return '#dc2626'; if (s >= 30) return '#f97316'; return '#10b981'; }
+    
     function populateFilters() {
         let regions = [...new Set(allData.map(r => getRegion(r)))].filter(r => r && r !== 'Unknown' && isCanadian(r));
         let sel = document.getElementById('provinceFilter');
@@ -167,6 +180,7 @@
         document.getElementById('manualRefreshBtn').onclick = () => renderAll();
         document.getElementById('resetBtn').onclick = () => { document.getElementById('provinceFilter').value = 'all'; document.getElementById('riskFilter').value = 'all'; document.getElementById('searchInput').value = ''; activeChips = { highRisk: false, offline: false, fullBins: false }; updateChipUI(); renderAll(); };
     }
+    
     function setupChips() {
         let bar = document.getElementById('chipBar');
         bar.innerHTML = `<div class="chip ${activeChips.highRisk ? 'chip-active' : ''}" data-chip="highRisk">🔴 High Risk Only</div><div class="chip ${activeChips.offline ? 'chip-active' : ''}" data-chip="offline">📡 Offline Only</div><div class="chip ${activeChips.fullBins ? 'chip-active' : ''}" data-chip="fullBins">🪣 Full Bins (>90%)</div><div class="chip chip-clear" id="clearChips">✖ Clear all</div>`;
@@ -175,9 +189,9 @@
     }
     function updateChipUI() { document.querySelectorAll('.chip[data-chip]').forEach(c => { let k = c.getAttribute('data-chip'); if (activeChips[k]) c.classList.add('chip-active'); else c.classList.remove('chip-active'); }); }
     function setupSorting() { document.querySelectorAll('#dataTable th').forEach(th => th.addEventListener('click', () => { let k = th.getAttribute('data-sort'); if (currentSort.column === k) currentSort.direction = currentSort.direction === 'desc' ? 'asc' : 'desc'; else { currentSort.column = k; currentSort.direction = 'desc'; } renderAll(); })); }
+    
     function filterData() {
         let f = [...allData];
-        // Filter to Canada only
         f = f.filter(r => isCanadian(r));
         let prov = document.getElementById('provinceFilter')?.value || 'all';
         if (prov !== 'all') f = f.filter(r => getRegion(r) === prov);
@@ -188,11 +202,12 @@
         if (activeChips.fullBins) f = f.filter(r => parseFloat(r['Total Bin Full %'] || 0) > 90);
         return f;
     }
+    
     function sortData(d) { return [...d].sort((a, b) => { let va, vb; switch (currentSort.column) { case 'store': va = (a.Store || '').toLowerCase(); vb = (b.Store || '').toLowerCase(); break; case 'address': va = (a.Address || '').toLowerCase(); vb = (b.Address || '').toLowerCase(); break; case 'city': va = (a.City || '').toLowerCase(); vb = (b.City || '').toLowerCase(); break; case 'province': va = getRegion(a); vb = getRegion(b); break; case 'status': va = a['Kiosk State'] || ''; vb = b['Kiosk State'] || ''; break; case 'tx': va = parseFloat(a['1 Day TX'] || 0); vb = parseFloat(b['1 Day TX'] || 0); break; case 'reject': va = parseFloat(a['1 Day Reject %'] || 0); vb = parseFloat(b['1 Day Reject %'] || 0); break; case 'uptime': va = parseFloat(a['7 Day Uptime %'] || 0); vb = parseFloat(b['7 Day Uptime %'] || 0); break; case 'bin': va = parseFloat(a['Total Bin Full %'] || 0); vb = parseFloat(b['Total Bin Full %'] || 0); break; case 'risk': va = calcRisk(a); vb = calcRisk(b); break; default: return 0; } if (typeof va === 'number') return currentSort.direction === 'desc' ? vb - va : va - vb; return currentSort.direction === 'desc' ? vb.localeCompare(va) : va.localeCompare(va); }); }
+    
     function updateMap(data) {
         if (!map) { map = L.map('map').setView([56.1304, -106.3468], 4); L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>' }).addTo(map); }
         markers.forEach(m => map.removeLayer(m)); markers = [];
-        // Only show Canadian kiosks on map
         let canadaOnly = data.filter(r => isCanadian(r));
         canadaOnly.forEach(r => { let lat = parseFloat(r.Latitude), lng = parseFloat(r.Longitude);
             if (isNaN(lat) || isNaN(lng)) return;
@@ -204,6 +219,7 @@
         });
         if (markers.length > 0) map.fitBounds(markers.map(m => m.getLatLng()));
     }
+    
     function renderAll() {
         if (!allData.length) return;
         let f = filterData(); f = sortData(f);
@@ -231,16 +247,20 @@
         }).join('');
         document.getElementById('lastUpdateTime').innerHTML = new Date().toLocaleString();
     }
+    
     function exportToExcelForBI(tool) {
         let f = filterData(), data = f.map(r => ({ Store: r.Store || '', Address: r.Address || '', City: r.City || '', Province: getRegion(r), Status: r['Kiosk State'] || '', '1 Day TX': parseFloat(r['1 Day TX'] || 0), 'Reject %': parseFloat(r['1 Day Reject %'] || 0), '7 Day Uptime %': parseFloat(r['7 Day Uptime %'] || 0), 'Bin Full %': parseFloat(r['Total Bin Full %'] || 0), 'Risk Score': calcRisk(r), 'Risk Level': getRiskLevel(calcRisk(r)) }));
         let ws = XLSX.utils.json_to_sheet(data), wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Canada_Kiosk_Data'); XLSX.writeFile(wb, `canada_kiosk_export_${tool.toLowerCase().replace(' ', '_')}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.xlsx`);
-        showModal(`${tool} Export Complete`, `<p>File downloaded. Open in ${tool}.</p><p>🇨🇦 Data filtered to Canada only.</p>`); showToast(`Exported ${f.length} Canadian kiosks for ${tool}`);
+        showModal(`${tool} Export Complete`, `<p>File downloaded.</p><p>🇨🇦 Data filtered to Canada only.</p>`); showToast(`Exported ${f.length} Canadian kiosks for ${tool}`);
     }
+    
     async function takeScreenshot() { showToast('Capturing...'); try { let el = document.querySelector('.container'), canvas = await html2canvas(el, { scale: 2, backgroundColor: '#f0f2f5' }); canvas.toBlob(async b => { try { await navigator.clipboard.write([new ClipboardItem({ [b.type]: b })]); showToast('Screenshot copied!'); } catch { let a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `canada_kiosk_snapshot_${Date.now()}.png`; a.click(); showToast('Screenshot saved'); } }); } catch (e) { showToast('Failed'); } }
+    
     document.getElementById('powerBIExportBtn')?.addEventListener('click', () => exportToExcelForBI('Power BI'));
     document.getElementById('tableauExportBtn')?.addEventListener('click', () => exportToExcelForBI('Tableau'));
     document.getElementById('snapshotBtn')?.addEventListener('click', takeScreenshot);
     function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
+    
     console.log('Canada-only dashboard ready. Upload your CSV file.');
 </script>
 </body>
