@@ -36,7 +36,7 @@
         select, input, button { padding: 8px 12px; border-radius: 10px; font-size: 12px; background: white; border: 1px solid #e2e8f0; }
         button { background: #1e3a5f; color: white; border: none; cursor: pointer; font-weight: 600; }
         .table-wrapper { background: white; border-radius: 16px; overflow: auto; max-height: 450px; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1200px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1300px; }
         th { text-align: left; padding: 14px 12px; background: #f8fafc; font-weight: 700; border-bottom: 2px solid #e2e8f0; cursor: pointer; position: sticky; top: 0; }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
         .high-risk-row { background-color: #fee2e2; }
@@ -70,10 +70,10 @@
     <div class="upload-area" id="uploadArea" onclick="document.getElementById('csvFile').click()"><div style="font-size:48px;">📊</div><h3>Upload Fleet Data</h3><p>Click to select your CSV file</p></div>
     <div id="dashboard" style="display:none">
         <div class="kpi-grid" id="kpiGrid"></div>
-        <div class="info-bar"><div>🕐 Last updated: <span id="lastUpdateTime">-</span></div><div>⚡ Click column headers to sort | Loss estimated at $5/transaction</div></div>
+        <div class="info-bar"><div>🕐 Last updated: <span id="lastUpdateTime">-</span></div><div>⚡ Click column headers to sort | Loss = $5/transaction</div></div>
         
         <div class="chart-container">
-            <div class="chart-title">💰 Revenue Loss by Province (Daily)</div>
+            <div class="chart-title">💰 Daily Revenue Loss by Province</div>
             <canvas id="lossChart"></canvas>
         </div>
         
@@ -89,24 +89,24 @@
             <table id="dataTable">
                 <thead>
                     <tr>
-                        <th data-sort="store">Store ↕️</th>
-                        <th data-sort="address">Address ↕️</th>
-                        <th data-sort="city">City ↕️</th>
-                        <th data-sort="province">Province ↕️</th>
-                        <th data-sort="status">Status ↕️</th>
-                        <th data-sort="tx">1D TX ↕️</th>
-                        <th data-sort="reject">Reject% ↕️</th>
-                        <th data-sort="uptime">Uptime% ↕️</th>
-                        <th data-sort="bin">Bin% ↕️</th>
-                        <th data-sort="risk">Risk Level ↕️</th>
-                        <th data-sort="loss">Est. Daily Loss ↕️</th>
-                        <th data-sort="fill">Est. Fill ↕️</th>
+                        <th data-sort="store">Store</th>
+                        <th data-sort="address">Address</th>
+                        <th data-sort="city">City</th>
+                        <th data-sort="province">Province</th>
+                        <th data-sort="status">Status</th>
+                        <th data-sort="tx">1D TX</th>
+                        <th data-sort="reject">Reject%</th>
+                        <th data-sort="uptime">Uptime%</th>
+                        <th data-sort="bin">Bin%</th>
+                        <th data-sort="risk">Risk Level</th>
+                        <th data-sort="loss">Daily Loss ($)</th>
+                        <th data-sort="fill">Est. Fill</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"><tr><td colspan="12">No data loaded. Upload a CSV file.</tbody>
             </table>
         </div>
-        <div class="footer">💡 High Risk = Score 60+ | Medium Risk = 30-59 | Low Risk = 0-29 | Loss = Lost transactions × $5</div>
+        <div class="footer">💡 High Risk = Score 60+ | Medium = 30-59 | Low = 0-29 | Daily Loss = Lost transactions × $5</div>
         <div class="copyright">© 2025 LogicLegion (JE) | Built by Jean Eljaalouk</div>
     </div>
 </div>
@@ -146,13 +146,14 @@
         }
         if (allData.length === 0) { showToast('Error: No valid data rows'); return; }
         
+        let originalCount = allData.length;
         allData = allData.filter(row => isCanadian(row));
         
         document.getElementById('dashboard').style.display = 'block';
         document.getElementById('uploadArea').style.display = 'none';
         document.getElementById('actionButtons').style.display = 'flex';
         populateFilters(); setupSorting(); renderAll();
-        showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
+        showToast(`✅ Loaded ${allData.length} Canadian kiosks (${originalCount - allData.length} non-Canada filtered)`);
     }
     
     function getRegion(r) { return r.State || r.Province || 'Unknown'; }
@@ -179,12 +180,10 @@
         let reject = parseFloat(r['1 Day Reject %'] || 0);
         let uptime = parseFloat(r['7 Day Uptime %'] || 0);
         
-        // Lost transactions from rejects + downtime
         let lostFromReject = tx * (reject / 100);
         let lostFromDowntime = tx * ((100 - uptime) / 100) * 0.5;
         let totalLost = lostFromReject + lostFromDowntime;
         
-        // $5 per transaction estimate
         return totalLost * 5;
     }
     
@@ -223,16 +222,12 @@
         let f = [...allData];
         
         let prov = document.getElementById('provinceFilter')?.value || 'all';
-        if (prov !== 'all') {
-            f = f.filter(r => getRegion(r) === prov);
-        }
+        if (prov !== 'all') f = f.filter(r => getRegion(r) === prov);
         
         let s = document.getElementById('searchInput')?.value.toLowerCase() || '';
-        if (s) {
-            f = f.filter(r => (r.Store || '').toLowerCase().includes(s) || 
+        if (s) f = f.filter(r => (r.Store || '').toLowerCase().includes(s) || 
                               (r.City || '').toLowerCase().includes(s) || 
                               (r.Address || '').toLowerCase().includes(s));
-        }
         
         let riskFilter = document.getElementById('riskFilter')?.value || 'all';
         if (riskFilter !== 'all') {
@@ -331,7 +326,7 @@
         
         let tbody = document.getElementById('tableBody');
         if (!f.length) { 
-            tbody.innerHTML = '<table><td colspan="12" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; 
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; 
             return; 
         }
         
@@ -359,7 +354,7 @@
                 <td><span class="badge ${cls}">${riskLevel}</span> <span style="font-size:11px;color:#64748b;">(${riskScore.toFixed(0)})</span></td>
                 <td style="color:#dc2626;font-weight:600;">$${dailyLoss.toFixed(0)}</td>
                 <td>${r['Estimated Fill Date'] || '—'}</td>
-             </tr>`;
+            <tr>`;
         }).join('');
         document.getElementById('lastUpdateTime').innerHTML = new Date().toLocaleString();
     }
