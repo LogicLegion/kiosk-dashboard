@@ -1,0 +1,16 @@
+# 🗺️ Kiosk Intelligence Platform
+
+Live dashboard for monitoring kiosk performance across Canada.
+
+🔗 **Live Demo:** https://logiclegion.github.io/kiosk-dashboard/
+
+## Features
+- 📊 Real-time risk scoring
+- 💰 Daily revenue loss tracking ($286/day current)
+- 🍁 Canada-only data filtering
+- 📎 Export to Power BI / Tableau
+
+## Built With
+- HTML, CSS, JavaScript
+- Chart.js, Leaflet
+- GitHub Pages
