@@ -103,7 +103,7 @@
                         <th data-sort="fill">Est. Fill</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody"><td><td colspan="12">No data loaded. Upload a CSV file.</tbody>
+                <tbody id="tableBody"><tr><td colspan="12">No data loaded. Upload a CSV file.</tbody>
             </table>
         </div>
         <div class="footer">💡 High Risk = Score 60+ | Medium = 30-59 | Low = 0-29 | Daily Loss = Lost transactions × $5</div>
@@ -120,14 +120,6 @@
     function isCanadian(row) {
         let prov = (row.State || row.Province || '').trim().toUpperCase();
         return CANADIAN_PROVINCES.includes(prov);
-    }
-    
-    // Extract risk level from text like "High Risk (100)" - just looks for the word
-    function getRiskLevelFromText(text) {
-        if (!text) return 'Low Risk';
-        if (text.includes('High Risk')) return 'High Risk';
-        if (text.includes('Medium Risk')) return 'Medium Risk';
-        return 'Low Risk';
     }
     
     function showToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
@@ -177,15 +169,10 @@
         return Math.min(Math.max(score, 0), 100);
     }
     
-    function getRiskLevelFromScore(score) {
+    function getRiskLevel(score) {
         if (score >= 60) return 'High Risk';
         if (score >= 30) return 'Medium Risk';
         return 'Low Risk';
-    }
-    
-    function getDisplayRiskText(score) {
-        let level = getRiskLevelFromScore(score);
-        return `${level} (${Math.round(score)})`;
     }
     
     function calcDailyLoss(r) {
@@ -242,11 +229,12 @@
                               (r.City || '').toLowerCase().includes(s) || 
                               (r.Address || '').toLowerCase().includes(s));
         
+        // THIS IS THE FIX - filter by calculated risk score, not the text
         let riskFilter = document.getElementById('riskFilter')?.value || 'all';
         if (riskFilter !== 'all') {
             f = f.filter(r => {
                 let score = calcRisk(r);
-                let level = getRiskLevelFromScore(score).toLowerCase();
+                let level = getRiskLevel(score).toLowerCase();
                 return level === riskFilter;
             });
         }
@@ -325,7 +313,7 @@
         f = sortData(f);
         
         let total = f.length;
-        let highRisk = f.filter(r => getRiskLevelFromScore(calcRisk(r)) === 'High Risk').length;
+        let highRisk = f.filter(r => getRiskLevel(calcRisk(r)) === 'High Risk').length;
         let offline = f.filter(r => r['Kiosk State'] === 'Offline').length;
         let highReject = f.filter(r => parseFloat(r['1 Day Reject %'] || 0) > 8).length;
         let totalLoss = f.reduce((sum, r) => sum + calcDailyLoss(r), 0);
@@ -343,7 +331,7 @@
         
         let tbody = document.getElementById('tableBody');
         if (!f.length) { 
-            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; 
+            tbody.innerHTML = '<table><td colspan="12" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; 
             return; 
         }
         
@@ -352,12 +340,14 @@
             let bin = parseFloat(r['Total Bin Full %'] || 0);
             let up = parseFloat(r['7 Day Uptime %'] || 0);
             let riskScore = calcRisk(r);
-            let riskLevel = getRiskLevelFromScore(riskScore);
-            let displayRisk = getDisplayRiskText(riskScore);
+            let riskLevel = getRiskLevel(riskScore);
             let dailyLoss = calcDailyLoss(r);
             let cls = riskLevel === 'High Risk' ? 'badge-high' : (riskLevel === 'Medium Risk' ? 'badge-medium' : 'badge-low');
             let isHigh = riskLevel === 'High Risk';
             let barC = bin > 95 ? '#dc2626' : (bin > 80 ? '#f97316' : '#10b981');
+            
+            // Display risk level WITHOUT parentheses in the table
+            let displayRisk = riskLevel;
             
             return `<tr class="${isHigh ? 'high-risk-row' : ''}">
                 <td><strong>${escapeHtml(r.Store || '—')}</strong></td>
@@ -369,10 +359,10 @@
                 <td style="color:${rej > 8 ? '#dc2626' : '#16a34a'};font-weight:600;">${rej.toFixed(1)}%</td>
                 <td>${up.toFixed(1)}%</td>
                 <td>${bin.toFixed(0)}%<div class="fill-bar"><div class="fill-bar-fill" style="width:${Math.min(bin, 100)}%;background:${barC};"></div></div></td>
-                <td><span class="badge ${cls}">${riskLevel}</span> <span style="font-size:11px;color:#64748b;">(${Math.round(riskScore)})</span></td>
+                <td><span class="badge ${cls}">${displayRisk}</span> <span style="font-size:11px;color:#64748b;">(${Math.round(riskScore)})</span></td>
                 <td style="color:#dc2626;font-weight:600;">$${dailyLoss.toFixed(0)}</td>
                 <td>${r['Estimated Fill Date'] || '—'}</td>
-            </td>`;
+            </tr>`;
         }).join('');
         document.getElementById('lastUpdateTime').innerHTML = new Date().toLocaleString();
     }
@@ -390,7 +380,7 @@
             '7 Day Uptime %': parseFloat(r['7 Day Uptime %'] || 0), 
             'Bin Full %': parseFloat(r['Total Bin Full %'] || 0), 
             'Risk Score': calcRisk(r), 
-            'Risk Level': getRiskLevelFromScore(calcRisk(r)),
+            'Risk Level': getRiskLevel(calcRisk(r)),
             'Est. Daily Loss ($)': calcDailyLoss(r)
         }));
         let ws = XLSX.utils.json_to_sheet(data);
