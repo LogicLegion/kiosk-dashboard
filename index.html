@@ -22,8 +22,8 @@
         .upload-area { background: white; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 50px; text-align: center; margin-bottom: 24px; cursor: pointer; }
         .upload-area:hover { border-color: #1e3a5f; background: #f8fafc; }
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .kpi-card { background: white; border-radius: 16px; padding: 16px; border: 1px solid #e2e8f0; }
-        .kpi-label { font-size: 11px; color: #64748b; text-transform: uppercase; }
+        .kpi-card { background: white; border-radius: 16px; padding: 16px; border: 1px solid #e2e8f0; position: relative; }
+        .kpi-label { font-size: 11px; color: #64748b; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
         .kpi-value { font-size: 32px; font-weight: 800; color: #1e293b; margin-top: 8px; }
         .kpi-loss { color: #dc2626; }
         .kpi-green { color: #10b981; }
@@ -94,6 +94,7 @@
             white-space: nowrap;
             z-index: 100;
             margin-bottom: 8px;
+            font-family: 'Segoe UI', Arial, sans-serif;
         }
     </style>
 </head>
@@ -113,15 +114,15 @@
     <div class="upload-area" id="uploadArea" onclick="document.getElementById('csvFile').click()"><div style="font-size:48px;">📊</div><h3>Upload Fleet Data</h3><p>Click to select your CSV file</p></div>
     <div id="dashboard" style="display:none">
         <div class="kpi-grid" id="kpiGrid"></div>
-        <div class="info-bar"><div>🕐 Last updated: <span id="lastUpdateTime">-</span></div><div>⚡ Click column headers to sort | Loss = $5/transaction</div></div>
+        <div class="info-bar"><div>🕐 Last updated: <span id="lastUpdateTime">-</span></div><div>⚡ Click column headers to sort | Hover over ? for explanations</div></div>
         
         <div class="chart-container">
-            <div class="chart-title">💰 Daily Revenue Loss by Province</div>
+            <div class="chart-title">💰 Daily Revenue Loss by Province <span class="help-icon" data-tooltip="Shows which province loses the most money each day from kiosk issues">?</span></div>
             <canvas id="lossChart"></canvas>
         </div>
         
         <div class="top-loss-container" id="topLossContainer">
-            <div class="top-loss-title">🚨 TOP 5 HIGHEST DAILY LOSS</div>
+            <div class="top-loss-title">🚨 TOP 5 HIGHEST DAILY LOSS <span class="help-icon" data-tooltip="These kiosks cost the most money. Fix them first.">?</span></div>
             <div class="top-loss-list" id="topLossList"></div>
         </div>
         
@@ -136,26 +137,26 @@
             <table id="dataTable">
                 <thead>
                     <tr>
-                        <th data-sort="store">Store</th>
-                        <th data-sort="address">Address</th>
-                        <th data-sort="city">City</th>
-                        <th data-sort="province">Province</th>
-                        <th data-sort="status">Status</th>
+                        <th data-sort="store">Store <span class="help-icon" data-tooltip="Name of the store or location">?</span></th>
+                        <th data-sort="address">Address <span class="help-icon" data-tooltip="Street address of the kiosk">?</span></th>
+                        <th data-sort="city">City <span class="help-icon" data-tooltip="City where the kiosk is located">?</span></th>
+                        <th data-sort="province">Province <span class="help-icon" data-tooltip="Province or territory">?</span></th>
+                        <th data-sort="status">Status <span class="help-icon" data-tooltip="Current operational state (Attract = normal, Offline = down, Full = bin full)">?</span></th>
                         <th data-sort="volume">Volume <span class="help-icon" data-tooltip="Number of transactions in the last 24 hours">?</span></th>
-                        <th data-sort="reject">Reject% <span class="help-icon" data-tooltip="Percentage of transactions that failed">?</span></th>
-                        <th data-sort="uptime">Uptime% <span class="help-icon" data-tooltip="Percentage of time the kiosk was online">?</span></th>
-                        <th data-sort="bin">Bin% <span class="help-icon" data-tooltip="How full the cash/coin bin is">?</span></th>
-                        <th data-sort="revenue">Est. Revenue <span class="help-icon" data-tooltip="Volume × $5 (if machine was perfect)">?</span></th>
-                        <th data-sort="loss">Daily Loss <span class="help-icon" data-tooltip="Revenue lost from rejects + downtime">?</span></th>
-                        <th data-sort="net">Net Revenue</th>
-                        <th data-sort="risk">Risk Level</th>
-                        <th data-sort="fill">Est. Fill</th>
+                        <th data-sort="reject">Reject% <span class="help-icon" data-tooltip="Percentage of transactions that failed. High = customers can't use machine">?</span></th>
+                        <th data-sort="uptime">Uptime% <span class="help-icon" data-tooltip="Percentage of time the kiosk was online. Low = machine is down">?</span></th>
+                        <th data-sort="bin">Bin% <span class="help-icon" data-tooltip="How full the cash/coin bin is. Over 90% needs emptying soon">?</span></th>
+                        <th data-sort="revenue">Est. Revenue <span class="help-icon" data-tooltip="What the kiosk WOULD make if perfect (Volume × $5)">?</span></th>
+                        <th data-sort="loss">Daily Loss <span class="help-icon" data-tooltip="Money lost from rejected transactions + downtime">?</span></th>
+                        <th data-sort="net">Net Revenue <span class="help-icon" data-tooltip="Actual revenue after losses (Est. Revenue - Daily Loss)">?</span></th>
+                        <th data-sort="risk">Risk Level <span class="help-icon" data-tooltip="High Risk = Score 60+ (fix now), Medium = 30-59, Low = 0-29">?</span></th>
+                        <th data-sort="fill">Est. Fill <span class="help-icon" data-tooltip="Estimated date when bin will be full">?</span></th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"><tr><td colspan="14">No data loaded. Upload a CSV file.</tbody>
             </table>
         </div>
-        <div class="footer">💡 Sort by Daily Loss to see highest risk first | High Risk = Score 60+ | Medium = 30-59 | Low = 0-29</div>
+        <div class="footer">💡 Hover over any <strong>?</strong> icon to see what the column means</div>
         <div class="copyright">© 2025 LogicLegion (JE) | Built by Jean Eljaalouk</div>
     </div>
 </div>
@@ -363,7 +364,7 @@
         let top5 = sorted.slice(0, 5);
         
         let container = document.getElementById('topLossList');
-        if (!top5.length || top5[0].dailyLoss === 0) {
+        if (!top5.length || (top5.length > 0 && calcDailyLoss(top5[0]) === 0)) {
             container.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No revenue loss data available</div>';
             return;
         }
@@ -401,12 +402,12 @@
         let avgUptime = f.reduce((s, r) => s + (parseFloat(r['7 Day Uptime %'] || 0)), 0) / (f.length || 1);
         
         document.getElementById('kpiGrid').innerHTML = `
-            <div class="kpi-card"><div class="kpi-label">Total Kiosks</div><div class="kpi-value">${total}</div></div>
-            <div class="kpi-card"><div class="kpi-label">⚠️ High Risk</div><div class="kpi-value" style="color:#dc2626;">${highRisk}</div></div>
-            <div class="kpi-card"><div class="kpi-label">📡 Offline</div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div>
-            <div class="kpi-card"><div class="kpi-label">💰 Est. Daily Revenue</div><div class="kpi-value kpi-green">$${totalRevenue.toFixed(0)}</div></div>
-            <div class="kpi-card"><div class="kpi-label">💸 Daily Loss</div><div class="kpi-value kpi-loss">$${totalLoss.toFixed(0)}</div></div>
-            <div class="kpi-card"><div class="kpi-label">📈 Net Revenue</div><div class="kpi-value">$${totalNet.toFixed(0)}</div></div>
+            <div class="kpi-card"><div class="kpi-label">Total Kiosks <span class="help-icon" data-tooltip="Total number of kiosks in your fleet (Canada only)">?</span></div><div class="kpi-value">${total}</div></div>
+            <div class="kpi-card"><div class="kpi-label">⚠️ High Risk <span class="help-icon" data-tooltip="Kiosks with Risk Score above 60. Fix these FIRST.">?</span></div><div class="kpi-value" style="color:#dc2626;">${highRisk}</div></div>
+            <div class="kpi-card"><div class="kpi-label">📡 Offline <span class="help-icon" data-tooltip="Kiosks that are completely offline. Generating ZERO revenue.">?</span></div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div>
+            <div class="kpi-card"><div class="kpi-label">💰 Est. Daily Revenue <span class="help-icon" data-tooltip="What all kiosks WOULD make if perfect (Volume × $5)">?</span></div><div class="kpi-value kpi-green">$${totalRevenue.toFixed(0)}</div></div>
+            <div class="kpi-card"><div class="kpi-label">💸 Daily Loss <span class="help-icon" data-tooltip="Money lost today from rejects + downtime">?</span></div><div class="kpi-value kpi-loss">$${totalLoss.toFixed(0)}</div></div>
+            <div class="kpi-card"><div class="kpi-label">📈 Net Revenue <span class="help-icon" data-tooltip="Actual revenue after losses">?</span></div><div class="kpi-value">$${totalNet.toFixed(0)}</div></div>
         `;
         
         updateLossChart(f);
