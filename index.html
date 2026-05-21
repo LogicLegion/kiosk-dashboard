@@ -122,6 +122,14 @@
         return CANADIAN_PROVINCES.includes(prov);
     }
     
+    // Helper function to extract risk level from text like "High Risk (100)"
+    function getRiskLevelFromText(text) {
+        if (!text) return 'Low Risk';
+        if (text.includes('High Risk')) return 'High Risk';
+        if (text.includes('Medium Risk')) return 'Medium Risk';
+        return 'Low Risk';
+    }
+    
     function showToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
     function showModal(t, c) { document.getElementById('modalTitle').textContent = t; document.getElementById('modalBody').innerHTML = c; document.getElementById('instructionModal').style.display = 'flex'; }
     function closeModal() { document.getElementById('instructionModal').style.display = 'none'; }
@@ -153,7 +161,7 @@
         document.getElementById('uploadArea').style.display = 'none';
         document.getElementById('actionButtons').style.display = 'flex';
         populateFilters(); setupSorting(); renderAll();
-        showToast(`✅ Loaded ${allData.length} Canadian kiosks (${originalCount - allData.length} non-Canada filtered)`);
+        showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
     }
     
     function getRegion(r) { return r.State || r.Province || 'Unknown'; }
@@ -169,10 +177,15 @@
         return Math.min(Math.max(score, 0), 100);
     }
     
-    function getRiskLevel(score) {
+    function getRiskLevelFromScore(score) {
         if (score >= 60) return 'High Risk';
         if (score >= 30) return 'Medium Risk';
         return 'Low Risk';
+    }
+    
+    function getDisplayRiskText(score) {
+        let level = getRiskLevelFromScore(score);
+        return `${level} (${Math.round(score)})`;
     }
     
     function calcDailyLoss(r) {
@@ -231,7 +244,11 @@
         
         let riskFilter = document.getElementById('riskFilter')?.value || 'all';
         if (riskFilter !== 'all') {
-            f = f.filter(r => getRiskLevel(calcRisk(r)).toLowerCase() === riskFilter);
+            f = f.filter(r => {
+                let score = calcRisk(r);
+                let level = getRiskLevelFromScore(score).toLowerCase();
+                return level === riskFilter;
+            });
         }
         
         return f;
@@ -308,7 +325,7 @@
         f = sortData(f);
         
         let total = f.length;
-        let highRisk = f.filter(r => getRiskLevel(calcRisk(r)) === 'High Risk').length;
+        let highRisk = f.filter(r => getRiskLevelFromScore(calcRisk(r)) === 'High Risk').length;
         let offline = f.filter(r => r['Kiosk State'] === 'Offline').length;
         let highReject = f.filter(r => parseFloat(r['1 Day Reject %'] || 0) > 8).length;
         let totalLoss = f.reduce((sum, r) => sum + calcDailyLoss(r), 0);
@@ -335,7 +352,8 @@
             let bin = parseFloat(r['Total Bin Full %'] || 0);
             let up = parseFloat(r['7 Day Uptime %'] || 0);
             let riskScore = calcRisk(r);
-            let riskLevel = getRiskLevel(riskScore);
+            let riskLevel = getRiskLevelFromScore(riskScore);
+            let displayRisk = getDisplayRiskText(riskScore);
             let dailyLoss = calcDailyLoss(r);
             let cls = riskLevel === 'High Risk' ? 'badge-high' : (riskLevel === 'Medium Risk' ? 'badge-medium' : 'badge-low');
             let isHigh = riskLevel === 'High Risk';
@@ -351,10 +369,10 @@
                 <td style="color:${rej > 8 ? '#dc2626' : '#16a34a'};font-weight:600;">${rej.toFixed(1)}%</td>
                 <td>${up.toFixed(1)}%</td>
                 <td>${bin.toFixed(0)}%<div class="fill-bar"><div class="fill-bar-fill" style="width:${Math.min(bin, 100)}%;background:${barC};"></div></div></td>
-                <td><span class="badge ${cls}">${riskLevel}</span> <span style="font-size:11px;color:#64748b;">(${riskScore.toFixed(0)})</span></td>
+                <td><span class="badge ${cls}">${riskLevel}</span> <span style="font-size:11px;color:#64748b;">(${Math.round(riskScore)})</span></td>
                 <td style="color:#dc2626;font-weight:600;">$${dailyLoss.toFixed(0)}</td>
                 <td>${r['Estimated Fill Date'] || '—'}</td>
-            <tr>`;
+            </tr>`;
         }).join('');
         document.getElementById('lastUpdateTime').innerHTML = new Date().toLocaleString();
     }
@@ -372,7 +390,7 @@
             '7 Day Uptime %': parseFloat(r['7 Day Uptime %'] || 0), 
             'Bin Full %': parseFloat(r['Total Bin Full %'] || 0), 
             'Risk Score': calcRisk(r), 
-            'Risk Level': getRiskLevel(calcRisk(r)),
+            'Risk Level': getRiskLevelFromScore(calcRisk(r)),
             'Est. Daily Loss ($)': calcDailyLoss(r)
         }));
         let ws = XLSX.utils.json_to_sheet(data);
