@@ -26,17 +26,28 @@
         .kpi-label { font-size: 11px; color: #64748b; text-transform: uppercase; }
         .kpi-value { font-size: 32px; font-weight: 800; color: #1e293b; margin-top: 8px; }
         .kpi-loss { color: #dc2626; }
+        .kpi-green { color: #10b981; }
         .info-bar { background: white; border-radius: 12px; padding: 10px 16px; margin-bottom: 20px; font-size: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; flex-wrap: wrap; }
         .chart-container { background: white; border-radius: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
         .chart-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 12px; }
         canvas { max-height: 250px; width: 100%; }
+        
+        .top-loss-container { background: white; border-radius: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
+        .top-loss-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .top-loss-list { display: flex; flex-direction: column; gap: 8px; }
+        .top-loss-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f8fafc; border-radius: 12px; border-left: 4px solid #dc2626; }
+        .top-loss-store { font-weight: 600; color: #1e293b; }
+        .top-loss-city { font-size: 11px; color: #64748b; margin-left: 8px; }
+        .top-loss-loss { font-weight: 700; color: #dc2626; }
+        .top-loss-rank { background: #dc2626; color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-right: 12px; }
+        
         .filters { background: white; border-radius: 16px; padding: 16px 20px; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 12px; border: 1px solid #e2e8f0; align-items: flex-end; }
         .filter-group { display: flex; flex-direction: column; gap: 5px; min-width: 140px; flex: 1; }
         .filter-group label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
         select, input, button { padding: 8px 12px; border-radius: 10px; font-size: 12px; background: white; border: 1px solid #e2e8f0; }
         button { background: #1e3a5f; color: white; border: none; cursor: pointer; font-weight: 600; }
         .table-wrapper { background: white; border-radius: 16px; overflow: auto; max-height: 450px; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1300px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1400px; }
         th { text-align: left; padding: 14px 12px; background: #f8fafc; font-weight: 700; border-bottom: 2px solid #e2e8f0; cursor: pointer; position: sticky; top: 0; }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
         .high-risk-row { background-color: #fee2e2; }
@@ -52,6 +63,38 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
         .modal-content { background: white; border-radius: 20px; padding: 24px; max-width: 500px; }
         .modal-close { background: #1e3a5f; color: white; border: none; padding: 10px; border-radius: 30px; cursor: pointer; margin-top: 16px; width: 100%; }
+        
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            background: #e2e8f0;
+            color: #64748b;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: help;
+            margin-left: 5px;
+            position: relative;
+        }
+        .help-icon:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            font-size: 11px;
+            font-weight: normal;
+            padding: 6px 10px;
+            border-radius: 8px;
+            white-space: nowrap;
+            z-index: 100;
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
@@ -77,6 +120,11 @@
             <canvas id="lossChart"></canvas>
         </div>
         
+        <div class="top-loss-container" id="topLossContainer">
+            <div class="top-loss-title">🚨 TOP 5 HIGHEST DAILY LOSS</div>
+            <div class="top-loss-list" id="topLossList"></div>
+        </div>
+        
         <div class="filters">
             <div class="filter-group"><label>📍 Province</label><select id="provinceFilter"><option value="all">All Provinces</option></select></div>
             <div class="filter-group"><label>🔍 Search</label><input type="text" id="searchInput" placeholder="Store, city, or address..."></div>
@@ -93,16 +141,18 @@
                         <th data-sort="city">City</th>
                         <th data-sort="province">Province</th>
                         <th data-sort="status">Status</th>
-                        <th data-sort="tx">1D TX</th>
-                        <th data-sort="reject">Reject%</th>
-                        <th data-sort="uptime">Uptime%</th>
-                        <th data-sort="bin">Bin%</th>
+                        <th data-sort="volume">Volume <span class="help-icon" data-tooltip="Number of transactions in the last 24 hours">?</span></th>
+                        <th data-sort="reject">Reject% <span class="help-icon" data-tooltip="Percentage of transactions that failed">?</span></th>
+                        <th data-sort="uptime">Uptime% <span class="help-icon" data-tooltip="Percentage of time the kiosk was online">?</span></th>
+                        <th data-sort="bin">Bin% <span class="help-icon" data-tooltip="How full the cash/coin bin is">?</span></th>
+                        <th data-sort="revenue">Est. Revenue <span class="help-icon" data-tooltip="Volume × $5 (if machine was perfect)">?</span></th>
+                        <th data-sort="loss">Daily Loss <span class="help-icon" data-tooltip="Revenue lost from rejects + downtime">?</span></th>
+                        <th data-sort="net">Net Revenue</th>
                         <th data-sort="risk">Risk Level</th>
-                        <th data-sort="loss">Daily Loss ($)</th>
                         <th data-sort="fill">Est. Fill</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody"><tr><td colspan="12">No data loaded. Upload a CSV file.</tbody>
+                <tbody id="tableBody"><tr><td colspan="14">No data loaded. Upload a CSV file.</tbody>
             </table>
         </div>
         <div class="footer">💡 Sort by Daily Loss to see highest risk first | High Risk = Score 60+ | Medium = 30-59 | Low = 0-29</div>
@@ -174,8 +224,16 @@
         return 'Low Risk';
     }
     
+    function getVolume(r) {
+        return parseFloat(r['1 Day TX'] || 0);
+    }
+    
+    function getEstRevenue(r) {
+        return getVolume(r) * 5;
+    }
+    
     function calcDailyLoss(r) {
-        let tx = parseFloat(r['1 Day TX'] || 0);
+        let tx = getVolume(r);
         let reject = parseFloat(r['1 Day Reject %'] || 0);
         let uptime = parseFloat(r['7 Day Uptime %'] || 0);
         
@@ -184,6 +242,10 @@
         let totalLost = lostFromReject + lostFromDowntime;
         
         return totalLost * 5;
+    }
+    
+    function getNetRevenue(r) {
+        return getEstRevenue(r) - calcDailyLoss(r);
     }
     
     function populateFilters() {
@@ -238,12 +300,14 @@
                 case 'city': va = (a.City || '').toLowerCase(); vb = (b.City || '').toLowerCase(); break; 
                 case 'province': va = getRegion(a); vb = getRegion(b); break; 
                 case 'status': va = a['Kiosk State'] || ''; vb = b['Kiosk State'] || ''; break; 
-                case 'tx': va = parseFloat(a['1 Day TX'] || 0); vb = parseFloat(b['1 Day TX'] || 0); break; 
+                case 'volume': va = getVolume(a); vb = getVolume(b); break; 
                 case 'reject': va = parseFloat(a['1 Day Reject %'] || 0); vb = parseFloat(b['1 Day Reject %'] || 0); break; 
                 case 'uptime': va = parseFloat(a['7 Day Uptime %'] || 0); vb = parseFloat(b['7 Day Uptime %'] || 0); break; 
                 case 'bin': va = parseFloat(a['Total Bin Full %'] || 0); vb = parseFloat(b['Total Bin Full %'] || 0); break; 
-                case 'risk': va = calcRisk(a); vb = calcRisk(b); break; 
+                case 'revenue': va = getEstRevenue(a); vb = getEstRevenue(b); break; 
                 case 'loss': va = calcDailyLoss(a); vb = calcDailyLoss(b); break; 
+                case 'net': va = getNetRevenue(a); vb = getNetRevenue(b); break; 
+                case 'risk': va = calcRisk(a); vb = calcRisk(b); break; 
                 default: return 0; 
             } 
             if (typeof va === 'number') return currentSort.direction === 'desc' ? vb - va : va - vb; 
@@ -294,6 +358,35 @@
         });
     }
     
+    function updateTopLossList(data) {
+        let sorted = [...data].sort((a, b) => calcDailyLoss(b) - calcDailyLoss(a));
+        let top5 = sorted.slice(0, 5);
+        
+        let container = document.getElementById('topLossList');
+        if (!top5.length || top5[0].dailyLoss === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No revenue loss data available</div>';
+            return;
+        }
+        
+        container.innerHTML = top5.map((r, idx) => {
+            let loss = calcDailyLoss(r);
+            let storeName = r.Store || 'Unknown';
+            let city = r.City || '';
+            return `
+                <div class="top-loss-item">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="top-loss-rank">#${idx + 1}</span>
+                        <div>
+                            <span class="top-loss-store">${escapeHtml(storeName)}</span>
+                            ${city ? `<span class="top-loss-city">${escapeHtml(city)}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="top-loss-loss">$${loss.toFixed(0)}/day</div>
+                </div>
+            `;
+        }).join('');
+    }
+    
     function renderAll() {
         if (!allData.length) return;
         let f = filterData(); 
@@ -302,23 +395,26 @@
         let total = f.length;
         let highRisk = f.filter(r => getRiskLevel(calcRisk(r)) === 'High Risk').length;
         let offline = f.filter(r => r['Kiosk State'] === 'Offline').length;
-        let highReject = f.filter(r => parseFloat(r['1 Day Reject %'] || 0) > 8).length;
         let totalLoss = f.reduce((sum, r) => sum + calcDailyLoss(r), 0);
+        let totalRevenue = f.reduce((sum, r) => sum + getEstRevenue(r), 0);
+        let totalNet = totalRevenue - totalLoss;
         let avgUptime = f.reduce((s, r) => s + (parseFloat(r['7 Day Uptime %'] || 0)), 0) / (f.length || 1);
         
         document.getElementById('kpiGrid').innerHTML = `
-            <div class="kpi-card"><div class="kpi-label">Total Kiosks (Canada)</div><div class="kpi-value">${total}</div></div>
+            <div class="kpi-card"><div class="kpi-label">Total Kiosks</div><div class="kpi-value">${total}</div></div>
             <div class="kpi-card"><div class="kpi-label">⚠️ High Risk</div><div class="kpi-value" style="color:#dc2626;">${highRisk}</div></div>
             <div class="kpi-card"><div class="kpi-label">📡 Offline</div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div>
-            <div class="kpi-card"><div class="kpi-label">💰 Est. Daily Loss</div><div class="kpi-value kpi-loss">$${totalLoss.toFixed(0)}</div></div>
-            <div class="kpi-card"><div class="kpi-label">📈 Avg Uptime</div><div class="kpi-value">${avgUptime.toFixed(1)}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">💰 Est. Daily Revenue</div><div class="kpi-value kpi-green">$${totalRevenue.toFixed(0)}</div></div>
+            <div class="kpi-card"><div class="kpi-label">💸 Daily Loss</div><div class="kpi-value kpi-loss">$${totalLoss.toFixed(0)}</div></div>
+            <div class="kpi-card"><div class="kpi-label">📈 Net Revenue</div><div class="kpi-value">$${totalNet.toFixed(0)}</div></div>
         `;
         
         updateLossChart(f);
+        updateTopLossList(f);
         
         let tbody = document.getElementById('tableBody');
         if (!f.length) { 
-            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; 
+            tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; 
             return; 
         }
         
@@ -326,14 +422,20 @@
             let rej = parseFloat(r['1 Day Reject %'] || 0);
             let bin = parseFloat(r['Total Bin Full %'] || 0);
             let up = parseFloat(r['7 Day Uptime %'] || 0);
+            let volume = getVolume(r);
+            let estRevenue = getEstRevenue(r);
+            let dailyLoss = calcDailyLoss(r);
+            let netRevenue = estRevenue - dailyLoss;
             let riskScore = calcRisk(r);
             let riskLevel = getRiskLevel(riskScore);
-            let dailyLoss = calcDailyLoss(r);
             let cls = riskLevel === 'High Risk' ? 'badge-high' : (riskLevel === 'Medium Risk' ? 'badge-medium' : 'badge-low');
             let isHigh = riskLevel === 'High Risk';
             let barC = bin > 95 ? '#dc2626' : (bin > 80 ? '#f97316' : '#10b981');
             
             let displayRisk = riskLevel;
+            
+            let revenueClass = estRevenue > 0 ? 'kpi-green' : '';
+            let lossClass = dailyLoss > 0 ? 'kpi-loss' : '';
             
             return `<tr class="${isHigh ? 'high-risk-row' : ''}">
                 <td><strong>${escapeHtml(r.Store || '—')}</strong></td>
@@ -341,12 +443,14 @@
                 <td>${escapeHtml(r.City || '—')}</td>
                 <td>${getRegion(r)}</td>
                 <td>${r['Kiosk State'] || 'Attract'}</td>
-                <td>${r['1 Day TX'] || 0}</td>
+                <td>${volume}</td>
                 <td style="color:${rej > 8 ? '#dc2626' : '#16a34a'};font-weight:600;">${rej.toFixed(1)}%</td>
                 <td>${up.toFixed(1)}%</td>
                 <td>${bin.toFixed(0)}%<div class="fill-bar"><div class="fill-bar-fill" style="width:${Math.min(bin, 100)}%;background:${barC};"></div></div></td>
+                <td class="${revenueClass}" style="font-weight:600;">$${estRevenue.toFixed(0)}</td>
+                <td class="${lossClass}" style="font-weight:600;">$${dailyLoss.toFixed(0)}</td>
+                <td style="font-weight:600;">$${netRevenue.toFixed(0)}</td>
                 <td><span class="badge ${cls}">${displayRisk}</span> <span style="font-size:11px;color:#64748b;">(${Math.round(riskScore)})</span></td>
-                <td style="color:#dc2626;font-weight:600;">$${dailyLoss.toFixed(0)}</td>
                 <td>${r['Estimated Fill Date'] || '—'}</td>
             </tr>`;
         }).join('');
@@ -361,13 +465,16 @@
             City: r.City || '', 
             Province: getRegion(r), 
             Status: r['Kiosk State'] || '', 
-            '1 Day TX': parseFloat(r['1 Day TX'] || 0), 
+            'Volume (Daily TX)': getVolume(r), 
             'Reject %': parseFloat(r['1 Day Reject %'] || 0), 
-            '7 Day Uptime %': parseFloat(r['7 Day Uptime %'] || 0), 
+            'Uptime %': parseFloat(r['7 Day Uptime %'] || 0), 
             'Bin Full %': parseFloat(r['Total Bin Full %'] || 0), 
+            'Est. Revenue ($5/TX)': getEstRevenue(r), 
+            'Est. Daily Loss ($)': calcDailyLoss(r), 
+            'Net Revenue ($)': getNetRevenue(r),
             'Risk Score': calcRisk(r), 
             'Risk Level': getRiskLevel(calcRisk(r)),
-            'Est. Daily Loss ($)': calcDailyLoss(r)
+            'Est. Fill Date': r['Estimated Fill Date'] || ''
         }));
         let ws = XLSX.utils.json_to_sheet(data);
         let wb = XLSX.utils.book_new();
