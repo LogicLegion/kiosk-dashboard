@@ -2,11 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Kiosk Intelligence Platform | Canada</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- QR Code library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; padding: 20px; }
@@ -19,6 +21,7 @@
         .action-btn { background: rgba(255,255,255,0.15); border: none; padding: 8px 16px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; }
         .action-btn:hover { background: rgba(255,255,255,0.25); }
         .upload-btn { background: #10b981; }
+        .qr-btn { background: #8b5cf6; }
         .upload-area { background: white; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 50px; text-align: center; margin-bottom: 24px; cursor: pointer; }
         .upload-area:hover { border-color: #1e3a5f; background: #f8fafc; }
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
@@ -65,8 +68,10 @@
         .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; z-index: 1000; display: none; }
         .hidden-upload { display: none; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-content { background: white; border-radius: 20px; padding: 24px; max-width: 500px; }
+        .modal-content { background: white; border-radius: 20px; padding: 24px; max-width: 500px; text-align: center; }
         .modal-close { background: #1e3a5f; color: white; border: none; padding: 10px; border-radius: 30px; cursor: pointer; margin-top: 16px; width: 100%; }
+        #qrcode { display: flex; justify-content: center; margin: 20px 0; }
+        .qr-instruction { font-size: 12px; color: #64748b; margin-top: 10px; }
         
         .help-icon {
             display: inline-flex;
@@ -107,13 +112,24 @@
         <div><h1>📊 Canada Kiosk Intelligence <span class="live-tag">LIVE</span></h1></div>
         <div class="action-buttons" id="actionButtons" style="display:none;">
             <button class="action-btn upload-btn" id="showUploadBtn">📂 Upload CSV</button>
+            <button class="action-btn qr-btn" id="qrBtn">📱 QR Code</button>
             <button class="action-btn" id="powerBIExportBtn">📊 Power BI</button>
             <button class="action-btn" id="tableauExportBtn">📈 Tableau</button>
             <button class="action-btn" id="snapshotBtn">📸 Screenshot</button>
         </div>
     </div>
     <input type="file" id="csvFile" accept=".csv" class="hidden-upload">
-    <div id="instructionModal" class="modal"><div class="modal-content"><h3 id="modalTitle"></h3><div id="modalBody"></div><button class="modal-close" onclick="closeModal()">Got it</button></div></div>
+    <div id="instructionModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Scan QR Code</h3>
+            <div id="modalBody">
+                <p>Scan with your phone camera to open this dashboard on your mobile device.</p>
+                <div id="qrcode"></div>
+                <p class="qr-instruction">📱 Works with any camera app on iPhone or Android</p>
+            </div>
+            <button class="modal-close" onclick="closeModal()">Close</button>
+        </div>
+    </div>
     <div class="upload-area" id="uploadArea" onclick="document.getElementById('csvFile').click()"><div style="font-size:48px;">📊</div><h3>Upload Fleet Data</h3><p>Click to select your CSV file</p></div>
     <div id="dashboard" style="display:none">
         <div class="kpi-grid" id="kpiGrid"></div>
@@ -156,7 +172,7 @@
                         <th data-sort="fill">Est. Fill <span class="help-icon" data-tooltip="Estimated date when bin will be full">?</span></th>
                     </tr>
                 </thead>
-                <tbody id="tableBody"></table><td colspan="14">No data loaded. Upload a CSV file.</tbody>
+                <tbody id="tableBody"><tr><td colspan="14">No data loaded. Upload a CSV file.</tbody>
             </table>
         </div>
         <div class="footer">💡 Hover over any <strong>?</strong> icon to see what the column means</div>
@@ -167,6 +183,7 @@
 <script>
     let allData = [], currentSort = { column: 'loss', direction: 'desc' };
     let lossChart = null;
+    let qr = null;
     
     const CANADIAN_PROVINCES = ['ON', 'QC', 'BC', 'AB', 'MB', 'SK', 'NS', 'NB', 'NL', 'PE', 'NT', 'YT', 'NU'];
     
@@ -176,8 +193,39 @@
     }
     
     function showToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
-    function showModal(t, c) { document.getElementById('modalTitle').textContent = t; document.getElementById('modalBody').innerHTML = c; document.getElementById('instructionModal').style.display = 'flex'; }
+    function showModal(title, content) { 
+        document.getElementById('modalTitle').textContent = title; 
+        document.getElementById('modalBody').innerHTML = content; 
+        document.getElementById('instructionModal').style.display = 'flex'; 
+    }
     function closeModal() { document.getElementById('instructionModal').style.display = 'none'; }
+    
+    document.getElementById('qrBtn')?.addEventListener('click', () => {
+        const currentUrl = window.location.href;
+        const modalContent = `
+            <p>Scan with your phone camera to open this dashboard on your mobile device.</p>
+            <div id="qrcode"></div>
+            <p class="qr-instruction">📱 Works with any camera app on iPhone or Android</p>
+            <p style="font-size: 11px; margin-top: 10px; color: #64748b;">URL: ${currentUrl}</p>
+        `;
+        showModal('Scan QR Code', modalContent);
+        
+        setTimeout(() => {
+            const qrContainer = document.getElementById('qrcode');
+            if (qrContainer) {
+                qrContainer.innerHTML = '';
+                new QRCode(qrContainer, {
+                    text: currentUrl,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+        }, 100);
+    });
+    
     document.getElementById('showUploadBtn')?.addEventListener('click', () => document.getElementById('csvFile').click());
     document.getElementById('csvFile').addEventListener('change', e => { if (e.target.files[0]) { let r = new FileReader(); r.onload = ev => parseCSV(ev.target.result); r.readAsText(e.target.files[0]); showToast('Loading file...'); } });
     
@@ -228,33 +276,22 @@
         return 'Low Risk';
     }
     
-    function getVolume(r) {
-        return parseFloat(r['1 Day TX'] || 0);
-    }
-    
-    function getEstRevenue(r) {
-        return getVolume(r) * 5;
-    }
+    function getVolume(r) { return parseFloat(r['1 Day TX'] || 0); }
+    function getEstRevenue(r) { return getVolume(r) * 5; }
     
     function calcDailyLoss(r) {
         let tx = getVolume(r);
         let reject = parseFloat(r['1 Day Reject %'] || 0);
         let uptime = parseFloat(r['7 Day Uptime %'] || 0);
-        
         let lostFromReject = tx * (reject / 100);
         let lostFromDowntime = tx * ((100 - uptime) / 100) * 0.5;
         let totalLost = lostFromReject + lostFromDowntime;
-        
         return totalLost * 5;
     }
     
-    function getNetRevenue(r) {
-        return getEstRevenue(r) - calcDailyLoss(r);
-    }
+    function getNetRevenue(r) { return getEstRevenue(r) - calcDailyLoss(r); }
     
-    function getLastServiceDate(r) {
-        return r['Last PM Date'] || r['Last Service Date'] || '—';
-    }
+    function getLastServiceDate(r) { return r['Last PM Date'] || r['Last Service Date'] || '—'; }
     
     function getDaysSinceService(r) {
         let lastService = getLastServiceDate(r);
@@ -303,15 +340,12 @@
     
     function filterData() {
         let f = [...allData];
-        
         let prov = document.getElementById('provinceFilter')?.value || 'all';
         if (prov !== 'all') f = f.filter(r => getRegion(r) === prov);
-        
         let s = document.getElementById('searchInput')?.value.toLowerCase() || '';
         if (s) f = f.filter(r => (r.Store || '').toLowerCase().includes(s) || 
                               (r.City || '').toLowerCase().includes(s) || 
                               (r.Address || '').toLowerCase().includes(s));
-        
         return f;
     }
     
@@ -347,51 +381,26 @@
                 provinceLoss[prov] = (provinceLoss[prov] || 0) + calcDailyLoss(r);
             }
         });
-        
         let sorted = Object.entries(provinceLoss).sort((a, b) => b[1] - a[1]);
         let labels = sorted.map(p => p[0]);
         let values = sorted.map(p => p[1]);
-        
         if (lossChart) lossChart.destroy();
-        
         let ctx = document.getElementById('lossChart').getContext('2d');
         lossChart = new Chart(ctx, {
             type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Daily Revenue Loss ($)',
-                    data: values,
-                    backgroundColor: '#dc2626',
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { position: 'top', labels: { font: { size: 11 } } }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { callback: v => '$' + v }
-                    }
-                }
-            }
+            data: { labels: labels, datasets: [{ label: 'Daily Revenue Loss ($)', data: values, backgroundColor: '#dc2626', borderRadius: 8 }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v } } } }
         });
     }
     
     function updateTopLossList(data) {
         let sorted = [...data].sort((a, b) => calcDailyLoss(b) - calcDailyLoss(a));
         let top5 = sorted.slice(0, 5);
-        
         let container = document.getElementById('topLossList');
         if (!top5.length || (top5.length > 0 && calcDailyLoss(top5[0]) === 0)) {
             container.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No revenue loss data available</div>';
             return;
         }
-        
         container.innerHTML = top5.map((r, idx) => {
             let loss = calcDailyLoss(r);
             let storeName = r.Store || 'Unknown';
@@ -400,30 +409,10 @@
             let province = getRegion(r);
             let lastService = getLastServiceDate(r);
             let daysSince = getDaysSinceService(r);
-            
             let locationText = address ? `${address}, ${city}, ${province}` : `${city}, ${province}`;
             let mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationText)}`;
-            
-            let serviceText = '';
-            if (lastService !== '—') {
-                serviceText = daysSince !== null ? `Last service: ${lastService} (${daysSince} days ago)` : `Last service: ${lastService}`;
-            } else {
-                serviceText = 'Last service: Unknown';
-            }
-            
-            return `
-                <div class="top-loss-item">
-                    <div class="top-loss-left">
-                        <span class="top-loss-rank">#${idx + 1}</span>
-                        <div>
-                            <div class="top-loss-store">${escapeHtml(storeName)}</div>
-                            <div class="top-loss-address">📍 <a href="${mapsUrl}" target="_blank" class="top-loss-link">${escapeHtml(locationText)}</a></div>
-                            <div class="top-loss-service">🕐 ${escapeHtml(serviceText)}</div>
-                        </div>
-                    </div>
-                    <div class="top-loss-loss">$${loss.toFixed(0)}/day</div>
-                </div>
-            `;
+            let serviceText = lastService !== '—' ? (daysSince !== null ? `Last service: ${lastService} (${daysSince} days ago)` : `Last service: ${lastService}`) : 'Last service: Unknown';
+            return `<div class="top-loss-item"><div class="top-loss-left"><span class="top-loss-rank">#${idx + 1}</span><div><div class="top-loss-store">${escapeHtml(storeName)}</div><div class="top-loss-address">📍 <a href="${mapsUrl}" target="_blank" class="top-loss-link">${escapeHtml(locationText)}</a></div><div class="top-loss-service">🕐 ${escapeHtml(serviceText)}</div></div></div><div class="top-loss-loss">$${loss.toFixed(0)}/day</div></div>`;
         }).join('');
     }
     
@@ -431,7 +420,6 @@
         if (!allData.length) return;
         let f = filterData(); 
         f = sortData(f);
-        
         let total = f.length;
         let highRisk = f.filter(r => getRiskLevel(calcRisk(r)) === 'High Risk').length;
         let offline = f.filter(r => r['Kiosk State'] === 'Offline').length;
@@ -471,12 +459,9 @@
             let cls = riskLevel === 'High Risk' ? 'badge-high' : (riskLevel === 'Medium Risk' ? 'badge-medium' : 'badge-low');
             let isHigh = riskLevel === 'High Risk';
             let barC = bin > 95 ? '#dc2626' : (bin > 80 ? '#f97316' : '#10b981');
-            
             let displayRisk = riskLevel;
-            
             let revenueClass = estRevenue > 0 ? 'kpi-green' : '';
             let lossClass = dailyLoss > 0 ? 'kpi-loss' : '';
-            
             return `<tr class="${isHigh ? 'high-risk-row' : ''}">
                 <td><strong>${escapeHtml(r.Store || '—')}</strong></td>
                 <td>${escapeHtml(r.Address || '—')}</td>
@@ -500,21 +485,11 @@
     function exportToExcelForBI(tool) {
         let f = filterData();
         let data = f.map(r => ({ 
-            Store: r.Store || '', 
-            Address: r.Address || '', 
-            City: r.City || '', 
-            Province: getRegion(r), 
-            Status: r['Kiosk State'] || '', 
-            'Volume (Daily TX)': getVolume(r), 
-            'Reject %': parseFloat(r['1 Day Reject %'] || 0), 
-            'Uptime %': parseFloat(r['7 Day Uptime %'] || 0), 
-            'Bin Full %': parseFloat(r['Total Bin Full %'] || 0), 
-            'Est. Revenue ($5/TX)': getEstRevenue(r), 
-            'Est. Daily Loss ($)': calcDailyLoss(r), 
-            'Net Revenue ($)': getNetRevenue(r),
-            'Risk Score': calcRisk(r), 
-            'Risk Level': getRiskLevel(calcRisk(r)),
-            'Est. Fill Date': r['Estimated Fill Date'] || '',
+            Store: r.Store || '', Address: r.Address || '', City: r.City || '', Province: getRegion(r), 
+            Status: r['Kiosk State'] || '', 'Volume (Daily TX)': getVolume(r), 'Reject %': parseFloat(r['1 Day Reject %'] || 0), 
+            'Uptime %': parseFloat(r['7 Day Uptime %'] || 0), 'Bin Full %': parseFloat(r['Total Bin Full %'] || 0), 
+            'Est. Revenue ($5/TX)': getEstRevenue(r), 'Est. Daily Loss ($)': calcDailyLoss(r), 'Net Revenue ($)': getNetRevenue(r),
+            'Risk Score': calcRisk(r), 'Risk Level': getRiskLevel(calcRisk(r)), 'Est. Fill Date': r['Estimated Fill Date'] || '',
             'Last Service Date': getLastServiceDate(r)
         }));
         let ws = XLSX.utils.json_to_sheet(data);
