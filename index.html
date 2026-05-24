@@ -7,7 +7,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <!-- QR Code library -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -24,9 +23,9 @@
         .qr-btn { background: #8b5cf6; }
         .upload-area { background: white; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 50px; text-align: center; margin-bottom: 24px; cursor: pointer; }
         .upload-area:hover { border-color: #1e3a5f; background: #f8fafc; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .kpi-card { background: white; border-radius: 16px; padding: 16px; border: 1px solid #e2e8f0; }
-        .kpi-label { font-size: 11px; color: #64748b; text-transform: uppercase; }
+        .kpi-label { font-size: 11px; color: #64748b; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
         .kpi-value { font-size: 32px; font-weight: 800; color: #1e293b; margin-top: 8px; }
         .kpi-loss { color: #dc2626; }
         .kpi-green { color: #10b981; }
@@ -54,24 +53,33 @@
         select, input, button { padding: 8px 12px; border-radius: 10px; font-size: 12px; background: white; border: 1px solid #e2e8f0; }
         button { background: #1e3a5f; color: white; border: none; cursor: pointer; font-weight: 600; }
         .table-wrapper { background: white; border-radius: 16px; overflow: auto; max-height: 450px; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1400px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1450px; }
         th { text-align: left; padding: 14px 12px; background: #f8fafc; font-weight: 700; border-bottom: 2px solid #e2e8f0; cursor: pointer; position: sticky; top: 0; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+        td:first-child { cursor: pointer; }
+        tr:hover td { background: #f8fafc; }
         .high-risk-row { background-color: #fee2e2; }
         .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge-high { background: #fee2e2; color: #dc2626; }
         .badge-medium { background: #fed7aa; color: #c2410c; }
         .badge-low { background: #dcfce7; color: #16a34a; }
+        .notes-icon { cursor: pointer; margin-right: 6px; font-size: 14px; display: inline-block; }
         .fill-bar { background: #e2e8f0; border-radius: 10px; height: 6px; width: 70px; margin-top: 5px; display: inline-block; }
         .fill-bar-fill { height: 100%; border-radius: 10px; display: block; }
         .footer { text-align: center; margin-top: 16px; font-size: 10px; color: #64748b; }
         .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; z-index: 1000; display: none; }
         .hidden-upload { display: none; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-content { background: white; border-radius: 20px; padding: 24px; max-width: 500px; text-align: center; }
+        .modal-content { background: white; border-radius: 20px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
         .modal-close { background: #1e3a5f; color: white; border: none; padding: 10px; border-radius: 30px; cursor: pointer; margin-top: 16px; width: 100%; }
-        #qrcode { display: flex; justify-content: center; margin: 20px 0; }
-        .qr-instruction { font-size: 12px; color: #64748b; margin-top: 10px; }
+        .notes-list { margin: 15px 0; max-height: 300px; overflow-y: auto; }
+        .note-item { background: #f8fafc; border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+        .note-text { flex: 1; font-size: 12px; color: #1e293b; }
+        .note-date { font-size: 10px; color: #64748b; margin-top: 4px; }
+        .note-edit-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px; }
+        .note-edit-btn:hover { opacity: 0.7; }
+        .note-input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 12px; font-family: inherit; resize: vertical; margin-top: 10px; }
+        .save-note-btn { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-top: 10px; font-size: 12px; }
         
         .help-icon {
             display: inline-flex;
@@ -100,7 +108,9 @@
             font-weight: normal;
             padding: 6px 10px;
             border-radius: 8px;
-            white-space: nowrap;
+            white-space: normal;
+            width: 220px;
+            text-align: center;
             z-index: 100;
             margin-bottom: 8px;
         }
@@ -130,10 +140,21 @@
             <button class="modal-close" onclick="closeModal()">Close</button>
         </div>
     </div>
+    <div id="notesModal" class="modal">
+        <div class="modal-content">
+            <h3 id="notesModalTitle">📝 Kiosk Notes</h3>
+            <div id="notesModalBody">
+                <div id="notesList" class="notes-list"></div>
+                <textarea id="newNoteInput" class="note-input" rows="2" placeholder="Add a new note..."></textarea>
+                <button id="saveNewNoteBtn" class="save-note-btn">Save Note</button>
+            </div>
+            <button class="modal-close" onclick="closeNotesModal()">Close</button>
+        </div>
+    </div>
     <div class="upload-area" id="uploadArea" onclick="document.getElementById('csvFile').click()"><div style="font-size:48px;">📊</div><h3>Upload Fleet Data</h3><p>Click to select your CSV file</p></div>
     <div id="dashboard" style="display:none">
         <div class="kpi-grid" id="kpiGrid"></div>
-        <div class="info-bar"><div>🕐 Last updated: <span id="lastUpdateTime">-</span></div><div>⚡ Click column headers to sort | Hover ? for help</div></div>
+        <div class="info-bar"><div>🕐 Last updated: <span id="lastUpdateTime">-</span></div><div>⚡ Click column headers to sort | Hover ? for help | Click store name to add notes</div></div>
         
         <div class="chart-container">
             <div class="chart-title">💰 Daily Revenue Loss by Province <span class="help-icon" data-tooltip="Shows which province loses the most money each day">?</span></div>
@@ -156,34 +177,231 @@
             <table id="dataTable">
                 <thead>
                     <tr>
-                        <th data-sort="store">Store <span class="help-icon" data-tooltip="Name of the store or location">?</span></th>
+                        <th data-sort="store">Store <span class="help-icon" data-tooltip="Click store name to add/edit notes">📝</span></th>
                         <th data-sort="address">Address <span class="help-icon" data-tooltip="Street address of the kiosk">?</span></th>
                         <th data-sort="city">City <span class="help-icon" data-tooltip="City where the kiosk is located">?</span></th>
                         <th data-sort="province">Province <span class="help-icon" data-tooltip="Province or territory">?</span></th>
                         <th data-sort="status">Status <span class="help-icon" data-tooltip="Current operational state">?</span></th>
                         <th data-sort="volume">Volume <span class="help-icon" data-tooltip="Number of transactions in the last 24 hours">?</span></th>
-                        <th data-sort="reject">Reject% <span class="help-icon" data-tooltip="Percentage of transactions that failed">?</span></th>
-                        <th data-sort="uptime">Uptime% <span class="help-icon" data-tooltip="Percentage of time the kiosk was online">?</span></th>
-                        <th data-sort="bin">Bin% <span class="help-icon" data-tooltip="How full the cash/coin bin is">?</span></th>
-                        <th data-sort="revenue">Est. Revenue <span class="help-icon" data-tooltip="What the kiosk WOULD make if perfect (Volume × $5)">?</span></th>
-                        <th data-sort="loss">Daily Loss <span class="help-icon" data-tooltip="Money lost from rejected transactions + downtime">?</span></th>
-                        <th data-sort="net">Net Revenue <span class="help-icon" data-tooltip="Actual revenue after losses">?</span></th>
-                        <th data-sort="risk">Risk Level <span class="help-icon" data-tooltip="High Risk = Score 60+ (fix now), Medium = 30-59, Low = 0-29">?</span></th>
+                        <th data-sort="reject">Reject% <span class="help-icon" data-tooltip="Percentage of transactions that failed. High = customers can't use machine">?</span></th>
+                        <th data-sort="uptime">Uptime% <span class="help-icon" data-tooltip="Percentage of time the kiosk was online. Low = machine is down">?</span></th>
+                        <th data-sort="bin">Bin% <span class="help-icon" data-tooltip="How full the cash/coin bin is. Over 90% needs emptying soon">?</span></th>
+                        <th data-sort="revenue">Est. Revenue <span class="help-icon" data-tooltip="What the kiosk WOULD make if perfect. Calculated as Volume × $5 per transaction. Ask Jeff for the correct $ value.">?</span></th>
+                        <th data-sort="loss">Daily Loss <span class="help-icon" data-tooltip="Money lost from rejected transactions + downtime. Calculated as Lost transactions × $5 per transaction.">?</span></th>
+                        <th data-sort="net">Net Revenue <span class="help-icon" data-tooltip="Estimated actual daily income. Est. Revenue minus Daily Loss. Currently using $5 per transaction - this can be updated.">?</span></th>
+                        <th data-sort="risk">Risk Level <span class="help-icon" data-tooltip="High Risk = Score 60+ (fix now), Medium = 30-59, Low = 0-29. Score formula: (Reject% × 2.5) + (100 - Uptime%) × 1.5 + (BinFull% / 2). Offline kiosks get +60.">?</span></th>
                         <th data-sort="fill">Est. Fill <span class="help-icon" data-tooltip="Estimated date when bin will be full">?</span></th>
                     </tr>
                 </thead>
-                <tbody id="tableBody"><tr><td colspan="14">No data loaded. Upload a CSV file.</tbody>
+                <tbody id="tableBody"></tr><td colspan="14">No data loaded. Upload a CSV file.</tbody>
             </table>
         </div>
-        <div class="footer">💡 Hover over any <strong>?</strong> icon to see what the column means</div>
-        <div class="copyright">© 2025 LogicLegion (JE) | Built by Jean Eljaalouk</div>
+        <div class="footer">💡 Click any store name to add/edit notes (saved to your browser, auto-delete after 30 days)</div>
+        <div class="copyright">© 2026 J.E. | Built by J.E.</div>
     </div>
 </div>
 <div id="toast" class="toast"></div>
 <script>
     let allData = [], currentSort = { column: 'loss', direction: 'desc' };
     let lossChart = null;
-    let qr = null;
+    let currentNoteStore = null;
+    let editingNoteId = null;
+    
+    // TRANSACTION VALUE - CHANGE THIS IF JEFF HAS A DIFFERENT NUMBER
+    const TRANSACTION_VALUE = 5;  // Change this to whatever Jeff says (e.g., 4, 6, 7.5)
+    
+    // Notes functions
+    function getNotesKey(storeId) {
+        return `kiosk_notes_${storeId}`;
+    }
+    
+    function loadNotes(storeId) {
+        const key = getNotesKey(storeId);
+        const saved = localStorage.getItem(key);
+        if (!saved) return [];
+        try {
+            const notes = JSON.parse(saved);
+            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            const filtered = notes.filter(note => new Date(note.date).getTime() > thirtyDaysAgo);
+            if (filtered.length !== notes.length) {
+                localStorage.setItem(key, JSON.stringify(filtered));
+            }
+            return filtered;
+        } catch(e) { return []; }
+    }
+    
+    function saveNote(storeId, noteText) {
+        if (!noteText.trim()) return;
+        const key = getNotesKey(storeId);
+        const notes = loadNotes(storeId);
+        notes.unshift({
+            id: Date.now().toString(),
+            text: noteText.trim(),
+            date: new Date().toISOString(),
+            formattedDate: new Date().toLocaleString()
+        });
+        localStorage.setItem(key, JSON.stringify(notes));
+        return notes;
+    }
+    
+    function updateNote(storeId, noteId, newText) {
+        if (!newText.trim()) return;
+        const key = getNotesKey(storeId);
+        const notes = loadNotes(storeId);
+        const noteIndex = notes.findIndex(n => n.id === noteId);
+        if (noteIndex !== -1) {
+            notes[noteIndex].text = newText.trim();
+            notes[noteIndex].date = new Date().toISOString();
+            notes[noteIndex].formattedDate = new Date().toLocaleString();
+            localStorage.setItem(key, JSON.stringify(notes));
+        }
+        return notes;
+    }
+    
+    function deleteNote(storeId, noteId) {
+        const key = getNotesKey(storeId);
+        const notes = loadNotes(storeId);
+        const filtered = notes.filter(n => n.id !== noteId);
+        localStorage.setItem(key, JSON.stringify(filtered));
+        return filtered;
+    }
+    
+    function openNotesModal(storeId, storeName) {
+        currentNoteStore = storeId;
+        editingNoteId = null;
+        document.getElementById('notesModalTitle').innerHTML = `📝 Notes - ${escapeHtml(storeName)}`;
+        
+        const notes = loadNotes(storeId);
+        const notesListDiv = document.getElementById('notesList');
+        
+        if (notes.length === 0) {
+            notesListDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No notes yet. Add one below.</div>';
+        } else {
+            notesListDiv.innerHTML = notes.map(note => `
+                <div class="note-item" data-note-id="${note.id}">
+                    <div style="flex:1;">
+                        <div class="note-text" data-original-text="${escapeHtml(note.text)}">${escapeHtml(note.text)}</div>
+                        <div class="note-date">📅 ${escapeHtml(note.formattedDate)}</div>
+                    </div>
+                    <div>
+                        <button class="note-edit-btn" onclick="editNote('${storeId}', '${note.id}')" title="Edit">✏️</button>
+                        <button class="note-edit-btn" onclick="deleteNoteAndRefresh('${storeId}', '${note.id}')" title="Delete">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        document.getElementById('newNoteInput').value = '';
+        document.getElementById('notesModal').style.display = 'flex';
+    }
+    
+    function editNote(storeId, noteId) {
+        const notes = loadNotes(storeId);
+        const note = notes.find(n => n.id === noteId);
+        if (!note) return;
+        
+        editingNoteId = noteId;
+        document.getElementById('newNoteInput').value = note.text;
+        document.getElementById('saveNewNoteBtn').textContent = 'Update Note';
+        document.getElementById('saveNewNoteBtn').style.background = '#f59e0b';
+        
+        const saveBtn = document.getElementById('saveNewNoteBtn');
+        saveBtn.onclick = () => {
+            const newText = document.getElementById('newNoteInput').value;
+            if (newText.trim()) {
+                updateNote(storeId, noteId, newText);
+                refreshNotesModal(storeId);
+            }
+        };
+        
+        const cancelEdit = () => {
+            editingNoteId = null;
+            document.getElementById('newNoteInput').value = '';
+            document.getElementById('saveNewNoteBtn').textContent = 'Save Note';
+            document.getElementById('saveNewNoteBtn').style.background = '#10b981';
+            saveBtn.onclick = () => saveNewNote(storeId);
+        };
+        
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel Edit';
+        cancelBtn.style.background = '#64748b';
+        cancelBtn.style.color = 'white';
+        cancelBtn.style.border = 'none';
+        cancelBtn.style.padding = '8px 16px';
+        cancelBtn.style.borderRadius = '8px';
+        cancelBtn.style.cursor = 'pointer';
+        cancelBtn.style.marginLeft = '10px';
+        cancelBtn.onclick = () => {
+            cancelEdit();
+            cancelBtn.remove();
+        };
+        
+        const existingCancel = document.querySelector('#cancelEditBtn');
+        if (existingCancel) existingCancel.remove();
+        cancelBtn.id = 'cancelEditBtn';
+        document.getElementById('saveNewNoteBtn').parentNode.appendChild(cancelBtn);
+    }
+    
+    function deleteNoteAndRefresh(storeId, noteId) {
+        deleteNote(storeId, noteId);
+        refreshNotesModal(storeId);
+    }
+    
+    function refreshNotesModal(storeId) {
+        const store = allData.find(r => (r.StoreId || r.Store) === storeId);
+        const storeName = store ? (store.Store || 'Kiosk') : 'Kiosk';
+        document.getElementById('notesModalTitle').innerHTML = `📝 Notes - ${escapeHtml(storeName)}`;
+        
+        const notes = loadNotes(storeId);
+        const notesListDiv = document.getElementById('notesList');
+        
+        if (notes.length === 0) {
+            notesListDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No notes yet. Add one below.</div>';
+        } else {
+            notesListDiv.innerHTML = notes.map(note => `
+                <div class="note-item" data-note-id="${note.id}">
+                    <div style="flex:1;">
+                        <div class="note-text">${escapeHtml(note.text)}</div>
+                        <div class="note-date">📅 ${escapeHtml(note.formattedDate)}</div>
+                    </div>
+                    <div>
+                        <button class="note-edit-btn" onclick="editNote('${storeId}', '${note.id}')" title="Edit">✏️</button>
+                        <button class="note-edit-btn" onclick="deleteNoteAndRefresh('${storeId}', '${note.id}')" title="Delete">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        document.getElementById('newNoteInput').value = '';
+        document.getElementById('saveNewNoteBtn').textContent = 'Save Note';
+        document.getElementById('saveNewNoteBtn').style.background = '#10b981';
+        editingNoteId = null;
+        
+        const cancelBtn = document.querySelector('#cancelEditBtn');
+        if (cancelBtn) cancelBtn.remove();
+    }
+    
+    function saveNewNote(storeId) {
+        const noteText = document.getElementById('newNoteInput').value;
+        if (noteText.trim()) {
+            saveNote(storeId, noteText);
+            refreshNotesModal(storeId);
+        }
+    }
+    
+    function closeNotesModal() {
+        document.getElementById('notesModal').style.display = 'none';
+        currentNoteStore = null;
+        editingNoteId = null;
+        document.getElementById('newNoteInput').value = '';
+        document.getElementById('saveNewNoteBtn').textContent = 'Save Note';
+        document.getElementById('saveNewNoteBtn').style.background = '#10b981';
+        const cancelBtn = document.querySelector('#cancelEditBtn');
+        if (cancelBtn) cancelBtn.remove();
+    }
+    
+    window.editNote = editNote;
+    window.deleteNoteAndRefresh = deleteNoteAndRefresh;
     
     const CANADIAN_PROVINCES = ['ON', 'QC', 'BC', 'AB', 'MB', 'SK', 'NS', 'NB', 'NL', 'PE', 'NT', 'YT', 'NU'];
     
@@ -209,7 +427,6 @@
             <p style="font-size: 11px; margin-top: 10px; color: #64748b;">URL: ${currentUrl}</p>
         `;
         showModal('Scan QR Code', modalContent);
-        
         setTimeout(() => {
             const qrContainer = document.getElementById('qrcode');
             if (qrContainer) {
@@ -258,13 +475,13 @@
     }
     
     function getRegion(r) { return r.State || r.Province || 'Unknown'; }
+    function getStoreId(r) { return r.StoreId || r.Store || r.MPID || `store_${r.Store}`.replace(/[^a-zA-Z0-9]/g, '_'); }
     
     function calcRisk(r) {
         let rej = parseFloat(r['1 Day Reject %'] || 0);
         let uptime = parseFloat(r['7 Day Uptime %'] || 0);
         let binFull = parseFloat(r['Total Bin Full %'] || 0);
         let isOffline = r['Kiosk State'] === 'Offline';
-        
         let score = (rej * 2.5) + (100 - uptime) * 1.5 + (binFull / 2);
         if (isOffline) score += 60;
         return Math.min(Math.max(score, 0), 100);
@@ -277,7 +494,7 @@
     }
     
     function getVolume(r) { return parseFloat(r['1 Day TX'] || 0); }
-    function getEstRevenue(r) { return getVolume(r) * 5; }
+    function getEstRevenue(r) { return getVolume(r) * TRANSACTION_VALUE; }
     
     function calcDailyLoss(r) {
         let tx = getVolume(r);
@@ -286,11 +503,10 @@
         let lostFromReject = tx * (reject / 100);
         let lostFromDowntime = tx * ((100 - uptime) / 100) * 0.5;
         let totalLost = lostFromReject + lostFromDowntime;
-        return totalLost * 5;
+        return totalLost * TRANSACTION_VALUE;
     }
     
     function getNetRevenue(r) { return getEstRevenue(r) - calcDailyLoss(r); }
-    
     function getLastServiceDate(r) { return r['Last PM Date'] || r['Last Service Date'] || '—'; }
     
     function getDaysSinceService(r) {
@@ -432,9 +648,9 @@
             <div class="kpi-card"><div class="kpi-label">Total Kiosks <span class="help-icon" data-tooltip="Total number of kiosks in your fleet (Canada only)">?</span></div><div class="kpi-value">${total}</div></div>
             <div class="kpi-card"><div class="kpi-label">⚠️ High Risk <span class="help-icon" data-tooltip="Kiosks with Risk Score above 60. Fix these FIRST.">?</span></div><div class="kpi-value" style="color:#dc2626;">${highRisk}</div></div>
             <div class="kpi-card"><div class="kpi-label">📡 Offline <span class="help-icon" data-tooltip="Kiosks that are completely offline. Generating ZERO revenue.">?</span></div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div>
-            <div class="kpi-card"><div class="kpi-label">💰 Est. Daily Revenue <span class="help-icon" data-tooltip="What all kiosks WOULD make if perfect (Volume × $5)">?</span></div><div class="kpi-value kpi-green">$${totalRevenue.toFixed(0)}</div></div>
-            <div class="kpi-card"><div class="kpi-label">💸 Daily Loss <span class="help-icon" data-tooltip="Money lost today from rejects + downtime">?</span></div><div class="kpi-value kpi-loss">$${totalLoss.toFixed(0)}</div></div>
-            <div class="kpi-card"><div class="kpi-label">📈 Net Revenue <span class="help-icon" data-tooltip="Actual revenue after losses">?</span></div><div class="kpi-value">$${totalNet.toFixed(0)}</div></div>
+            <div class="kpi-card"><div class="kpi-label">💰 Est. Daily Revenue <span class="help-icon" data-tooltip="What all kiosks WOULD make if perfect. Calculated as Total Daily Transactions × $${TRANSACTION_VALUE} per transaction. Ask Jeff for the correct $ value per transaction.">?</span></div><div class="kpi-value kpi-green">$${totalRevenue.toFixed(0)}</div></div>
+            <div class="kpi-card"><div class="kpi-label">💸 Daily Loss <span class="help-icon" data-tooltip="Money lost today from rejected transactions + downtime. Calculated as Lost transactions × $${TRANSACTION_VALUE} per transaction.">?</span></div><div class="kpi-value kpi-loss">$${totalLoss.toFixed(0)}</div></div>
+            <div class="kpi-card"><div class="kpi-label">📈 Net Revenue <span class="help-icon" data-tooltip="Estimated actual daily income across all kiosks in Canada. Est. Revenue minus Daily Loss. Currently using $${TRANSACTION_VALUE} per transaction - this can be updated in the code.">?</span></div><div class="kpi-value">$${totalNet.toFixed(0)}</div></div>
         `;
         
         updateLossChart(f);
@@ -442,7 +658,7 @@
         
         let tbody = document.getElementById('tableBody');
         if (!f.length) { 
-            tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; 
+            tbody.innerHTML = '</table><td colspan="14" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; 
             return; 
         }
         
@@ -462,8 +678,11 @@
             let displayRisk = riskLevel;
             let revenueClass = estRevenue > 0 ? 'kpi-green' : '';
             let lossClass = dailyLoss > 0 ? 'kpi-loss' : '';
+            let storeId = getStoreId(r);
+            let storeName = r.Store || '—';
+            
             return `<tr class="${isHigh ? 'high-risk-row' : ''}">
-                <td><strong>${escapeHtml(r.Store || '—')}</strong></td>
+                <td><span class="notes-icon" onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">📝</span> <strong style="cursor:pointer;" onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">${escapeHtml(storeName)}</strong></td>
                 <td>${escapeHtml(r.Address || '—')}</td>
                 <td>${escapeHtml(r.City || '—')}</td>
                 <td>${getRegion(r)}</td>
@@ -521,6 +740,24 @@
             showToast('Failed'); 
         } 
     }
+    
+    window.openNotesModal = openNotesModal;
+    window.saveNewNote = saveNewNote;
+    
+    document.getElementById('saveNewNoteBtn')?.addEventListener('click', () => {
+        if (currentNoteStore) {
+            const noteText = document.getElementById('newNoteInput').value;
+            if (noteText.trim()) {
+                if (editingNoteId) {
+                    updateNote(currentNoteStore, editingNoteId, noteText);
+                    refreshNotesModal(currentNoteStore);
+                } else {
+                    saveNote(currentNoteStore, noteText);
+                    refreshNotesModal(currentNoteStore);
+                }
+            }
+        }
+    });
     
     document.getElementById('powerBIExportBtn')?.addEventListener('click', () => exportToExcelForBI('Power BI'));
     document.getElementById('tableauExportBtn')?.addEventListener('click', () => exportToExcelForBI('Tableau'));
