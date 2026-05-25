@@ -31,40 +31,32 @@
         .kpi-green { color: #10b981; }
         .info-bar { background: white; border-radius: 12px; padding: 10px 16px; margin-bottom: 20px; font-size: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; flex-wrap: wrap; }
         .chart-container { background: white; border-radius: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
-        .chart-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .chart-title:hover { color: #3b82f6; }
-        .province-bar-container { margin-bottom: 16px; cursor: pointer; transition: transform 0.2s; }
-        .province-bar-container:hover { transform: translateX(5px); }
-        .province-name { font-weight: 600; font-size: 13px; margin-bottom: 4px; display: flex; justify-content: space-between; }
-        .bar-wrapper { display: flex; align-items: center; gap: 8px; }
-        .bar-stack { flex: 1; height: 32px; display: flex; border-radius: 8px; overflow: hidden; }
-        .reject-bar { background: #dc2626; height: 100%; transition: width 0.3s; }
-        .downtime-bar { background: #f97316; height: 100%; transition: width 0.3s; }
-        .bar-total { font-size: 12px; font-weight: 600; min-width: 60px; text-align: right; }
-        .legend { display: flex; gap: 20px; margin-top: 15px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 11px; }
+        .chart-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        canvas { max-height: 300px; width: 100%; }
+        .legend { display: flex; justify-content: center; gap: 20px; margin-top: 12px; font-size: 11px; flex-wrap: wrap; }
         .legend-color { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-right: 5px; }
-        .click-hint { font-size: 10px; color: #64748b; margin-top: 10px; text-align: center; }
+        .click-hint { font-size: 10px; color: #64748b; margin-top: 8px; text-align: center; }
         
         .top-loss-container { background: white; border-radius: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
-        .top-loss-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .top-loss-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .top-loss-list { display: flex; flex-direction: column; gap: 8px; }
         .top-loss-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: #f8fafc; border-radius: 12px; border-left: 4px solid #dc2626; flex-wrap: wrap; gap: 10px; }
-        .top-loss-left { display: flex; align-items: center; gap: 12px; flex: 2; min-width: 250px; }
+        .top-loss-left { display: flex; align-items: center; gap: 12px; flex: 2; min-width: 200px; }
         .top-loss-rank { background: #dc2626; color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
-        .top-loss-store { font-weight: 600; color: #1e293b; }
+        .top-loss-store { font-weight: 600; color: #1e293b; font-size: 13px; }
         .top-loss-address { font-size: 11px; color: #64748b; margin-top: 2px; }
         .top-loss-service { font-size: 10px; color: #64748b; margin-top: 2px; }
         .top-loss-loss { font-weight: 700; color: #dc2626; white-space: nowrap; }
-        .top-loss-link { color: #3b82f6; text-decoration: none; font-size: 11px; margin-left: 8px; }
+        .top-loss-link { color: #3b82f6; text-decoration: none; font-size: 11px; }
         .top-loss-link:hover { text-decoration: underline; }
         
         .filters { background: white; border-radius: 16px; padding: 16px 20px; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 12px; border: 1px solid #e2e8f0; align-items: flex-end; }
-        .filter-group { display: flex; flex-direction: column; gap: 5px; min-width: 140px; flex: 1; }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; min-width: 120px; flex: 1; }
         .filter-group label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
         select, input, button { padding: 8px 12px; border-radius: 10px; font-size: 12px; background: white; border: 1px solid #e2e8f0; }
         button { background: #1e3a5f; color: white; border: none; cursor: pointer; font-weight: 600; }
-        .table-wrapper { background: white; border-radius: 16px; overflow: auto; max-height: 450px; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1450px; }
+        .table-wrapper { background: white; border-radius: 16px; overflow-x: auto; max-height: 450px; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1000px; }
         th { text-align: left; padding: 14px 12px; background: #f8fafc; font-weight: 700; border-bottom: 2px solid #e2e8f0; cursor: pointer; position: sticky; top: 0; }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
         td:first-child { cursor: pointer; }
@@ -125,6 +117,17 @@
             z-index: 100;
             margin-bottom: 8px;
         }
+        
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .header h1 { font-size: 18px; }
+            .kpi-value { font-size: 24px; }
+            .action-btn { padding: 6px 12px; font-size: 10px; }
+            .top-loss-store { font-size: 12px; }
+            .top-loss-address { font-size: 10px; }
+            .top-loss-loss { font-size: 12px; }
+            th, td { padding: 8px 6px; font-size: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -168,13 +171,13 @@
         <div class="info-bar"><div>🕐 Last updated: <span id="lastUpdateTime">-</span></div><div>⚡ Click column headers to sort | Hover ? for help | Click store name to add notes</div></div>
         
         <div class="chart-container">
-            <div class="chart-title">💰 Daily Revenue Loss by Province <span class="help-icon" data-tooltip="Shows which province loses the most money. 🔴 Red = lost from rejected transactions | 🟠 Orange = lost from downtime. Click any province bar to filter the table.">?</span></div>
-            <div id="provinceChartContainer"></div>
+            <div class="chart-title">💰 Daily Revenue Loss by Province <span class="help-icon" data-tooltip="Shows which province loses the most money. 🔴 Red = lost from rejected transactions | 🟠 Orange = lost from downtime. Click any bar to filter the table.">?</span></div>
+            <canvas id="lossChart"></canvas>
             <div class="legend">
                 <div><span class="legend-color" style="background: #dc2626;"></span> Loss from rejected transactions</div>
                 <div><span class="legend-color" style="background: #f97316;"></span> Loss from downtime</div>
             </div>
-            <div class="click-hint">💡 Click any province bar to filter the table below</div>
+            <div class="click-hint">💡 Click any bar to filter the table below</div>
         </div>
         
         <div class="top-loss-container" id="topLossContainer">
@@ -209,7 +212,7 @@
                         <th data-sort="fill">Est. Fill <span class="help-icon" data-tooltip="Estimated date when bin will be full">?</span></th>
                     </tr>
                 </thead>
-                <tbody id="tableBody"><tr><td colspan="14">No data loaded. Upload a CSV file.</tbody>
+                <tbody id="tableBody"><table><td colspan="14">No data loaded. Upload a CSV file.</tbody>
             </table>
         </div>
         <div class="footer">💡 Click any store name to add/edit notes (saved to your browser, auto-delete after 30 days)</div>
@@ -219,17 +222,15 @@
 <div id="toast" class="toast"></div>
 <script>
     let allData = [], currentSort = { column: 'loss', direction: 'desc' };
+    let lossChart = null;
     let currentNoteStore = null;
     let editingNoteId = null;
     let currentProvinceFilter = 'all';
     
-    // TRANSACTION VALUE - Change this if Jeff has a different number
     const TRANSACTION_VALUE = 5;
     
-    // Notes functions
-    function getNotesKey(storeId) {
-        return `kiosk_notes_${storeId}`;
-    }
+    // Notes functions (same as before)
+    function getNotesKey(storeId) { return `kiosk_notes_${storeId}`; }
     
     function loadNotes(storeId) {
         const key = getNotesKey(storeId);
@@ -239,9 +240,7 @@
             const notes = JSON.parse(saved);
             const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
             const filtered = notes.filter(note => new Date(note.date).getTime() > thirtyDaysAgo);
-            if (filtered.length !== notes.length) {
-                localStorage.setItem(key, JSON.stringify(filtered));
-            }
+            if (filtered.length !== notes.length) localStorage.setItem(key, JSON.stringify(filtered));
             return filtered;
         } catch(e) { return []; }
     }
@@ -250,14 +249,8 @@
         if (!noteText.trim()) return;
         const key = getNotesKey(storeId);
         const notes = loadNotes(storeId);
-        notes.unshift({
-            id: Date.now().toString(),
-            text: noteText.trim(),
-            date: new Date().toISOString(),
-            formattedDate: new Date().toLocaleString()
-        });
+        notes.unshift({ id: Date.now().toString(), text: noteText.trim(), date: new Date().toISOString(), formattedDate: new Date().toLocaleString() });
         localStorage.setItem(key, JSON.stringify(notes));
-        return notes;
     }
     
     function updateNote(storeId, noteId, newText) {
@@ -271,7 +264,6 @@
             notes[noteIndex].formattedDate = new Date().toLocaleString();
             localStorage.setItem(key, JSON.stringify(notes));
         }
-        return notes;
     }
     
     function deleteNote(storeId, noteId) {
@@ -279,34 +271,24 @@
         const notes = loadNotes(storeId);
         const filtered = notes.filter(n => n.id !== noteId);
         localStorage.setItem(key, JSON.stringify(filtered));
-        return filtered;
     }
     
     function openNotesModal(storeId, storeName) {
         currentNoteStore = storeId;
         editingNoteId = null;
         document.getElementById('notesModalTitle').innerHTML = `📝 Notes - ${escapeHtml(storeName)}`;
-        
         const notes = loadNotes(storeId);
         const notesListDiv = document.getElementById('notesList');
-        
         if (notes.length === 0) {
             notesListDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No notes yet. Add one below.</div>';
         } else {
             notesListDiv.innerHTML = notes.map(note => `
-                <div class="note-item" data-note-id="${note.id}">
-                    <div style="flex:1;">
-                        <div class="note-text">${escapeHtml(note.text)}</div>
-                        <div class="note-date">📅 ${escapeHtml(note.formattedDate)}</div>
-                    </div>
-                    <div>
-                        <button class="note-edit-btn" onclick="editNote('${storeId}', '${note.id}')" title="Edit">✏️</button>
-                        <button class="note-edit-btn" onclick="deleteNoteAndRefresh('${storeId}', '${note.id}')" title="Delete">🗑️</button>
-                    </div>
+                <div class="note-item">
+                    <div style="flex:1;"><div class="note-text">${escapeHtml(note.text)}</div><div class="note-date">📅 ${escapeHtml(note.formattedDate)}</div></div>
+                    <div><button class="note-edit-btn" onclick="editNote('${storeId}', '${note.id}')">✏️</button><button class="note-edit-btn" onclick="deleteNoteAndRefresh('${storeId}', '${note.id}')">🗑️</button></div>
                 </div>
             `).join('');
         }
-        
         document.getElementById('newNoteInput').value = '';
         document.getElementById('notesModal').style.display = 'flex';
     }
@@ -315,47 +297,10 @@
         const notes = loadNotes(storeId);
         const note = notes.find(n => n.id === noteId);
         if (!note) return;
-        
         editingNoteId = noteId;
         document.getElementById('newNoteInput').value = note.text;
         document.getElementById('saveNewNoteBtn').textContent = 'Update Note';
         document.getElementById('saveNewNoteBtn').style.background = '#f59e0b';
-        
-        const saveBtn = document.getElementById('saveNewNoteBtn');
-        saveBtn.onclick = () => {
-            const newText = document.getElementById('newNoteInput').value;
-            if (newText.trim()) {
-                updateNote(storeId, noteId, newText);
-                refreshNotesModal(storeId);
-            }
-        };
-        
-        const cancelEdit = () => {
-            editingNoteId = null;
-            document.getElementById('newNoteInput').value = '';
-            document.getElementById('saveNewNoteBtn').textContent = 'Save Note';
-            document.getElementById('saveNewNoteBtn').style.background = '#10b981';
-            saveBtn.onclick = () => saveNewNote(storeId);
-        };
-        
-        const cancelBtn = document.createElement('button');
-        cancelBtn.textContent = 'Cancel Edit';
-        cancelBtn.style.background = '#64748b';
-        cancelBtn.style.color = 'white';
-        cancelBtn.style.border = 'none';
-        cancelBtn.style.padding = '8px 16px';
-        cancelBtn.style.borderRadius = '8px';
-        cancelBtn.style.cursor = 'pointer';
-        cancelBtn.style.marginLeft = '10px';
-        cancelBtn.onclick = () => {
-            cancelEdit();
-            cancelBtn.remove();
-        };
-        
-        const existingCancel = document.querySelector('#cancelEditBtn');
-        if (existingCancel) existingCancel.remove();
-        cancelBtn.id = 'cancelEditBtn';
-        document.getElementById('saveNewNoteBtn').parentNode.appendChild(cancelBtn);
     }
     
     function deleteNoteAndRefresh(storeId, noteId) {
@@ -367,41 +312,34 @@
         const store = allData.find(r => (r.StoreId || r.Store) === storeId);
         const storeName = store ? (store.Store || 'Kiosk') : 'Kiosk';
         document.getElementById('notesModalTitle').innerHTML = `📝 Notes - ${escapeHtml(storeName)}`;
-        
         const notes = loadNotes(storeId);
         const notesListDiv = document.getElementById('notesList');
-        
         if (notes.length === 0) {
             notesListDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No notes yet. Add one below.</div>';
         } else {
             notesListDiv.innerHTML = notes.map(note => `
-                <div class="note-item" data-note-id="${note.id}">
-                    <div style="flex:1;">
-                        <div class="note-text">${escapeHtml(note.text)}</div>
-                        <div class="note-date">📅 ${escapeHtml(note.formattedDate)}</div>
-                    </div>
-                    <div>
-                        <button class="note-edit-btn" onclick="editNote('${storeId}', '${note.id}')" title="Edit">✏️</button>
-                        <button class="note-edit-btn" onclick="deleteNoteAndRefresh('${storeId}', '${note.id}')" title="Delete">🗑️</button>
-                    </div>
+                <div class="note-item">
+                    <div style="flex:1;"><div class="note-text">${escapeHtml(note.text)}</div><div class="note-date">📅 ${escapeHtml(note.formattedDate)}</div></div>
+                    <div><button class="note-edit-btn" onclick="editNote('${storeId}', '${note.id}')">✏️</button><button class="note-edit-btn" onclick="deleteNoteAndRefresh('${storeId}', '${note.id}')">🗑️</button></div>
                 </div>
             `).join('');
         }
-        
         document.getElementById('newNoteInput').value = '';
         document.getElementById('saveNewNoteBtn').textContent = 'Save Note';
         document.getElementById('saveNewNoteBtn').style.background = '#10b981';
         editingNoteId = null;
-        
-        const cancelBtn = document.querySelector('#cancelEditBtn');
-        if (cancelBtn) cancelBtn.remove();
     }
     
     function saveNewNote(storeId) {
         const noteText = document.getElementById('newNoteInput').value;
         if (noteText.trim()) {
-            saveNote(storeId, noteText);
-            refreshNotesModal(storeId);
+            if (editingNoteId) {
+                updateNote(storeId, editingNoteId, noteText);
+                refreshNotesModal(storeId);
+            } else {
+                saveNote(storeId, noteText);
+                refreshNotesModal(storeId);
+            }
         }
     }
     
@@ -412,51 +350,24 @@
         document.getElementById('newNoteInput').value = '';
         document.getElementById('saveNewNoteBtn').textContent = 'Save Note';
         document.getElementById('saveNewNoteBtn').style.background = '#10b981';
-        const cancelBtn = document.querySelector('#cancelEditBtn');
-        if (cancelBtn) cancelBtn.remove();
     }
     
     window.editNote = editNote;
     window.deleteNoteAndRefresh = deleteNoteAndRefresh;
+    window.openNotesModal = openNotesModal;
+    window.saveNewNote = saveNewNote;
     
     const CANADIAN_PROVINCES = ['ON', 'QC', 'BC', 'AB', 'MB', 'SK', 'NS', 'NB', 'NL', 'PE', 'NT', 'YT', 'NU'];
     
-    function isCanadian(row) {
-        let prov = (row.State || row.Province || '').trim().toUpperCase();
-        return CANADIAN_PROVINCES.includes(prov);
-    }
-    
+    function isCanadian(row) { let prov = (row.State || row.Province || '').trim().toUpperCase(); return CANADIAN_PROVINCES.includes(prov); }
     function showToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
-    function showModal(title, content) { 
-        document.getElementById('modalTitle').textContent = title; 
-        document.getElementById('modalBody').innerHTML = content; 
-        document.getElementById('instructionModal').style.display = 'flex'; 
-    }
+    function showModal(title, content) { document.getElementById('modalTitle').textContent = title; document.getElementById('modalBody').innerHTML = content; document.getElementById('instructionModal').style.display = 'flex'; }
     function closeModal() { document.getElementById('instructionModal').style.display = 'none'; }
     
     document.getElementById('qrBtn')?.addEventListener('click', () => {
         const currentUrl = window.location.href;
-        const modalContent = `
-            <p>Scan with your phone camera to open this dashboard on your mobile device.</p>
-            <div id="qrcode"></div>
-            <p class="qr-instruction">📱 Works with any camera app on iPhone or Android</p>
-            <p style="font-size: 11px; margin-top: 10px; color: #64748b;">URL: ${currentUrl}</p>
-        `;
-        showModal('Scan QR Code', modalContent);
-        setTimeout(() => {
-            const qrContainer = document.getElementById('qrcode');
-            if (qrContainer) {
-                qrContainer.innerHTML = '';
-                new QRCode(qrContainer, {
-                    text: currentUrl,
-                    width: 200,
-                    height: 200,
-                    colorDark: '#000000',
-                    colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-            }
-        }, 100);
+        showModal('Scan QR Code', `<p>Scan with your phone camera to open this dashboard on your mobile device.</p><div id="qrcode"></div><p class="qr-instruction">📱 Works with any camera app on iPhone or Android</p><p style="font-size:11px;margin-top:10px;color:#64748b;">URL: ${currentUrl}</p>`);
+        setTimeout(() => { const qc = document.getElementById('qrcode'); if(qc) { qc.innerHTML = ''; new QRCode(qc, { text: currentUrl, width: 200, height: 200 }); } }, 100);
     });
     
     document.getElementById('showUploadBtn')?.addEventListener('click', () => document.getElementById('csvFile').click());
@@ -479,10 +390,7 @@
             if (Object.keys(row).length) allData.push(row);
         }
         if (allData.length === 0) { showToast('Error: No valid data rows'); return; }
-        
-        let originalCount = allData.length;
         allData = allData.filter(row => isCanadian(row));
-        
         document.getElementById('dashboard').style.display = 'block';
         document.getElementById('uploadArea').style.display = 'none';
         document.getElementById('actionButtons').style.display = 'flex';
@@ -503,180 +411,115 @@
         return Math.min(Math.max(score, 0), 100);
     }
     
-    function getRiskLevel(score) {
-        if (score >= 60) return 'High Risk';
-        if (score >= 30) return 'Medium Risk';
-        return 'Low Risk';
-    }
-    
+    function getRiskLevel(score) { if (score >= 60) return 'High Risk'; if (score >= 30) return 'Medium Risk'; return 'Low Risk'; }
     function getVolume(r) { return parseFloat(r['1 Day TX'] || 0); }
     function getEstRevenue(r) { return getVolume(r) * TRANSACTION_VALUE; }
-    
-    function calcLossFromReject(r) {
-        let tx = getVolume(r);
-        let reject = parseFloat(r['1 Day Reject %'] || 0);
-        let lostFromReject = tx * (reject / 100);
-        return lostFromReject * TRANSACTION_VALUE;
-    }
-    
-    function calcLossFromDowntime(r) {
-        let tx = getVolume(r);
-        let uptime = parseFloat(r['7 Day Uptime %'] || 0);
-        let lostFromDowntime = tx * ((100 - uptime) / 100) * 0.5;
-        return lostFromDowntime * TRANSACTION_VALUE;
-    }
-    
-    function calcDailyLoss(r) {
-        return calcLossFromReject(r) + calcLossFromDowntime(r);
-    }
-    
+    function calcLossFromReject(r) { let tx = getVolume(r); let reject = parseFloat(r['1 Day Reject %'] || 0); return (tx * (reject / 100)) * TRANSACTION_VALUE; }
+    function calcLossFromDowntime(r) { let tx = getVolume(r); let uptime = parseFloat(r['7 Day Uptime %'] || 0); return (tx * ((100 - uptime) / 100) * 0.5) * TRANSACTION_VALUE; }
+    function calcDailyLoss(r) { return calcLossFromReject(r) + calcLossFromDowntime(r); }
     function getNetRevenue(r) { return getEstRevenue(r) - calcDailyLoss(r); }
     function getLastServiceDate(r) { return r['Last PM Date'] || r['Last Service Date'] || '—'; }
-    
-    function getDaysSinceService(r) {
-        let lastService = getLastServiceDate(r);
-        if (lastService === '—') return null;
-        try {
-            let parts = lastService.match(/(\d{2})\/(\d{2})\/(\d{2})/);
-            if (parts) {
-                let date = new Date(2000 + parseInt(parts[3]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                let today = new Date();
-                let diffTime = today - date;
-                let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                return diffDays > 0 ? diffDays : 0;
-            }
-        } catch(e) {}
-        return null;
-    }
     
     function populateFilters() {
         let regions = [...new Set(allData.map(r => getRegion(r)))].filter(r => r && r !== 'Unknown');
         let sel = document.getElementById('provinceFilter');
         sel.innerHTML = '<option value="all">🌎 All Provinces</option>';
         regions.sort().forEach(r => sel.innerHTML += `<option value="${r}">${r}</option>`);
-        
-        document.getElementById('provinceFilter').onchange = () => {
-            currentProvinceFilter = document.getElementById('provinceFilter').value;
-            renderAll();
-        };
+        document.getElementById('provinceFilter').onchange = () => { currentProvinceFilter = document.getElementById('provinceFilter').value; renderAll(); };
         document.getElementById('searchInput').oninput = () => renderAll();
         document.getElementById('manualRefreshBtn').onclick = () => renderAll();
-        document.getElementById('resetBtn').onclick = () => { 
-            document.getElementById('provinceFilter').value = 'all'; 
-            document.getElementById('searchInput').value = ''; 
-            currentProvinceFilter = 'all';
-            renderAll(); 
-        };
+        document.getElementById('resetBtn').onclick = () => { document.getElementById('provinceFilter').value = 'all'; document.getElementById('searchInput').value = ''; currentProvinceFilter = 'all'; renderAll(); };
     }
     
-    function setupSorting() { 
-        document.querySelectorAll('#dataTable th').forEach(th => th.addEventListener('click', () => { 
-            let k = th.getAttribute('data-sort'); 
-            if (currentSort.column === k) {
-                currentSort.direction = currentSort.direction === 'desc' ? 'asc' : 'desc';
-            } else { 
-                currentSort.column = k; 
-                currentSort.direction = 'desc'; 
-            } 
-            renderAll(); 
-        })); 
-    }
+    function setupSorting() { document.querySelectorAll('#dataTable th').forEach(th => th.addEventListener('click', () => { let k = th.getAttribute('data-sort'); if (currentSort.column === k) currentSort.direction = currentSort.direction === 'desc' ? 'asc' : 'desc'; else { currentSort.column = k; currentSort.direction = 'desc'; } renderAll(); })); }
     
     function filterData() {
         let f = [...allData];
         let prov = currentProvinceFilter !== 'all' ? currentProvinceFilter : (document.getElementById('provinceFilter')?.value || 'all');
         if (prov !== 'all') f = f.filter(r => getRegion(r) === prov);
         let s = document.getElementById('searchInput')?.value.toLowerCase() || '';
-        if (s) f = f.filter(r => (r.Store || '').toLowerCase().includes(s) || 
-                              (r.City || '').toLowerCase().includes(s) || 
-                              (r.Address || '').toLowerCase().includes(s));
+        if (s) f = f.filter(r => (r.Store || '').toLowerCase().includes(s) || (r.City || '').toLowerCase().includes(s) || (r.Address || '').toLowerCase().includes(s));
         return f;
     }
     
-    function sortData(d) { 
-        return [...d].sort((a, b) => { 
-            let va, vb; 
-            switch (currentSort.column) { 
-                case 'store': va = (a.Store || '').toLowerCase(); vb = (b.Store || '').toLowerCase(); break; 
-                case 'address': va = (a.Address || '').toLowerCase(); vb = (b.Address || '').toLowerCase(); break; 
-                case 'city': va = (a.City || '').toLowerCase(); vb = (b.City || '').toLowerCase(); break; 
-                case 'province': va = getRegion(a); vb = getRegion(b); break; 
-                case 'status': va = a['Kiosk State'] || ''; vb = b['Kiosk State'] || ''; break; 
-                case 'volume': va = getVolume(a); vb = getVolume(b); break; 
-                case 'reject': va = parseFloat(a['1 Day Reject %'] || 0); vb = parseFloat(b['1 Day Reject %'] || 0); break; 
-                case 'uptime': va = parseFloat(a['7 Day Uptime %'] || 0); vb = parseFloat(b['7 Day Uptime %'] || 0); break; 
-                case 'bin': va = parseFloat(a['Total Bin Full %'] || 0); vb = parseFloat(b['Total Bin Full %'] || 0); break; 
-                case 'revenue': va = getEstRevenue(a); vb = getEstRevenue(b); break; 
-                case 'loss': va = calcDailyLoss(a); vb = calcDailyLoss(b); break; 
-                case 'net': va = getNetRevenue(a); vb = getNetRevenue(b); break; 
-                case 'risk': va = calcRisk(a); vb = calcRisk(b); break; 
-                default: return 0; 
-            } 
-            if (typeof va === 'number') return currentSort.direction === 'desc' ? vb - va : va - vb; 
-            return currentSort.direction === 'desc' ? vb.localeCompare(va) : va.localeCompare(vb); 
-        }); 
+    function sortData(d) {
+        return [...d].sort((a, b) => {
+            let va, vb;
+            switch (currentSort.column) {
+                case 'store': va = (a.Store || '').toLowerCase(); vb = (b.Store || '').toLowerCase(); break;
+                case 'address': va = (a.Address || '').toLowerCase(); vb = (b.Address || '').toLowerCase(); break;
+                case 'city': va = (a.City || '').toLowerCase(); vb = (b.City || '').toLowerCase(); break;
+                case 'province': va = getRegion(a); vb = getRegion(b); break;
+                case 'status': va = a['Kiosk State'] || ''; vb = b['Kiosk State'] || ''; break;
+                case 'volume': va = getVolume(a); vb = getVolume(b); break;
+                case 'reject': va = parseFloat(a['1 Day Reject %'] || 0); vb = parseFloat(b['1 Day Reject %'] || 0); break;
+                case 'uptime': va = parseFloat(a['7 Day Uptime %'] || 0); vb = parseFloat(b['7 Day Uptime %'] || 0); break;
+                case 'bin': va = parseFloat(a['Total Bin Full %'] || 0); vb = parseFloat(b['Total Bin Full %'] || 0); break;
+                case 'revenue': va = getEstRevenue(a); vb = getEstRevenue(b); break;
+                case 'loss': va = calcDailyLoss(a); vb = calcDailyLoss(b); break;
+                case 'net': va = getNetRevenue(a); vb = getNetRevenue(b); break;
+                case 'risk': va = calcRisk(a); vb = calcRisk(b); break;
+                default: return 0;
+            }
+            if (typeof va === 'number') return currentSort.direction === 'desc' ? vb - va : va - vb;
+            return currentSort.direction === 'desc' ? vb.localeCompare(va) : va.localeCompare(vb);
+        });
     }
     
     function updateProvinceChart(data) {
-        let provinceStats = {};
+        let provinceReject = {}, provinceDowntime = {};
         data.forEach(r => {
             let prov = getRegion(r);
             if (prov && prov !== 'Unknown') {
-                if (!provinceStats[prov]) {
-                    provinceStats[prov] = { rejectLoss: 0, downtimeLoss: 0 };
-                }
-                provinceStats[prov].rejectLoss += calcLossFromReject(r);
-                provinceStats[prov].downtimeLoss += calcLossFromDowntime(r);
+                provinceReject[prov] = (provinceReject[prov] || 0) + calcLossFromReject(r);
+                provinceDowntime[prov] = (provinceDowntime[prov] || 0) + calcLossFromDowntime(r);
             }
         });
         
-        let sorted = Object.entries(provinceStats)
-            .map(([prov, stats]) => ({ prov, totalLoss: stats.rejectLoss + stats.downtimeLoss, rejectLoss: stats.rejectLoss, downtimeLoss: stats.downtimeLoss }))
-            .sort((a, b) => b.totalLoss - a.totalLoss);
+        let provinces = [...new Set([...Object.keys(provinceReject), ...Object.keys(provinceDowntime)])];
+        let sorted = provinces.map(prov => ({ prov, total: (provinceReject[prov] || 0) + (provinceDowntime[prov] || 0) })).sort((a, b) => b.total - a.total);
         
-        const maxLoss = sorted.length > 0 ? sorted[0].totalLoss : 1;
+        let labels = sorted.map(p => p.prov);
+        let rejectData = sorted.map(p => provinceReject[p.prov] || 0);
+        let downtimeData = sorted.map(p => provinceDowntime[p.prov] || 0);
         
-        let html = '';
-        sorted.forEach(province => {
-            const rejectPct = (province.rejectLoss / maxLoss) * 100;
-            const downtimePct = (province.downtimeLoss / maxLoss) * 100;
-            html += `
-                <div class="province-bar-container" data-province="${province.prov}" onclick="filterByProvince('${province.prov}')">
-                    <div class="province-name">
-                        <span>${province.prov}</span>
-                        <span>$${province.totalLoss.toFixed(0)}</span>
-                    </div>
-                    <div class="bar-wrapper">
-                        <div class="bar-stack">
-                            <div class="reject-bar" style="width: ${rejectPct}%;"></div>
-                            <div class="downtime-bar" style="width: ${downtimePct}%;"></div>
-                        </div>
-                        <div class="bar-total">$${province.totalLoss.toFixed(0)}</div>
-                    </div>
-                </div>
-            `;
+        if (lossChart) lossChart.destroy();
+        let ctx = document.getElementById('lossChart').getContext('2d');
+        lossChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Loss from rejected transactions', data: rejectData, backgroundColor: '#dc2626', borderRadius: 4 },
+                    { label: 'Loss from downtime', data: downtimeData, backgroundColor: '#f97316', borderRadius: 4 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { position: 'top', labels: { font: { size: 10 } } }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: $${ctx.raw.toFixed(0)}` } } },
+                onClick: (event, activeElements) => {
+                    if (activeElements.length > 0) {
+                        let index = activeElements[0].index;
+                        let province = labels[index];
+                        if (province) {
+                            document.getElementById('provinceFilter').value = province;
+                            currentProvinceFilter = province;
+                            renderAll();
+                            showToast(`📌 Filtered to ${province}`);
+                        }
+                    }
+                },
+                scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v } } }
+            }
         });
-        
-        document.getElementById('provinceChartContainer').innerHTML = html;
     }
-    
-    function filterByProvince(province) {
-        document.getElementById('provinceFilter').value = province;
-        currentProvinceFilter = province;
-        renderAll();
-        showToast(`📌 Filtered to ${province}`);
-    }
-    
-    window.filterByProvince = filterByProvince;
     
     function updateTopLossList(data) {
         let sorted = [...data].sort((a, b) => calcDailyLoss(b) - calcDailyLoss(a));
         let top5 = sorted.slice(0, 5);
         let container = document.getElementById('topLossList');
-        if (!top5.length || (top5.length > 0 && calcDailyLoss(top5[0]) === 0)) {
-            container.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No revenue loss data available</div>';
-            return;
-        }
+        if (!top5.length || calcDailyLoss(top5[0]) === 0) { container.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No revenue loss data available</div>'; return; }
         container.innerHTML = top5.map((r, idx) => {
             let loss = calcDailyLoss(r);
             let storeName = r.Store || 'Unknown';
@@ -684,7 +527,7 @@
             let city = r.City || '';
             let province = getRegion(r);
             let lastService = getLastServiceDate(r);
-            let daysSince = getDaysSinceService(r);
+            let daysSince = (() => { try { let parts = lastService.match(/(\d{2})\/(\d{2})\/(\d{2})/); if (parts) { let date = new Date(2000 + parseInt(parts[3]), parseInt(parts[1]) - 1, parseInt(parts[2])); let diff = Math.ceil((new Date() - date) / (1000 * 60 * 60 * 24)); return diff > 0 ? diff : 0; } } catch(e) {} return null; })();
             let locationText = address ? `${address}, ${city}, ${province}` : `${city}, ${province}`;
             let mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationText)}`;
             let serviceText = lastService !== '—' ? (daysSince !== null ? `Last service: ${lastService} (${daysSince} days ago)` : `Last service: ${lastService}`) : 'Last service: Unknown';
@@ -694,14 +537,9 @@
     
     function renderAll() {
         if (!allData.length) return;
-        let f = filterData(); 
-        f = sortData(f);
-        let total = f.length;
-        let highRisk = f.filter(r => getRiskLevel(calcRisk(r)) === 'High Risk').length;
-        let offline = f.filter(r => r['Kiosk State'] === 'Offline').length;
-        let totalLoss = f.reduce((sum, r) => sum + calcDailyLoss(r), 0);
-        let totalRevenue = f.reduce((sum, r) => sum + getEstRevenue(r), 0);
-        let totalNet = totalRevenue - totalLoss;
+        let f = filterData(); f = sortData(f);
+        let total = f.length, highRisk = f.filter(r => getRiskLevel(calcRisk(r)) === 'High Risk').length, offline = f.filter(r => r['Kiosk State'] === 'Offline').length;
+        let totalLoss = f.reduce((s, r) => s + calcDailyLoss(r), 0), totalRevenue = f.reduce((s, r) => s + getEstRevenue(r), 0), totalNet = totalRevenue - totalLoss;
         let avgUptime = f.reduce((s, r) => s + (parseFloat(r['7 Day Uptime %'] || 0)), 0) / (f.length || 1);
         
         document.getElementById('kpiGrid').innerHTML = `
@@ -717,117 +555,51 @@
         updateTopLossList(f);
         
         let tbody = document.getElementById('tableBody');
-        if (!f.length) { 
-            tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; 
-            return; 
-        }
-        
+        if (!f.length) { tbody.innerHTML = '<table><td colspan="14" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; return; }
         tbody.innerHTML = f.slice(0, 500).map(r => {
-            let rej = parseFloat(r['1 Day Reject %'] || 0);
-            let bin = parseFloat(r['Total Bin Full %'] || 0);
-            let up = parseFloat(r['7 Day Uptime %'] || 0);
-            let volume = getVolume(r);
-            let estRevenue = getEstRevenue(r);
-            let dailyLoss = calcDailyLoss(r);
-            let netRevenue = estRevenue - dailyLoss;
-            let riskScore = calcRisk(r);
-            let riskLevel = getRiskLevel(riskScore);
+            let rej = parseFloat(r['1 Day Reject %'] || 0), bin = parseFloat(r['Total Bin Full %'] || 0), up = parseFloat(r['7 Day Uptime %'] || 0);
+            let volume = getVolume(r), estRevenue = getEstRevenue(r), dailyLoss = calcDailyLoss(r), netRevenue = estRevenue - dailyLoss;
+            let riskScore = calcRisk(r), riskLevel = getRiskLevel(riskScore);
             let cls = riskLevel === 'High Risk' ? 'badge-high' : (riskLevel === 'Medium Risk' ? 'badge-medium' : 'badge-low');
             let isHigh = riskLevel === 'High Risk';
             let barC = bin > 95 ? '#dc2626' : (bin > 80 ? '#f97316' : '#10b981');
-            let displayRisk = riskLevel;
-            let revenueClass = estRevenue > 0 ? 'kpi-green' : '';
-            let lossClass = dailyLoss > 0 ? 'kpi-loss' : '';
-            let storeId = getStoreId(r);
-            let storeName = r.Store || '—';
-            
-            return `<tr class="${isHigh ? 'high-risk-row' : ''}">
-                <td><span class="notes-icon" onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">📝</span> <strong style="cursor:pointer;" onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">${escapeHtml(storeName)}</strong></td>
-                <td>${escapeHtml(r.Address || '—')}</td>
-                <td>${escapeHtml(r.City || '—')}</td>
-                <td>${getRegion(r)}</td>
-                <td>${r['Kiosk State'] || 'Attract'}</td>
-                <td>${volume}</td>
+            let storeId = getStoreId(r), storeName = r.Store || '—';
+            return `<tr class="${isHigh ? 'high-risk-row' : ''}"><td><span class="notes-icon" onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">📝</span> <strong onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">${escapeHtml(storeName)}</strong></td>
+                <td>${escapeHtml(r.Address || '—')}</td><td>${escapeHtml(r.City || '—')}</td><td>${getRegion(r)}</td>
+                <td>${r['Kiosk State'] || 'Attract'}</td><td>${volume}</td>
                 <td style="color:${rej > 8 ? '#dc2626' : '#16a34a'};font-weight:600;">${rej.toFixed(1)}%</td>
                 <td>${up.toFixed(1)}%</td>
                 <td>${bin.toFixed(0)}%<div class="fill-bar"><div class="fill-bar-fill" style="width:${Math.min(bin, 100)}%;background:${barC};"></div></div></td>
-                <td class="${revenueClass}" style="font-weight:600;">$${estRevenue.toFixed(0)}</td>
-                <td class="${lossClass}" style="font-weight:600;">$${dailyLoss.toFixed(0)}</td>
+                <td style="font-weight:600;">$${estRevenue.toFixed(0)}</td>
+                <td style="color:#dc2626;font-weight:600;">$${dailyLoss.toFixed(0)}</td>
                 <td style="font-weight:600;">$${netRevenue.toFixed(0)}</td>
-                <td><span class="badge ${cls}">${displayRisk}</span> <span style="font-size:11px;color:#64748b;">(${Math.round(riskScore)})</span></td>
-                <td>${r['Estimated Fill Date'] || '—'}</td>
-            </tr>`;
+                <td><span class="badge ${cls}">${riskLevel}</span> <span style="font-size:11px;color:#64748b;">(${Math.round(riskScore)})</span></td>
+                <td>${r['Estimated Fill Date'] || '—'}</td></tr>`;
         }).join('');
         document.getElementById('lastUpdateTime').innerHTML = new Date().toLocaleString();
     }
     
     function exportToExcelForBI(tool) {
         let f = filterData();
-        let data = f.map(r => ({ 
-            Store: r.Store || '', Address: r.Address || '', City: r.City || '', Province: getRegion(r), 
+        let data = f.map(r => ({ Store: r.Store || '', Address: r.Address || '', City: r.City || '', Province: getRegion(r), 
             Status: r['Kiosk State'] || '', 'Volume (Daily TX)': getVolume(r), 'Reject %': parseFloat(r['1 Day Reject %'] || 0), 
             'Uptime %': parseFloat(r['7 Day Uptime %'] || 0), 'Bin Full %': parseFloat(r['Total Bin Full %'] || 0), 
             'Est. Revenue': getEstRevenue(r), 'Loss from Rejects': calcLossFromReject(r), 'Loss from Downtime': calcLossFromDowntime(r),
-            'Total Daily Loss': calcDailyLoss(r), 'Net Revenue': getNetRevenue(r),
-            'Risk Score': calcRisk(r), 'Risk Level': getRiskLevel(calcRisk(r)), 'Est. Fill Date': r['Estimated Fill Date'] || '',
-            'Last Service Date': getLastServiceDate(r)
-        }));
-        let ws = XLSX.utils.json_to_sheet(data);
-        let wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Kiosk_Data');
+            'Total Daily Loss': calcDailyLoss(r), 'Net Revenue': getNetRevenue(r), 'Risk Score': calcRisk(r), 
+            'Risk Level': getRiskLevel(calcRisk(r)), 'Est. Fill Date': r['Estimated Fill Date'] || '', 'Last Service Date': getLastServiceDate(r) }));
+        let ws = XLSX.utils.json_to_sheet(data); let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Kiosk_Data');
         XLSX.writeFile(wb, `kiosk_export_${tool.toLowerCase().replace(' ', '_')}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.xlsx`);
-        showModal(`${tool} Export Complete`, `<p>File downloaded. Open in ${tool}.</p>`);
-        showToast(`Exported ${f.length} kiosks for ${tool}`);
+        showModal(`${tool} Export Complete`, `<p>File downloaded. Open in ${tool}.</p>`); showToast(`Exported ${f.length} kiosks for ${tool}`);
     }
     
-    async function takeScreenshot() { 
-        showToast('Capturing...'); 
-        try { 
-            let el = document.querySelector('.container'); 
-            let canvas = await html2canvas(el, { scale: 2, backgroundColor: '#f0f2f5' }); 
-            canvas.toBlob(async b => { 
-                try { 
-                    await navigator.clipboard.write([new ClipboardItem({ [b.type]: b })]); 
-                    showToast('Screenshot copied!'); 
-                } catch { 
-                    let a = document.createElement('a'); 
-                    a.href = URL.createObjectURL(b); 
-                    a.download = `kiosk_snapshot_${Date.now()}.png`; 
-                    a.click(); 
-                    showToast('Screenshot saved'); 
-                } 
-            }); 
-        } catch (e) { 
-            showToast('Failed'); 
-        } 
-    }
+    async function takeScreenshot() { showToast('Capturing...'); try { let el = document.querySelector('.container'); let canvas = await html2canvas(el, { scale: 2, backgroundColor: '#f0f2f5' }); canvas.toBlob(async b => { try { await navigator.clipboard.write([new ClipboardItem({ [b.type]: b })]); showToast('Screenshot copied!'); } catch { let a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `kiosk_snapshot_${Date.now()}.png`; a.click(); showToast('Screenshot saved'); } }); } catch(e) { showToast('Failed'); } }
     
-    window.openNotesModal = openNotesModal;
-    window.saveNewNote = saveNewNote;
-    
-    document.getElementById('saveNewNoteBtn')?.addEventListener('click', () => {
-        if (currentNoteStore) {
-            const noteText = document.getElementById('newNoteInput').value;
-            if (noteText.trim()) {
-                if (editingNoteId) {
-                    updateNote(currentNoteStore, editingNoteId, noteText);
-                    refreshNotesModal(currentNoteStore);
-                } else {
-                    saveNote(currentNoteStore, noteText);
-                    refreshNotesModal(currentNoteStore);
-                }
-            }
-        }
-    });
-    
+    document.getElementById('saveNewNoteBtn')?.addEventListener('click', () => { if (currentNoteStore) { const noteText = document.getElementById('newNoteInput').value; if (noteText.trim()) { if (editingNoteId) { updateNote(currentNoteStore, editingNoteId, noteText); refreshNotesModal(currentNoteStore); } else { saveNote(currentNoteStore, noteText); refreshNotesModal(currentNoteStore); } } } });
     document.getElementById('powerBIExportBtn')?.addEventListener('click', () => exportToExcelForBI('Power BI'));
     document.getElementById('tableauExportBtn')?.addEventListener('click', () => exportToExcelForBI('Tableau'));
     document.getElementById('snapshotBtn')?.addEventListener('click', takeScreenshot);
     
-    function escapeHtml(s) { 
-        if (!s) return ''; 
-        return s.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); 
-    }
+    function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
 </script>
 </body>
 </html>
