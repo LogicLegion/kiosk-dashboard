@@ -22,6 +22,9 @@
         .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
         .action-btn { background: rgba(255,255,255,0.15); border: none; padding: 8px 16px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; position: relative; }
         .action-btn:hover { background: rgba(255,255,255,0.25); }
+        .upload-area { background: white; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 50px; text-align: center; margin-bottom: 24px; cursor: pointer; }
+        .upload-area:hover { border-color: #1e3a5f; background: #f8fafc; }
+        .hidden-upload { display: none; }
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .kpi-card { background: white; border-radius: 16px; padding: 16px; border: 1px solid #e2e8f0; }
         .kpi-label { font-size: 11px; color: #64748b; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
@@ -61,7 +64,7 @@
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
         td:first-child { cursor: pointer; }
         tr:hover td { background: #f8fafc; }
-        .high-risk-row { background-color: #fee2e2; }
+        .critical-row { background-color: #fee2e2; }
         .warning-row { background-color: #fffbeb; }
         .bin-alert-row { background-color: #e0f2fe; }
         .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
@@ -119,7 +122,6 @@
             margin-bottom: 8px;
         }
         
-        /* Tooltip for buttons on hover */
         .action-btn:hover::after, .alert-btn:hover::after, .filter-group button:hover::after {
             content: attr(data-tooltip);
             position: absolute;
@@ -155,6 +157,7 @@
     <div class="header">
         <div><h1>📊 Canada Kiosk Intelligence <span class="live-tag">LIVE</span></h1></div>
         <div class="action-buttons">
+            <button class="action-btn" id="showUploadBtn" data-tooltip="📂 Upload a new CSV file to refresh the data">📂 Upload CSV</button>
             <button class="action-btn qr-btn" id="qrBtn" data-tooltip="📱 Generate QR code to open dashboard on your phone">📱 QR Code</button>
             <button class="action-btn" id="powerBIExportBtn" data-tooltip="📊 Export filtered data as Excel file for Power BI">📊 Power BI</button>
             <button class="action-btn" id="tableauExportBtn" data-tooltip="📈 Export filtered data as Excel file for Tableau">📈 Tableau</button>
@@ -162,6 +165,8 @@
             <button class="action-btn email-btn" id="emailReportBtn" data-tooltip="📧 Opens email draft with summary report for your boss">📧 Email Report</button>
         </div>
     </div>
+    
+    <input type="file" id="csvFile" accept=".csv" class="hidden-upload">
     
     <div id="instructionModal" class="modal">
         <div class="modal-content">
@@ -181,10 +186,16 @@
         </div>
     </div>
     
-    <div id="dashboard">
+    <div class="upload-area" id="uploadArea" onclick="document.getElementById('csvFile').click()">
+        <div style="font-size:48px;">📊</div>
+        <h3>Upload Fleet Data</h3>
+        <p>Click to select your CSV file (Canada kiosk data)</p>
+    </div>
+    
+    <div id="dashboard" style="display:none">
         <div class="alert-bar" id="alertBar">
             <span>⚠️ <strong>Action Required:</strong> Loading data...</span>
-            <button class="alert-btn" id="viewHighRiskBtn" data-tooltip="🔍 Show only kiosks with 7-day reject rate above 4%">View High Risk →</button>
+            <button class="alert-btn" id="viewCriticalBtn" data-tooltip="🔍 Show only kiosks with 7-day reject rate above 8%">View Critical →</button>
         </div>
         
         <div class="kpi-grid" id="kpiGrid"></div>
@@ -256,11 +267,12 @@
 
 <script>
     // ============================================================
-    // HARDCODED DATA (Sample - uses 7-day reject as primary metric)
-    // Threshold: 4% warning, 8% critical
+    // SAMPLE DATA (will be replaced when user uploads CSV)
     // ============================================================
     
-    const rawData = [
+    let allData = [];
+    
+    const SAMPLE_DATA = [
         {Store:"Loblaws 1082",Address:"1460 Merivale Rd.",City:"Nepean",Province:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"38.98",Reject7Day:"15.01",Uptime7Day:"99.95",BinFull:"2",EstFillDate:"09/15/26",LastPM:"04/23/26"},
         {Store:"The Real Canadian Superstore 1091",Address:"825 Oxford St E",City:"London",Province:"ON",KioskState:"Attract",Tx1Day:"6",Reject1Day:"6.82",Reject7Day:"3.51",Uptime7Day:"62.32",BinFull:"10",EstFillDate:"07/02/26",LastPM:"04/23/26"},
         {Store:"Metro 742",Address:"425 Bloor St W",City:"Toronto",Province:"ON",KioskState:"Attract",Tx1Day:"8",Reject1Day:"6.69",Reject7Day:"2.90",Uptime7Day:"74.97",BinFull:"46",EstFillDate:"06/22/26",LastPM:"05/21/26"},
@@ -270,25 +282,17 @@
         {Store:"The Real Canadian Superstore 1012",Address:"30 Kingston Rd. West",City:"Ajax",Province:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"29.69",Reject7Day:"8.09",Uptime7Day:"99.98",BinFull:"40",EstFillDate:"09/01/26",LastPM:"05/14/26"},
         {Store:"Super C 5918",Address:"259 boul. Seigneurie",City:"Blainville",Province:"QC",KioskState:"Attract",Tx1Day:"6",Reject1Day:"16.64",Reject7Day:"12.90",Uptime7Day:"99.93",BinFull:"82",EstFillDate:"06/07/26",LastPM:"05/05/26"},
         {Store:"The Real Canadian Superstore 1525",Address:"6435 Metral Dr.",City:"Nanaimo",Province:"BC",KioskState:"OOS-Mach",Tx1Day:"7",Reject1Day:"1.42",Reject7Day:"7.81",Uptime7Day:"76.40",BinFull:"67",EstFillDate:"06/10/26",LastPM:"05/06/26"},
-        {Store:"Super C 5919",Address:"8330 boul. Taschereau",City:"Brossard",Province:"QC",KioskState:"Partner",Tx1Day:"6",Reject1Day:"1.64",Reject7Day:"1.83",Uptime7Day:"73.33",BinFull:"90",EstFillDate:"05/29/26",LastPM:"05/11/26"},
-        {Store:"Food Basics 844",Address:"288 Erie St. South",City:"Leamington",Province:"ON",KioskState:"Full",Tx1Day:"6",Reject1Day:"8.86",Reject7Day:"4.62",Uptime7Day:"89.34",BinFull:"100",EstFillDate:"05/24/26",LastPM:"04/07/26"},
-        {Store:"The Real Canadian Superstore 2800",Address:"2549 Weston Rd",City:"Toronto",Province:"ON",KioskState:"OOS-Mach",Tx1Day:"10",Reject1Day:"2.36",Reject7Day:"1.37",Uptime7Day:"88.08",BinFull:"15",EstFillDate:"06/29/26",LastPM:"05/11/26"},
-        {Store:"Super C 5938",Address:"2801 boul des Promenades",City:"Sainte-marthe-sur-le-lac",Province:"QC",KioskState:"Attract",Tx1Day:"12",Reject1Day:"2.43",Reject7Day:"2.72",Uptime7Day:"91.05",BinFull:"26",EstFillDate:"07/04/26",LastPM:"05/19/26"},
-        {Store:"The Real Canadian Superstore 2831",Address:"669 Borden Ave",City:"Peterborough",Province:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"15.98",Reject7Day:"5.73",Uptime7Day:"99.71",BinFull:"0",EstFillDate:"07/07/26",LastPM:"05/22/26"},
-        {Store:"Maxi & CIE 8675",Address:"8305 Avenue papineau",City:"Montreal",Province:"QC",KioskState:"Attract",Tx1Day:"6",Reject1Day:"1.90",Reject7Day:"6.79",Uptime7Day:"77.95",BinFull:"62",EstFillDate:"06/15/26",LastPM:"05/13/26"},
-        {Store:"Save-On-Foods & Coopers Foods 923",Address:"108 - 3170 TILLICUM ROAD",City:"Victoria",Province:"BC",KioskState:"Attract",Tx1Day:"10",Reject1Day:"7.70",Reject7Day:"3.74",Uptime7Day:"99.93",BinFull:"40",EstFillDate:"06/18/26",LastPM:"05/07/26"},
-        {Store:"The Real Canadian Superstore 1554",Address:"8195 - 120th Street",City:"Delta",Province:"BC",KioskState:"Attract",Tx1Day:"3",Reject1Day:"12.93",Reject7Day:"11.13",Uptime7Day:"77.47",BinFull:"17",EstFillDate:"07/21/26",LastPM:"05/19/26"},
-        {Store:"Food Basics 676",Address:"84 Lyndon Road",City:"Brantford",Province:"ON",KioskState:"Attract",Tx1Day:"3",Reject1Day:"23.86",Reject7Day:"2.97",Uptime7Day:"99.91",BinFull:"16",EstFillDate:"10/28/26",LastPM:"05/13/26"},
-        {Store:"Maxi 8900",Address:"2101 Rue Dollard",City:"Lasalle",Province:"QC",KioskState:"Attract",Tx1Day:"2",Reject1Day:"30.73",Reject7Day:"12.33",Uptime7Day:"93.18",BinFull:"30",EstFillDate:"10/27/26",LastPM:"05/13/26"},
-        {Store:"The Real Canadian Superstore 1576",Address:"3575-20th Avenue N.E.",City:"Calgary",Province:"AB",KioskState:"Attract",Tx1Day:"8",Reject1Day:"8.14",Reject7Day:"3.88",Uptime7Day:"99.99",BinFull:"67",EstFillDate:"06/10/26",LastPM:"02/03/26"},
-        {Store:"Metro 493",Address:"1090 Wilson Avenue",City:"Toronto",Province:"ON",KioskState:"Attract",Tx1Day:"8",Reject1Day:"3.05",Reject7Day:"6.01",Uptime7Day:"90.02",BinFull:"16",EstFillDate:"06/21/26",LastPM:"05/13/26"},
-        {Store:"Loblaws 1170",Address:"363 Rideau St.",City:"Ottawa",Province:"ON",KioskState:"Attract",Tx1Day:"14",Reject1Day:"4.34",Reject7Day:"6.60",Uptime7Day:"99.99",BinFull:"82",EstFillDate:"06/01/26",LastPM:"05/12/26"},
-        {Store:"Food Basics 906",Address:"505 Rymal Road E",City:"Hamilton",Province:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"29.66",Reject7Day:"3.76",Uptime7Day:"99.74",BinFull:"39",EstFillDate:"07/21/26",LastPM:"05/20/26"},
-        {Store:"Sobeys 678",Address:"130 Cedar St.",City:"Cambridge",Province:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"14.04",Reject7Day:"10.92",Uptime7Day:"99.95",BinFull:"53",EstFillDate:"08/13/26",LastPM:"05/05/26"},
-        {Store:"Loblaws 1040",Address:"1100 Princess Street",City:"Kingston",Province:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"10.88",Reject7Day:"7.26",Uptime7Day:"100.00",BinFull:"13",EstFillDate:"08/29/26",LastPM:"04/16/26"}
+        {Store:"Super C 5919",Address:"8330 boul. Taschereau",City:"Brossard",Province:"QC",KioskState:"Partner",Tx1Day:"6",Reject1Day:"1.64",Reject7Day:"1.83",Uptime7Day:"73.33",BinFull:"90",EstFillDate:"05/29/26",LastPM:"05/11/26"}
     ];
     
-    let allData = [...rawData];
+    const CANADIAN_PROVINCES = ['ON', 'QC', 'BC', 'AB', 'MB', 'SK', 'NS', 'NB', 'NL', 'PE', 'NT', 'YT', 'NU'];
+    
+    function isCanadian(row) { 
+        let prov = (row.Province || row.State || '').trim().toUpperCase(); 
+        return CANADIAN_PROVINCES.includes(prov); 
+    }
+    
+    // Global variables
     let currentSort = { column: 'reject7d', direction: 'desc' };
     let lossChart = null;
     let currentNoteStore = null;
@@ -297,7 +301,7 @@
     const TRANSACTION_VALUE = 5;
     
     // Helper functions
-    function getRegion(r) { return r.Province || 'Unknown'; }
+    function getRegion(r) { return r.Province || r.State || 'Unknown'; }
     function getStoreId(r) { return (r.Store || '').replace(/[^a-zA-Z0-9]/g, '_') + '_' + (r.City || '').replace(/[^a-zA-Z0-9]/g, '_'); }
     function getVolume(r) { return parseFloat(r.Tx1Day) || 0; }
     function getEstRevenue(r) { return getVolume(r) * TRANSACTION_VALUE; }
@@ -320,7 +324,7 @@
     function getMonthlyLoss(r) { return calcDailyLoss(r) * 30; }
     function getNetRevenue(r) { return getEstRevenue(r) - calcDailyLoss(r); }
     
-    // NEW: Status based on 7-day reject (boss's rule: 4% threshold)
+    // Status based on 7-day reject (boss's rule: 4% threshold)
     function getStatusLevel(r) {
         let reject7d = getReject7d(r);
         if (reject7d >= 8) return 'Critical';
@@ -334,7 +338,7 @@
         return 'badge-good';
     }
     
-    function getLastServiceDate(r) { return r.LastPM || '—'; }
+    function getLastServiceDate(r) { return r.LastPM || r['Last PM Date'] || '—'; }
     function daysSinceService(dateStr) {
         if (!dateStr || dateStr === '—') return null;
         try {
@@ -347,7 +351,7 @@
         return null;
     }
     
-    // Notes functions (same as before)
+    // Notes functions
     function getNotesKey(storeId) { return `kiosk_notes_${storeId}`; }
     function loadNotes(storeId) {
         const saved = localStorage.getItem(getNotesKey(storeId));
@@ -453,6 +457,47 @@
     function closeNotesModal() { document.getElementById('notesModal').style.display = 'none'; }
     function closeModal() { document.getElementById('instructionModal').style.display = 'none'; }
     function showToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
+    
+    // CSV Parsing
+    function parseCSV(csvText) {
+        let lines = csvText.split(/\r?\n/);
+        if (lines.length < 2) { showToast('Error: Empty file'); return false; }
+        let headers = lines[0].split(',').map(h => h.replace(/^\uFEFF/, '').replace(/"/g, '').trim());
+        let data = [];
+        for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue;
+            let row = {}, inQuote = false, current = '', col = 0;
+            for (let ch of lines[i]) {
+                if (ch === '"') inQuote = !inQuote;
+                else if (ch === ',' && !inQuote) {
+                    row[headers[col]] = current.trim().replace(/"/g, '');
+                    current = '';
+                    col++;
+                } else current += ch;
+            }
+            if (col < headers.length) row[headers[col]] = current.trim().replace(/"/g, '');
+            if (Object.keys(row).length) data.push(row);
+        }
+        if (data.length === 0) { showToast('Error: No valid data rows'); return false; }
+        
+        // Filter to Canada only and map fields
+        allData = data.filter(row => isCanadian(row)).map(row => ({
+            Store: row.Store || row['Store Name'] || 'Unknown',
+            Address: row.Address || '',
+            City: row.City || '',
+            Province: row.State || row.Province || '',
+            KioskState: row['Kiosk State'] || row.State || 'Attract',
+            Tx1Day: row['1 Day TX'] || row['Volume'] || '0',
+            Reject1Day: row['1 Day Reject %'] || row['Reject %'] || '0',
+            Reject7Day: row['7 Day Reject %'] || row['Reject7Day'] || row['1 Day Reject %'] || '0',
+            Uptime7Day: row['7 Day Uptime %'] || row['Uptime'] || '100',
+            BinFull: row['Total Bin Full %'] || row['Bin Full %'] || '0',
+            EstFillDate: row['Estimated Fill Date'] || '',
+            LastPM: row['Last PM Date'] || row['Last Service Date'] || ''
+        }));
+        
+        return true;
+    }
     
     // Filter and sort
     function filterData() {
@@ -575,8 +620,8 @@
         let totalRevenue = f.reduce((s, r) => s + getEstRevenue(r), 0);
         let totalNet = totalRevenue - totalLoss;
         
-        document.getElementById('alertBar').innerHTML = `<span>⚠️ <strong>Action Required:</strong> ${critical} critical (7-day reject >8%) | ${warning} warning (4-8%) | ${offline} offline | ${binAlert} bins >80%</span><button class="alert-btn" id="viewHighRiskBtn" data-tooltip="🔍 Show only Critical status kiosks">View Critical →</button>`;
-        document.getElementById('viewHighRiskBtn').onclick = () => { document.getElementById('riskFilter').value = 'critical'; renderAll(); };
+        document.getElementById('alertBar').innerHTML = `<span>⚠️ <strong>Action Required:</strong> ${critical} critical (7-day reject >8%) | ${warning} warning (4-8%) | ${offline} offline | ${binAlert} bins >80%</span><button class="alert-btn" id="viewCriticalBtn" data-tooltip="🔍 Show only Critical status kiosks">View Critical →</button>`;
+        document.getElementById('viewCriticalBtn').onclick = () => { document.getElementById('riskFilter').value = 'critical'; renderAll(); };
         
         document.getElementById('kpiGrid').innerHTML = `
             <div class="kpi-card"><div class="kpi-label">📊 Total Kiosks <span class="help-icon" data-tooltip="Total active kiosks in fleet">?</span></div><div class="kpi-value">${total}</div></div>
@@ -610,17 +655,17 @@
             let barC = bin > 95 ? '#dc2626' : (bin > 80 ? '#f97316' : '#10b981');
             let storeId = getStoreId(r);
             let storeName = r.Store || '—';
-            let rowClass = isCritical ? 'high-risk-row' : (isWarning ? 'warning-row' : (isBinAlert ? 'bin-alert-row' : ''));
-            return `<tr class="${rowClass}"><tr><span class="notes-icon" onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">📝</span> <strong onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">${escapeHtml(storeName)}</strong></td>
+            let rowClass = isCritical ? 'critical-row' : (isWarning ? 'warning-row' : (isBinAlert ? 'bin-alert-row' : ''));
+            return `<tr class="${rowClass}"><td><span class="notes-icon" onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">📝</span> <strong onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">${escapeHtml(storeName)}</strong></td>
                 <td>${escapeHtml(r.Address || '—')}</td><td>${escapeHtml(r.City || '—')}</td><td>${getRegion(r)}</td>
                 <td>${r.KioskState || 'Attract'}</td><td>${volume}</td>
                 <td style="color:${reject1d > 8 ? '#dc2626' : (reject1d > 4 ? '#f59e0b' : '#16a34a')};font-weight:600;">${reject1d.toFixed(1)}%</td>
                 <td style="color:${reject7d >= 8 ? '#dc2626' : (reject7d >= 4 ? '#f59e0b' : '#16a34a')};font-weight:600;background:#fef3c7;">⭐ ${reject7d.toFixed(1)}%</td>
                 <td>${up.toFixed(1)}%</td>
                 <td>${bin.toFixed(0)}%<div class="fill-bar"><div class="fill-bar-fill" style="width:${Math.min(bin, 100)}%;background:${barC};"></div></div></td>
-                <td>$${estRevenue.toFixed(0)}</td>
-                <td style="color:#dc2626;">$${dailyLoss.toFixed(0)}</td>
-                <td>$${netRevenue.toFixed(0)}</td>
+                <td style="font-weight:600;">$${estRevenue.toFixed(0)}</td>
+                <td style="color:#dc2626;font-weight:600;">$${dailyLoss.toFixed(0)}</td>
+                <td style="font-weight:600;">$${netRevenue.toFixed(0)}</td>
                 <td><span class="badge ${badgeClass}">${statusLevel}</span></td>
                 <td>${r.EstFillDate || '—'}</td>
             </tr>`;
@@ -671,6 +716,26 @@
     }
     
     // Event listeners
+    document.getElementById('showUploadBtn')?.addEventListener('click', () => document.getElementById('csvFile').click());
+    document.getElementById('uploadArea')?.addEventListener('click', () => document.getElementById('csvFile').click());
+    document.getElementById('csvFile').addEventListener('change', e => {
+        if (e.target.files[0]) {
+            let reader = new FileReader();
+            reader.onload = ev => {
+                if (parseCSV(ev.target.result)) {
+                    document.getElementById('dashboard').style.display = 'block';
+                    document.getElementById('uploadArea').style.display = 'none';
+                    populateFilters();
+                    setupSorting();
+                    renderAll();
+                    showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
+                }
+            };
+            reader.readAsText(e.target.files[0]);
+            showToast('Loading file...');
+        }
+    });
+    
     document.getElementById('qrBtn')?.addEventListener('click', () => {
         document.getElementById('instructionModal').style.display = 'flex';
         setTimeout(() => {
@@ -723,11 +788,14 @@
     
     function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
     
-    // Initialize
+    // Load sample data on start
+    allData = [...SAMPLE_DATA];
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('uploadArea').style.display = 'none';
     populateFilters();
     setupSorting();
     renderAll();
-    showToast(`✅ Loaded ${allData.length} Canadian kiosks | Using 7-day reject averages for accuracy`);
+    showToast(`✅ Loaded ${allData.length} Canadian kiosks (sample) | Upload CSV for full data`);
 </script>
 </body>
 </html>
