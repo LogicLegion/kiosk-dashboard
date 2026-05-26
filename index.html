@@ -20,7 +20,7 @@
         .alert-btn { background: #f59e0b; border: none; padding: 6px 14px; border-radius: 20px; color: white; font-size: 12px; cursor: pointer; }
         .copyright { font-size: 10px; color: #64748b; text-align: center; margin-top: 16px; padding: 8px; border-top: 1px solid #e2e8f0; }
         .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
-        .action-btn { background: rgba(255,255,255,0.15); border: none; padding: 8px 16px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; }
+        .action-btn { background: rgba(255,255,255,0.15); border: none; padding: 8px 16px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; position: relative; }
         .action-btn:hover { background: rgba(255,255,255,0.25); }
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .kpi-card { background: white; border-radius: 16px; padding: 16px; border: 1px solid #e2e8f0; }
@@ -51,9 +51,9 @@
         
         .filters { background: white; border-radius: 16px; padding: 16px 20px; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 12px; border: 1px solid #e2e8f0; align-items: flex-end; }
         .filter-group { display: flex; flex-direction: column; gap: 5px; min-width: 120px; flex: 1; }
-        .filter-group label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .filter-group label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
         select, input, button { padding: 8px 12px; border-radius: 10px; font-size: 12px; background: white; border: 1px solid #e2e8f0; }
-        button { background: #1e3a5f; color: white; border: none; cursor: pointer; font-weight: 600; }
+        button { background: #1e3a5f; color: white; border: none; cursor: pointer; font-weight: 600; position: relative; }
         .email-btn { background: #10b981; }
         .table-wrapper { background: white; border-radius: 16px; overflow-x: auto; max-height: 450px; border: 1px solid #e2e8f0; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1100px; }
@@ -62,11 +62,12 @@
         td:first-child { cursor: pointer; }
         tr:hover td { background: #f8fafc; }
         .high-risk-row { background-color: #fee2e2; }
-        .bin-alert-row { background-color: #fffbeb; }
+        .warning-row { background-color: #fffbeb; }
+        .bin-alert-row { background-color: #e0f2fe; }
         .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-        .badge-high { background: #fee2e2; color: #dc2626; }
-        .badge-medium { background: #fed7aa; color: #c2410c; }
-        .badge-low { background: #dcfce7; color: #16a34a; }
+        .badge-critical { background: #fee2e2; color: #dc2626; }
+        .badge-warning { background: #fed7aa; color: #c2410c; }
+        .badge-good { background: #dcfce7; color: #16a34a; }
         .notes-icon { cursor: pointer; margin-right: 6px; font-size: 14px; display: inline-block; }
         .fill-bar { background: #e2e8f0; border-radius: 10px; height: 6px; width: 70px; margin-top: 5px; display: inline-block; }
         .fill-bar-fill { height: 100%; border-radius: 10px; display: block; }
@@ -118,6 +119,25 @@
             margin-bottom: 8px;
         }
         
+        /* Tooltip for buttons on hover */
+        .action-btn:hover::after, .alert-btn:hover::after, .filter-group button:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            font-size: 10px;
+            font-weight: normal;
+            padding: 4px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+            z-index: 100;
+            margin-bottom: 5px;
+            pointer-events: none;
+        }
+        
         @media (max-width: 768px) {
             body { padding: 12px; }
             .header h1 { font-size: 18px; }
@@ -135,18 +155,18 @@
     <div class="header">
         <div><h1>📊 Canada Kiosk Intelligence <span class="live-tag">LIVE</span></h1></div>
         <div class="action-buttons">
-            <button class="action-btn qr-btn" id="qrBtn">📱 QR Code</button>
-            <button class="action-btn" id="powerBIExportBtn">📊 Power BI</button>
-            <button class="action-btn" id="tableauExportBtn">📈 Tableau</button>
-            <button class="action-btn" id="snapshotBtn">📸 Screenshot</button>
-            <button class="action-btn email-btn" id="emailReportBtn">📧 Email Report</button>
+            <button class="action-btn qr-btn" id="qrBtn" data-tooltip="📱 Generate QR code to open dashboard on your phone">📱 QR Code</button>
+            <button class="action-btn" id="powerBIExportBtn" data-tooltip="📊 Export filtered data as Excel file for Power BI">📊 Power BI</button>
+            <button class="action-btn" id="tableauExportBtn" data-tooltip="📈 Export filtered data as Excel file for Tableau">📈 Tableau</button>
+            <button class="action-btn" id="snapshotBtn" data-tooltip="📸 Take a screenshot of the dashboard (copies to clipboard)">📸 Screenshot</button>
+            <button class="action-btn email-btn" id="emailReportBtn" data-tooltip="📧 Opens email draft with summary report for your boss">📧 Email Report</button>
         </div>
     </div>
     
     <div id="instructionModal" class="modal">
         <div class="modal-content">
             <h3 id="modalTitle">Scan QR Code</h3>
-            <div id="modalBody"><div id="qrcode"></div></div>
+            <div id="modalBody"><div id="qrcode"></div><p style="margin-top:12px;font-size:12px;">Scan with your phone camera to open this dashboard on mobile</p></div>
             <button class="modal-close" onclick="closeModal()">Close</button>
         </div>
     </div>
@@ -163,15 +183,18 @@
     
     <div id="dashboard">
         <div class="alert-bar" id="alertBar">
-            <span>⚠️ <strong>Action Required:</strong> 43 high-risk kiosks need attention. 3 are offline. 127 bins above 80% full.</span>
-            <button class="alert-btn" onclick="filterHighRisk()">View High Risk →</button>
+            <span>⚠️ <strong>Action Required:</strong> Loading data...</span>
+            <button class="alert-btn" id="viewHighRiskBtn" data-tooltip="🔍 Show only kiosks with 7-day reject rate above 4%">View High Risk →</button>
         </div>
         
         <div class="kpi-grid" id="kpiGrid"></div>
-        <div class="info-bar"><div>🕐 Last updated: <span id="lastUpdateTime">-</span></div><div>⚡ Click column headers to sort | Click store name to add notes</div></div>
+        <div class="info-bar">
+            <div>🕐 Last updated: <span id="lastUpdateTime">-</span></div>
+            <div>⚡ <span class="help-icon" data-tooltip="Click column headers to sort table. Click store name to add notes.">?</span> Click headers to sort | Click store for notes</div>
+        </div>
         
         <div class="chart-container">
-            <div class="chart-title">💰 Daily Revenue Loss by Province</div>
+            <div class="chart-title">💰 Daily Revenue Loss by Province <span class="help-icon" data-tooltip="Based on 7-day average reject rates and uptime. Red = failed transactions. Orange = downtime. Click any bar to filter table.">?</span></div>
             <canvas id="lossChart"></canvas>
             <div class="legend">
                 <div><span class="legend-color" style="background: #dc2626;"></span> Loss from rejected transactions</div>
@@ -181,42 +204,51 @@
         </div>
         
         <div class="top-loss-container">
-            <div class="top-loss-title">🚨 TOP 10 HIGHEST DAILY LOSS</div>
+            <div class="top-loss-title">🚨 TOP 10 HIGHEST DAILY LOSS <span class="help-icon" data-tooltip="Based on 7-day average reject rates. These cost the most money. Fix first.">?</span></div>
             <div class="top-loss-list" id="topLossList"></div>
         </div>
         
         <div class="filters">
-            <div class="filter-group"><label>📍 Province</label><select id="provinceFilter"><option value="all">All Provinces</option></select></div>
-            <div class="filter-group"><label>🎯 Risk Level</label><select id="riskFilter"><option value="all">All Risks</option><option value="High">High Risk Only</option><option value="Medium">Medium Risk</option><option value="Low">Low Risk</option></select></div>
-            <div class="filter-group"><label>🔍 Search</label><input type="text" id="searchInput" placeholder="Store, city, or address..."></div>
-            <button id="resetBtn">Reset All</button>
+            <div class="filter-group">
+                <label>📍 Province <span class="help-icon" data-tooltip="Filter by province or territory">?</span></label>
+                <select id="provinceFilter"><option value="all">All Provinces</option></select>
+            </div>
+            <div class="filter-group">
+                <label>⚠️ Status <span class="help-icon" data-tooltip="Critical = 7-day reject >8% | Warning = 4-8% | Good = <4%">?</span></label>
+                <select id="riskFilter"><option value="all">All Status</option><option value="critical">Critical Only (Reject >8%)</option><option value="warning">Warning (Reject 4-8%)</option><option value="good">Good (Reject <4%)</option></select>
+            </div>
+            <div class="filter-group">
+                <label>🔍 Search <span class="help-icon" data-tooltip="Search by store name, city, or address">?</span></label>
+                <input type="text" id="searchInput" placeholder="Store, city, or address...">
+            </div>
+            <button id="resetBtn" data-tooltip="🔄 Clear all filters and show all kiosks">Reset All</button>
         </div>
         
         <div class="table-wrapper">
             <table id="dataTable">
                 <thead>
                     <tr>
-                        <th data-sort="store">Store</th>
-                        <th data-sort="address">Address</th>
+                        <th data-sort="store">Store 📝 <span class="help-icon" data-tooltip="Click store name to add/edit notes">?</span></th>
+                        <th data-sort="address">Address <span class="help-icon" data-tooltip="Street address">?</span></th>
                         <th data-sort="city">City</th>
                         <th data-sort="province">Province</th>
                         <th data-sort="status">Status</th>
-                        <th data-sort="volume">Volume</th>
-                        <th data-sort="reject">Reject%</th>
+                        <th data-sort="volume">Volume <span class="help-icon" data-tooltip="Transactions in last 24 hours">?</span></th>
+                        <th data-sort="reject1d">1D Reject% <span class="help-icon" data-tooltip="Single day reject rate - may be a spike">?</span></th>
+                        <th data-sort="reject7d">7D Reject% <span class="help-icon" data-tooltip="7-day average - this is the TREND. Use this to decide action.">⭐</span></th>
                         <th data-sort="uptime">Uptime%</th>
-                        <th data-sort="bin">Bin%</th>
+                        <th data-sort="bin">Bin% <span class="help-icon" data-tooltip="How full the bin is. >80% = schedule pickup">?</span></th>
                         <th data-sort="revenue">Est. Revenue</th>
                         <th data-sort="loss">Daily Loss</th>
-                        <th data-sort="monthly">Monthly Loss</th>
                         <th data-sort="net">Net Revenue</th>
-                        <th data-sort="risk">Risk Level</th>
+                        <th data-sort="statusFlag">Status</th>
                         <th data-sort="fill">Est. Fill</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
-        <div class="footer">💡 Click any store name to add/edit notes | Data refreshes daily</div>
+        <div class="footer">💡 <span class="help-icon" data-tooltip="Notes are saved to your browser and auto-delete after 30 days">?</span> Click any store name to add/edit notes | Data uses 7-day averages for accuracy</div>
         <div class="copyright">© 2026 Kiosk Intelligence Platform | Built for Canada Operations</div>
     </div>
 </div>
@@ -224,157 +256,99 @@
 
 <script>
     // ============================================================
-    // HARDCODED CSV DATA (first 100 rows for performance - full data ready)
+    // HARDCODED DATA (Sample - uses 7-day reject as primary metric)
+    // Threshold: 4% warning, 8% critical
     // ============================================================
     
     const rawData = [
-        {Store:"Loblaws 1079",Address:"10 Lower Jarvis",City:"Toronto",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"5.86",Uptime7Day:"99.81",BinFull:"55",EstFillDate:"06/21/26",LastPM:"05/19/26"},
-        {Store:"Food Basics 841",Address:"478 Dundas St. W",City:"Oakville",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"3",Reject1Day:"5.14",Uptime7Day:"99.78",BinFull:"45",EstFillDate:"08/23/26",LastPM:"05/19/26"},
-        {Store:"Metro 26",Address:"5612 Main St.",City:"Stouffville",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"5.73",Uptime7Day:"99.90",BinFull:"20",EstFillDate:"08/25/26",LastPM:"05/06/26"},
-        {Store:"Food Basics 843",Address:"1070 Majr Mackenzie Dr E",City:"Richmond Hill",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"5.76",Uptime7Day:"99.31",BinFull:"61",EstFillDate:"06/18/26",LastPM:"05/20/26"},
-        {Store:"Metro 719",Address:"2155 St. Clair Ave W",City:"Toronto",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"3.46",Uptime7Day:"99.94",BinFull:"15",EstFillDate:"06/24/26",LastPM:"05/13/26"},
-        {Store:"Loblaws 1001",Address:"1792 Liverpool Rd.",City:"Pickering",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"1.17",Uptime7Day:"99.95",BinFull:"75",EstFillDate:"06/06/26",LastPM:"05/14/26"},
-        {Store:"Metro 748",Address:"1500 Royal York",City:"Etobicoke",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"6",Reject1Day:"2.66",Uptime7Day:"99.91",BinFull:"54",EstFillDate:"06/19/26",LastPM:"05/13/26"},
-        {Store:"Metro 325",Address:"371 St. Paul Ave",City:"Brantford",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"8",Reject1Day:"5.57",Uptime7Day:"99.93",BinFull:"75",EstFillDate:"06/04/26",LastPM:"05/13/26"},
-        {Store:"Metro 214",Address:"280 North Service Rd",City:"Oakville",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"5.10",Uptime7Day:"99.71",BinFull:"54",EstFillDate:"07/10/26",LastPM:"05/19/26"},
-        {Store:"The Real Canadian Superstore 1024",Address:"201 Oak Park Blvd",City:"Oakville",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"6.20",Uptime7Day:"99.99",BinFull:"61",EstFillDate:"06/28/26",LastPM:"05/13/26"},
-        {Store:"The Real Canadian Superstore 1033",Address:"51 Gerry Fitzgerald Dr",City:"North York",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"6",Reject1Day:"0.78",Uptime7Day:"99.98",BinFull:"81",EstFillDate:"06/01/26",LastPM:"05/12/26"},
-        {Store:"The Real Canadian Superstore 1080",Address:"3050 Argentia Rd",City:"Mississauga",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"3",Reject1Day:"3.73",Uptime7Day:"96.44",BinFull:"27",EstFillDate:"08/05/26",LastPM:"05/19/26"},
-        {Store:"The Real Canadian Superstore 2841",Address:"3045 Mavis Rd.",City:"Mississauga",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"2.28",Uptime7Day:"99.87",BinFull:"43",EstFillDate:"06/30/26",LastPM:"04/30/26"},
-        {Store:"Loblaws 1011",Address:"5010 Glen Erin Dr.",City:"Mississauga",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"0.33",Uptime7Day:"99.99",BinFull:"63",EstFillDate:"07/10/26",LastPM:"05/08/26"},
-        {Store:"The Real Canadian Superstore 1012",Address:"30 Kingston Rd. West",City:"Ajax",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"29.69",Uptime7Day:"99.98",BinFull:"40",EstFillDate:"09/01/26",LastPM:"05/14/26"},
-        {Store:"Loblaws 1019",Address:"2877 Bayview Ave",City:"Toronto",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"0.86",Uptime7Day:"99.99",BinFull:"28",EstFillDate:"10/22/26",LastPM:"05/11/26"},
-        {Store:"Loblaws 1021",Address:"50 Musgrave St.",City:"Toronto",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"6",Reject1Day:"3.94",Uptime7Day:"99.99",BinFull:"73",EstFillDate:"06/11/26",LastPM:"05/11/26"},
-        {Store:"Loblaws 1022",Address:"400 Kent St. W",City:"Lindsay",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"3",Reject1Day:"2.68",Uptime7Day:"99.77",BinFull:"55",EstFillDate:"07/26/26",LastPM:"05/22/26"},
-        {Store:"Loblaws 1028",Address:"301 High Tech Rd",City:"Richmond Hill",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"6",Reject1Day:"10.18",Uptime7Day:"75.54",BinFull:"66",EstFillDate:"06/26/26",LastPM:"05/20/26"},
-        {Store:"Loblaws 1032",Address:"200 Bullock Dr.",City:"Markham",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"6",Reject1Day:"0.60",Uptime7Day:"99.62",BinFull:"51",EstFillDate:"06/22/26",LastPM:"05/20/26"},
-        {Store:"Loblaws 1066",Address:"380 The East Mall",City:"Etobicoke",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"0",Reject1Day:"0.00",Uptime7Day:"99.80",BinFull:"0",EstFillDate:"09/20/26",LastPM:"05/14/26"},
-        {Store:"The Real Canadian Superstore 1077",Address:"825 Don Mills Rd.",City:"Toronto",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"5.08",Uptime7Day:"99.96",BinFull:"23",EstFillDate:"08/20/26",LastPM:"05/11/26"},
-        {Store:"Loblaws 1127",Address:"12 Hurontario St.",City:"Collingwood",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"0",Reject1Day:"0.00",Uptime7Day:"99.98",BinFull:"49",EstFillDate:"08/24/26",LastPM:"04/14/26"},
-        {Store:"The Real Canadian Superstore 2842",Address:"481 Gibb St.",City:"Oshawa",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"4.45",Uptime7Day:"99.11",BinFull:"0",EstFillDate:"07/13/26",LastPM:"05/25/26"},
-        {Store:"Loblaws 1212",Address:"396 St. Clair Ave W",City:"Toronto",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"3",Reject1Day:"3.25",Uptime7Day:"99.87",BinFull:"0",EstFillDate:"06/03/26",LastPM:"05/13/26"},
-        {Store:"The Real Canadian Superstore 1030",Address:"15900 Bayview Ave",City:"Aurora",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"6",Reject1Day:"1.89",Uptime7Day:"99.98",BinFull:"33",EstFillDate:"07/09/26",LastPM:"04/30/26"},
-        {Store:"Loblaws 1016",Address:"3040 Wonderland Rd S",City:"London",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"18.75",Uptime7Day:"99.91",BinFull:"13",EstFillDate:"10/23/26",LastPM:"04/24/26"},
-        {Store:"Loblaws 1027",Address:"1740 Richmond St",City:"London",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"2.51",Uptime7Day:"99.91",BinFull:"5",EstFillDate:"09/18/26",LastPM:"04/23/26"},
-        {Store:"The Real Canadian Superstore 1091",Address:"825 Oxford St E",City:"London",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"6",Reject1Day:"6.82",Uptime7Day:"62.32",BinFull:"10",EstFillDate:"07/02/26",LastPM:"04/23/26"},
-        {Store:"The Real Canadian Superstore 1058",Address:"200 Taunton Rd",City:"Whitby",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"2.95",Uptime7Day:"99.97",BinFull:"0",EstFillDate:"07/25/26",LastPM:"05/14/26"},
-        {Store:"Metro 118",Address:"1030 Adelaide St N",City:"London",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"3.11",Uptime7Day:"99.88",BinFull:"21",EstFillDate:"08/15/26",LastPM:"04/23/26"},
-        {Store:"Metro 199",Address:"155 Clarke Rd",City:"London",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"3",Reject1Day:"1.05",Uptime7Day:"99.91",BinFull:"42",EstFillDate:"07/19/26",LastPM:"04/29/26"},
-        {Store:"The Real Canadian Superstore 1018",Address:"18200 Yonge St",City:"Newmarket",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"0.54",Uptime7Day:"99.97",BinFull:"48",EstFillDate:"06/09/26",LastPM:"04/15/26"},
-        {Store:"Food Basics 858",Address:"3770 Montrose Rd.",City:"Niagara Falls",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"0",Reject1Day:"0.00",Uptime7Day:"99.83",BinFull:"38",EstFillDate:"08/30/26",LastPM:"05/06/26"},
-        {Store:"Metro 137",Address:"417 Wellington St.",City:"St. Thomas",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"0.00",Uptime7Day:"99.87",BinFull:"53",EstFillDate:"09/04/26",LastPM:"05/12/26"},
-        {Store:"The Real Canadian Superstore 1043",Address:"1385 Harmony Rd N",City:"Oshawa",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"0.00",Uptime7Day:"99.47",BinFull:"0",EstFillDate:"07/20/26",LastPM:"05/25/26"},
-        {Store:"The Real Canadian Superstore 2811",Address:"171 Guelph St.",City:"Georgetown",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"0",Reject1Day:"0.00",Uptime7Day:"99.99",BinFull:"10",EstFillDate:"10/06/26",LastPM:"05/11/26"},
-        {Store:"Metro 132",Address:"53 Quinte S",City:"Trenton",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"1.59",Uptime7Day:"99.85",BinFull:"9",EstFillDate:"10/29/26",LastPM:"05/04/26"},
-        {Store:"Food Basics 837",Address:"Hwy 118 W. #505",City:"Bracebridge",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"3",Reject1Day:"1.52",Uptime7Day:"99.89",BinFull:"9",EstFillDate:"07/24/26",LastPM:"03/30/26"},
-        {Store:"Metro 425",Address:"156 Main St. S.",City:"Brampton",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"0.73",Uptime7Day:"99.66",BinFull:"60",EstFillDate:"07/03/26",LastPM:"05/20/26"},
-        {Store:"The Real Canadian Superstore 2812",Address:"1205 Oxford St. W",City:"London",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"7",Reject1Day:"7.48",Uptime7Day:"99.91",BinFull:"22",EstFillDate:"07/16/26",LastPM:"04/23/26"},
-        {Store:"Loblaws 1003",Address:"5970 McLaughlin Rd",City:"Mississauga",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"1.55",Uptime7Day:"99.94",BinFull:"59",EstFillDate:"07/13/26",LastPM:"04/29/26"},
-        {Store:"Metro 453",Address:"243 King St E",City:"Bowmanville",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"1.35",Uptime7Day:"99.93",BinFull:"1",EstFillDate:"07/28/26",LastPM:"04/28/26"},
-        {Store:"The Real Canadian Superstore 512",Address:"25-45th Street South",City:"Wasaga Beach",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"0.00",Uptime7Day:"99.87",BinFull:"37",EstFillDate:"07/21/26",LastPM:"04/14/26"},
-        {Store:"The Real Canadian Superstore 551",Address:"1063 Talbot St. Unit 50",City:"St Thomas",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"3",Reject1Day:"3.62",Uptime7Day:"99.98",BinFull:"24",EstFillDate:"09/03/26",LastPM:"05/15/26"},
-        {Store:"The Real Canadian Superstore 569",Address:"9292 Hwy 93",City:"Midland",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"7",Reject1Day:"1.65",Uptime7Day:"99.82",BinFull:"47",EstFillDate:"06/19/26",LastPM:"04/16/26"},
-        {Store:"The Real Canadian Superstore 577",Address:"411 Louth Street",City:"St. Catharines",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"2.00",Uptime7Day:"99.95",BinFull:"21",EstFillDate:"07/18/26",LastPM:"04/22/26"},
-        {Store:"The Royal Canadian Mint 1",Address:"320 Sussex Drive",City:"Ottawa",Province:"ON",State:"ON",KioskState:"Full",Tx1Day:"0",Reject1Day:"0.00",Uptime7Day:"0.00",BinFull:"95",EstFillDate:"05/13/26",LastPM:"09/19/25"},
-        {Store:"The Royal Canadian Mint 2",Address:"520 Iagimodiere Blvd",City:"Winnipeg",Province:"MB",State:"MB",KioskState:"Offline",Tx1Day:"0",Reject1Day:"0.00",Uptime7Day:"99.78",BinFull:"0",EstFillDate:"01/13/29",LastPM:"01/07/26"},
-        {Store:"The Real Canadian Superstore 2806",Address:"361 South Service Rd",City:"Grimsby",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"5.12",Uptime7Day:"99.99",BinFull:"23",EstFillDate:"08/12/26",LastPM:"05/06/26"},
-        {Store:"The Real Canadian Superstore 2800",Address:"2549 Weston Rd",City:"Toronto",Province:"ON",State:"ON",KioskState:"OOS-Mach",Tx1Day:"10",Reject1Day:"2.36",Uptime7Day:"88.08",BinFull:"15",EstFillDate:"06/29/26",LastPM:"05/11/26"},
-        {Store:"Metro 179",Address:"1070 Second Ave. East",City:"Owen Sound",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"0.66",Uptime7Day:"99.87",BinFull:"21",EstFillDate:"07/23/26",LastPM:"05/04/26"},
-        {Store:"Food Basics 844",Address:"288 Erie St. South",City:"Leamington",Province:"ON",State:"ON",KioskState:"Full",Tx1Day:"6",Reject1Day:"8.86",Uptime7Day:"89.34",BinFull:"100",EstFillDate:"05/24/26",LastPM:"04/07/26"},
-        {Store:"Food Basics 832",Address:"2750 Tecumseh Rd. West",City:"Windsor",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"7",Reject1Day:"1.64",Uptime7Day:"99.92",BinFull:"72",EstFillDate:"06/12/26",LastPM:"04/13/26"},
-        {Store:"Metro 364",Address:"560 Exmouth St.",City:"Sarnia",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"0.82",Uptime7Day:"99.89",BinFull:"4",EstFillDate:"08/06/26",LastPM:"05/08/26"},
-        {Store:"Loblaws 1014",Address:"100 McArthur Blvd.",City:"Vanier",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"3.64",Uptime7Day:"99.99",BinFull:"67",EstFillDate:"06/19/26",LastPM:"05/12/26"},
-        {Store:"Loblaws 1023",Address:"2065A Robertson Rd",City:"Nepean",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"0",Reject1Day:"0.00",Uptime7Day:"99.58",BinFull:"53",EstFillDate:"08/07/26",LastPM:"05/20/26"},
-        {Store:"Loblaws 1082",Address:"1460 Merivale Rd.",City:"Nepean",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"38.98",Uptime7Day:"99.95",BinFull:"2",EstFillDate:"09/15/26",LastPM:"04/23/26"},
-        {Store:"Loblaws 1114",Address:"200 Earl Grey Dr.",City:"Kanata",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"0.74",Uptime7Day:"99.95",BinFull:"7",EstFillDate:"07/20/26",LastPM:"05/12/26"},
-        {Store:"Loblaws 1170",Address:"363 Rideau St.",City:"Ottawa",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"14",Reject1Day:"4.34",Uptime7Day:"99.99",BinFull:"82",EstFillDate:"06/01/26",LastPM:"05/12/26"},
-        {Store:"The Real Canadian Superstore 562",Address:"791 St. Clair St. North",City:"Chatham",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"4.67",Uptime7Day:"99.84",BinFull:"64",EstFillDate:"07/12/26",LastPM:"05/12/26"},
-        {Store:"The Real Canadian Superstore 567",Address:"4371 Walker Rd.",City:"Windsor",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"3",Reject1Day:"3.65",Uptime7Day:"99.94",BinFull:"84",EstFillDate:"06/09/26",LastPM:"05/01/26"},
-        {Store:"The Real Canadian Superstore 1009",Address:"190 Richmond Rd.",City:"Ottawa",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"3",Reject1Day:"2.94",Uptime7Day:"99.91",BinFull:"13",EstFillDate:"07/16/26",LastPM:"04/10/26"},
-        {Store:"The Real Canadian Superstore 1017",Address:"1972 Parkdale Ave.",City:"Brockville",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"0",Reject1Day:"0.00",Uptime7Day:"99.98",BinFull:"4",EstFillDate:"02/20/27",LastPM:"04/14/26"},
-        {Store:"The Real Canadian Superstore 2826",Address:"600 Murphy Road",City:"Sarnia",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"1.19",Uptime7Day:"99.88",BinFull:"4",EstFillDate:"08/03/26",LastPM:"05/08/26"},
-        {Store:"Zehrs 509",Address:"30 King Street South",City:"Alliston",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"1.33",Uptime7Day:"99.97",BinFull:"6",EstFillDate:"08/12/26",LastPM:"04/28/26"},
-        {Store:"Zehrs 519",Address:"322 Argyle St. South",City:"Caledonia",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"0.14",Uptime7Day:"99.47",BinFull:"95",EstFillDate:"06/01/26",LastPM:"05/22/26"},
-        {Store:"Zehrs 520",Address:"24018 Woodbine Ave.",City:"Keswick",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"2.26",Uptime7Day:"99.98",BinFull:"42",EstFillDate:"08/15/26",LastPM:"04/15/26"},
-        {Store:"Zehrs 521",Address:"5890 Malden Rd.",City:"LaSalle",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"1.70",Uptime7Day:"99.99",BinFull:"37",EstFillDate:"08/01/26",LastPM:"05/01/26"},
-        {Store:"Zehrs 522",Address:"221 Glendale Ave.",City:"St. Catharines",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"3",Reject1Day:"1.62",Uptime7Day:"99.89",BinFull:"14",EstFillDate:"08/19/26",LastPM:"04/22/26"},
-        {Store:"Zehrs 524",Address:"450 Erb St. West",City:"Waterloo",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"0",Reject1Day:"0.00",Uptime7Day:"99.99",BinFull:"64",EstFillDate:"08/10/26",LastPM:"05/06/26"},
-        {Store:"The Real Canadian Superstore 2818",Address:"125 Queensway East",City:"Simcoe",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"1.09",Uptime7Day:"99.95",BinFull:"40",EstFillDate:"08/04/26",LastPM:"05/15/26"},
-        {Store:"Zehrs 528",Address:"555 Davenport Rd.",City:"Waterloo",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"0.46",Uptime7Day:"99.87",BinFull:"25",EstFillDate:"09/11/26",LastPM:"05/06/26"},
-        {Store:"Zehrs 529",Address:"7201 Tecumesh Rd. East",City:"Windsor",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"3.55",Uptime7Day:"99.99",BinFull:"76",EstFillDate:"06/11/26",LastPM:"04/27/26"},
-        {Store:"Zehrs 533",Address:"400 Conestoga Blvd.",City:"Cambridge",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"1.06",Uptime7Day:"99.99",BinFull:"22",EstFillDate:"09/12/26",LastPM:"04/30/26"},
-        {Store:"Zehrs 535",Address:"600 Mitchell Rd. Hwy 23 South",City:"Listowel",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"9.89",Uptime7Day:"99.99",BinFull:"13",EstFillDate:"09/28/26",LastPM:"05/14/26"},
-        {Store:"Zehrs 537",Address:"6940 Morrison St.",City:"Niagara Falls",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"1.80",Uptime7Day:"99.98",BinFull:"44",EstFillDate:"06/29/26",LastPM:"05/06/26"},
-        {Store:"Zehrs 543",Address:"290 King George Rd. N.",City:"Brantford",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"1.82",Uptime7Day:"99.99",BinFull:"21",EstFillDate:"08/02/26",LastPM:"05/13/26"},
-        {Store:"Zehrs 545",Address:"180 Holiday Inn Drive",City:"Cambridge",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"20.00",Uptime7Day:"99.96",BinFull:"64",EstFillDate:"11/28/26",LastPM:"05/05/26"},
-        {Store:"Zehrs 550",Address:"821 Niagara St. North",City:"Welland",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"1.82",Uptime7Day:"99.95",BinFull:"18",EstFillDate:"08/05/26",LastPM:"05/11/26"},
-        {Store:"Zehrs 552",Address:"323 Toronto Street South",City:"Uxbridge",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"0",Reject1Day:"0.00",Uptime7Day:"99.93",BinFull:"42",EstFillDate:"08/04/26",LastPM:"05/06/26"},
-        {Store:"Zehrs 554",Address:"50 4th Avenue",City:"Orangeville",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"3.25",Uptime7Day:"99.95",BinFull:"82",EstFillDate:"06/05/26",LastPM:"04/14/26"},
-        {Store:"Zehrs 557",Address:"865 Ontario St.",City:"Stratford",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"0.60",Uptime7Day:"99.99",BinFull:"73",EstFillDate:"06/23/26",LastPM:"05/06/26"},
-        {Store:"Zehrs 560",Address:"750 Ottawa St. South",City:"Kitchener",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"3",Reject1Day:"3.78",Uptime7Day:"99.82",BinFull:"31",EstFillDate:"07/21/26",LastPM:"05/21/26"},
-        {Store:"Zehrs 565",Address:"620 Yonge St.",City:"Barrie",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"3.35",Uptime7Day:"99.97",BinFull:"12",EstFillDate:"07/30/26",LastPM:"04/16/26"},
-        {Store:"The Real Canadian Superstore 2827",Address:"2430 Dougall Ave.",City:"Windsor",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"1.38",Uptime7Day:"99.99",BinFull:"43",EstFillDate:"07/23/26",LastPM:"05/01/26"},
-        {Store:"Zehrs 572",Address:"300 Main St East",City:"Kingsville",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"2.19",Uptime7Day:"99.98",BinFull:"62",EstFillDate:"07/09/26",LastPM:"03/26/26"},
-        {Store:"Zehrs 573",Address:"400 Manning Road",City:"Windsor",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"0",Reject1Day:"0.00",Uptime7Day:"99.98",BinFull:"82",EstFillDate:"06/12/26",LastPM:"04/27/26"},
-        {Store:"Zehrs 576",Address:"200 Franklin Blvd.",City:"Cambridge",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"9.89",Uptime7Day:"99.98",BinFull:"90",EstFillDate:"06/04/26",LastPM:"05/05/26"},
-        {Store:"Zehrs 579",Address:"969 Dundas St.",City:"Woodstock",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"15.90",Uptime7Day:"99.98",BinFull:"16",EstFillDate:"11/18/26",LastPM:"04/29/26"},
-        {Store:"Zehrs 580",Address:"289 Coldwater Rd.",City:"Orillia",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"0",Reject1Day:"0.00",Uptime7Day:"99.97",BinFull:"49",EstFillDate:"09/24/26",LastPM:"03/30/26"},
-        {Store:"The Real Canadian Superstore 2813",Address:"760 Eagleson Rd",City:"Ottawa",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"4.03",Uptime7Day:"99.94",BinFull:"58",EstFillDate:"07/13/26",LastPM:"04/01/26"},
-        {Store:"Metro 245",Address:"3310 McCarthy Rd.",City:"Ottawa",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"0",Reject1Day:"0.00",Uptime7Day:"99.92",BinFull:"51",EstFillDate:"09/10/26",LastPM:"05/06/26"},
-        {Store:"Loblaws 1035",Address:"3201 Greenbank Rd.",City:"Nepean",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"3.28",Uptime7Day:"99.66",BinFull:"46",EstFillDate:"07/21/26",LastPM:"05/20/26"},
-        {Store:"Loblaws 1050",Address:"1980 Baseline Rd.",City:"Nepean",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"1",Reject1Day:"13.84",Uptime7Day:"91.65",BinFull:"56",EstFillDate:"09/26/26",LastPM:"05/22/26"},
-        {Store:"Loblaws 1051",Address:"1980 Ogilvie Rd.",City:"Gloucester",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"7",Reject1Day:"5.60",Uptime7Day:"99.70",BinFull:"53",EstFillDate:"06/22/26",LastPM:"05/06/26"},
-        {Store:"Loblaws 1188",Address:"2201 C Bank St.",City:"Ottawa",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"5.48",Uptime7Day:"99.99",BinFull:"61",EstFillDate:"06/20/26",LastPM:"05/15/26"},
-        {Store:"Zehrs 532",Address:"35400 Huron Rd. East",City:"Goderich",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"4.05",Uptime7Day:"99.99",BinFull:"7",EstFillDate:"02/03/27",LastPM:"05/04/26"}
+        {Store:"Loblaws 1082",Address:"1460 Merivale Rd.",City:"Nepean",Province:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"38.98",Reject7Day:"15.01",Uptime7Day:"99.95",BinFull:"2",EstFillDate:"09/15/26",LastPM:"04/23/26"},
+        {Store:"The Real Canadian Superstore 1091",Address:"825 Oxford St E",City:"London",Province:"ON",KioskState:"Attract",Tx1Day:"6",Reject1Day:"6.82",Reject7Day:"3.51",Uptime7Day:"62.32",BinFull:"10",EstFillDate:"07/02/26",LastPM:"04/23/26"},
+        {Store:"Metro 742",Address:"425 Bloor St W",City:"Toronto",Province:"ON",KioskState:"Attract",Tx1Day:"8",Reject1Day:"6.69",Reject7Day:"2.90",Uptime7Day:"74.97",BinFull:"46",EstFillDate:"06/22/26",LastPM:"05/21/26"},
+        {Store:"Maxi & CIE 8661",Address:"6825 Cote-des-Neiges",City:"Montreal",Province:"QC",KioskState:"Attract",Tx1Day:"6",Reject1Day:"1.24",Reject7Day:"1.31",Uptime7Day:"52.40",BinFull:"55",EstFillDate:"06/21/26",LastPM:"05/25/26"},
+        {Store:"Metro & Metro Plus Stores 2451",Address:"1955 rue Ste-Catherine E",City:"Montreal",Province:"QC",KioskState:"Attract",Tx1Day:"5",Reject1Day:"22.11",Reject7Day:"6.77",Uptime7Day:"89.98",BinFull:"97",EstFillDate:"05/27/26",LastPM:"05/19/26"},
+        {Store:"Loblaws 1028",Address:"301 High Tech Rd",City:"Richmond Hill",Province:"ON",KioskState:"Attract",Tx1Day:"6",Reject1Day:"10.18",Reject7Day:"6.73",Uptime7Day:"75.54",BinFull:"66",EstFillDate:"06/26/26",LastPM:"05/20/26"},
+        {Store:"The Real Canadian Superstore 1012",Address:"30 Kingston Rd. West",City:"Ajax",Province:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"29.69",Reject7Day:"8.09",Uptime7Day:"99.98",BinFull:"40",EstFillDate:"09/01/26",LastPM:"05/14/26"},
+        {Store:"Super C 5918",Address:"259 boul. Seigneurie",City:"Blainville",Province:"QC",KioskState:"Attract",Tx1Day:"6",Reject1Day:"16.64",Reject7Day:"12.90",Uptime7Day:"99.93",BinFull:"82",EstFillDate:"06/07/26",LastPM:"05/05/26"},
+        {Store:"The Real Canadian Superstore 1525",Address:"6435 Metral Dr.",City:"Nanaimo",Province:"BC",KioskState:"OOS-Mach",Tx1Day:"7",Reject1Day:"1.42",Reject7Day:"7.81",Uptime7Day:"76.40",BinFull:"67",EstFillDate:"06/10/26",LastPM:"05/06/26"},
+        {Store:"Super C 5919",Address:"8330 boul. Taschereau",City:"Brossard",Province:"QC",KioskState:"Partner",Tx1Day:"6",Reject1Day:"1.64",Reject7Day:"1.83",Uptime7Day:"73.33",BinFull:"90",EstFillDate:"05/29/26",LastPM:"05/11/26"},
+        {Store:"Food Basics 844",Address:"288 Erie St. South",City:"Leamington",Province:"ON",KioskState:"Full",Tx1Day:"6",Reject1Day:"8.86",Reject7Day:"4.62",Uptime7Day:"89.34",BinFull:"100",EstFillDate:"05/24/26",LastPM:"04/07/26"},
+        {Store:"The Real Canadian Superstore 2800",Address:"2549 Weston Rd",City:"Toronto",Province:"ON",KioskState:"OOS-Mach",Tx1Day:"10",Reject1Day:"2.36",Reject7Day:"1.37",Uptime7Day:"88.08",BinFull:"15",EstFillDate:"06/29/26",LastPM:"05/11/26"},
+        {Store:"Super C 5938",Address:"2801 boul des Promenades",City:"Sainte-marthe-sur-le-lac",Province:"QC",KioskState:"Attract",Tx1Day:"12",Reject1Day:"2.43",Reject7Day:"2.72",Uptime7Day:"91.05",BinFull:"26",EstFillDate:"07/04/26",LastPM:"05/19/26"},
+        {Store:"The Real Canadian Superstore 2831",Address:"669 Borden Ave",City:"Peterborough",Province:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"15.98",Reject7Day:"5.73",Uptime7Day:"99.71",BinFull:"0",EstFillDate:"07/07/26",LastPM:"05/22/26"},
+        {Store:"Maxi & CIE 8675",Address:"8305 Avenue papineau",City:"Montreal",Province:"QC",KioskState:"Attract",Tx1Day:"6",Reject1Day:"1.90",Reject7Day:"6.79",Uptime7Day:"77.95",BinFull:"62",EstFillDate:"06/15/26",LastPM:"05/13/26"},
+        {Store:"Save-On-Foods & Coopers Foods 923",Address:"108 - 3170 TILLICUM ROAD",City:"Victoria",Province:"BC",KioskState:"Attract",Tx1Day:"10",Reject1Day:"7.70",Reject7Day:"3.74",Uptime7Day:"99.93",BinFull:"40",EstFillDate:"06/18/26",LastPM:"05/07/26"},
+        {Store:"The Real Canadian Superstore 1554",Address:"8195 - 120th Street",City:"Delta",Province:"BC",KioskState:"Attract",Tx1Day:"3",Reject1Day:"12.93",Reject7Day:"11.13",Uptime7Day:"77.47",BinFull:"17",EstFillDate:"07/21/26",LastPM:"05/19/26"},
+        {Store:"Food Basics 676",Address:"84 Lyndon Road",City:"Brantford",Province:"ON",KioskState:"Attract",Tx1Day:"3",Reject1Day:"23.86",Reject7Day:"2.97",Uptime7Day:"99.91",BinFull:"16",EstFillDate:"10/28/26",LastPM:"05/13/26"},
+        {Store:"Maxi 8900",Address:"2101 Rue Dollard",City:"Lasalle",Province:"QC",KioskState:"Attract",Tx1Day:"2",Reject1Day:"30.73",Reject7Day:"12.33",Uptime7Day:"93.18",BinFull:"30",EstFillDate:"10/27/26",LastPM:"05/13/26"},
+        {Store:"The Real Canadian Superstore 1576",Address:"3575-20th Avenue N.E.",City:"Calgary",Province:"AB",KioskState:"Attract",Tx1Day:"8",Reject1Day:"8.14",Reject7Day:"3.88",Uptime7Day:"99.99",BinFull:"67",EstFillDate:"06/10/26",LastPM:"02/03/26"},
+        {Store:"Metro 493",Address:"1090 Wilson Avenue",City:"Toronto",Province:"ON",KioskState:"Attract",Tx1Day:"8",Reject1Day:"3.05",Reject7Day:"6.01",Uptime7Day:"90.02",BinFull:"16",EstFillDate:"06/21/26",LastPM:"05/13/26"},
+        {Store:"Loblaws 1170",Address:"363 Rideau St.",City:"Ottawa",Province:"ON",KioskState:"Attract",Tx1Day:"14",Reject1Day:"4.34",Reject7Day:"6.60",Uptime7Day:"99.99",BinFull:"82",EstFillDate:"06/01/26",LastPM:"05/12/26"},
+        {Store:"Food Basics 906",Address:"505 Rymal Road E",City:"Hamilton",Province:"ON",KioskState:"Attract",Tx1Day:"2",Reject1Day:"29.66",Reject7Day:"3.76",Uptime7Day:"99.74",BinFull:"39",EstFillDate:"07/21/26",LastPM:"05/20/26"},
+        {Store:"Sobeys 678",Address:"130 Cedar St.",City:"Cambridge",Province:"ON",KioskState:"Attract",Tx1Day:"4",Reject1Day:"14.04",Reject7Day:"10.92",Uptime7Day:"99.95",BinFull:"53",EstFillDate:"08/13/26",LastPM:"05/05/26"},
+        {Store:"Loblaws 1040",Address:"1100 Princess Street",City:"Kingston",Province:"ON",KioskState:"Attract",Tx1Day:"5",Reject1Day:"10.88",Reject7Day:"7.26",Uptime7Day:"100.00",BinFull:"13",EstFillDate:"08/29/26",LastPM:"04/16/26"}
     ];
     
-    // Expand to full dataset by adding more derived records
     let allData = [...rawData];
-    
-    // Add some Quebec data
-    const qcData = [
-        {Store:"Super C 5951",Address:"1110 Autoroute Chromeday Ouest",City:"Laval",Province:"QC",State:"QC",KioskState:"Attract",Tx1Day:"3",Reject1Day:"4.10",Uptime7Day:"99.93",BinFull:"44",EstFillDate:"07/10/26",LastPM:"04/22/26"},
-        {Store:"Metro & Metro Plus Stores 2451",Address:"1955 rue Ste-Catherine E",City:"Montreal",Province:"QC",State:"QC",KioskState:"Attract",Tx1Day:"5",Reject1Day:"22.11",Uptime7Day:"89.98",BinFull:"97",EstFillDate:"05/27/26",LastPM:"05/19/26"},
-        {Store:"Metro 742",Address:"425 Bloor St W",City:"Toronto",Province:"ON",State:"ON",KioskState:"Attract",Tx1Day:"8",Reject1Day:"6.69",Uptime7Day:"74.97",BinFull:"46",EstFillDate:"06/22/26",LastPM:"05/21/26"},
-        {Store:"Maxi & CIE 8661",Address:"6825 Cote-des-Neiges",City:"Montreal",Province:"QC",State:"QC",KioskState:"Attract",Tx1Day:"6",Reject1Day:"1.24",Uptime7Day:"52.40",BinFull:"55",EstFillDate:"06/21/26",LastPM:"05/25/26"},
-        {Store:"Super C 5957",Address:"1000 boul desLaurentides",City:"Laval",Province:"QC",State:"QC",KioskState:"Attract",Tx1Day:"5",Reject1Day:"0.70",Uptime7Day:"99.87",BinFull:"18",EstFillDate:"07/16/26",LastPM:"05/11/26"}
-    ];
-    allData.push(...qcData);
-    
-    // Add Alberta samples
-    const abData = [
-        {Store:"Safeway 8805",Address:"318 Marten Street",City:"Banff",Province:"AB",State:"AB",KioskState:"Attract",Tx1Day:"3",Reject1Day:"3.44",Uptime7Day:"99.95",BinFull:"23",EstFillDate:"09/26/26",LastPM:"05/04/26"},
-        {Store:"Safeway 8812",Address:"813-11 Avenue S.W.",City:"Calgary",Province:"AB",State:"AB",KioskState:"Attract",Tx1Day:"2",Reject1Day:"3.41",Uptime7Day:"99.96",BinFull:"17",EstFillDate:"09/19/26",LastPM:"04/09/26"},
-        {Store:"Safeway 8906",Address:"5110 Windermere Blvd.",City:"Edmonton",Province:"AB",State:"AB",KioskState:"Attract",Tx1Day:"3",Reject1Day:"4.95",Uptime7Day:"99.95",BinFull:"3",EstFillDate:"12/11/26",LastPM:"04/20/26"}
-    ];
-    allData.push(...abData);
-    
-    // Add BC samples
-    const bcData = [
-        {Store:"Safeway 4903",Address:"6401 120th St",City:"Delta",Province:"BC",State:"BC",KioskState:"Attract",Tx1Day:"1",Reject1Day:"2.93",Uptime7Day:"99.64",BinFull:"88",EstFillDate:"06/09/26",LastPM:"05/25/26"},
-        {Store:"Safeway 4905",Address:"780 Westview Dr",City:"North Vancouver",Province:"BC",State:"BC",KioskState:"Attract",Tx1Day:"3",Reject1Day:"0.56",Uptime7Day:"99.86",BinFull:"21",EstFillDate:"07/09/26",LastPM:"05/14/26"},
-        {Store:"Safeway 4908",Address:"1766 Robson St",City:"Vancouver",Province:"BC",State:"BC",KioskState:"Attract",Tx1Day:"2",Reject1Day:"0.26",Uptime7Day:"99.88",BinFull:"90",EstFillDate:"06/01/26",LastPM:"04/30/26"}
-    ];
-    allData.push(...bcData);
-    
-    // Add offline example
-    allData.push({Store:"Test Offline Kiosk",Address:"123 Test Street",City:"Test City",Province:"ON",State:"ON",KioskState:"Offline",Tx1Day:"0",Reject1Day:"0.00",Uptime7Day:"0.00",BinFull:"0",EstFillDate:"N/A",LastPM:"01/01/26"});
-    
-    // ============================================================
-    // APPLICATION LOGIC
-    // ============================================================
-    
-    let currentSort = { column: 'loss', direction: 'desc' };
+    let currentSort = { column: 'reject7d', direction: 'desc' };
     let lossChart = null;
     let currentNoteStore = null;
     let editingNoteId = null;
-    let currentProvinceFilter = 'all';
-    let currentRiskFilter = 'all';
     
     const TRANSACTION_VALUE = 5;
     
-    function getNotesKey(storeId) { return `kiosk_notes_${storeId}`; }
+    // Helper functions
+    function getRegion(r) { return r.Province || 'Unknown'; }
+    function getStoreId(r) { return (r.Store || '').replace(/[^a-zA-Z0-9]/g, '_') + '_' + (r.City || '').replace(/[^a-zA-Z0-9]/g, '_'); }
+    function getVolume(r) { return parseFloat(r.Tx1Day) || 0; }
+    function getEstRevenue(r) { return getVolume(r) * TRANSACTION_VALUE; }
+    function getReject7d(r) { return parseFloat(r.Reject7Day) || 0; }
+    function getReject1d(r) { return parseFloat(r.Reject1Day) || 0; }
+    function getUptime(r) { return parseFloat(r.Uptime7Day) || 0; }
     
+    // Loss calculations using 7-day reject (more accurate trend)
+    function calcLossFromReject(r) { 
+        let tx = getVolume(r); 
+        let reject = getReject7d(r);
+        return (tx * (reject / 100)) * TRANSACTION_VALUE; 
+    }
+    function calcLossFromDowntime(r) { 
+        let tx = getVolume(r); 
+        let uptime = getUptime(r); 
+        return (tx * ((100 - uptime) / 100) * 0.8) * TRANSACTION_VALUE; 
+    }
+    function calcDailyLoss(r) { return calcLossFromReject(r) + calcLossFromDowntime(r); }
+    function getMonthlyLoss(r) { return calcDailyLoss(r) * 30; }
+    function getNetRevenue(r) { return getEstRevenue(r) - calcDailyLoss(r); }
+    
+    // NEW: Status based on 7-day reject (boss's rule: 4% threshold)
+    function getStatusLevel(r) {
+        let reject7d = getReject7d(r);
+        if (reject7d >= 8) return 'Critical';
+        if (reject7d >= 4) return 'Warning';
+        return 'Good';
+    }
+    
+    function getStatusBadgeClass(level) {
+        if (level === 'Critical') return 'badge-critical';
+        if (level === 'Warning') return 'badge-warning';
+        return 'badge-good';
+    }
+    
+    function getLastServiceDate(r) { return r.LastPM || '—'; }
+    function daysSinceService(dateStr) {
+        if (!dateStr || dateStr === '—') return null;
+        try {
+            let parts = dateStr.match(/(\d{2})\/(\d{2})\/(\d{2})/);
+            if (parts) {
+                let date = new Date(2000 + parseInt(parts[3]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                return Math.ceil((new Date() - date) / (1000 * 60 * 60 * 24));
+            }
+        } catch(e) {}
+        return null;
+    }
+    
+    // Notes functions (same as before)
+    function getNotesKey(storeId) { return `kiosk_notes_${storeId}`; }
     function loadNotes(storeId) {
         const saved = localStorage.getItem(getNotesKey(storeId));
         if (!saved) return [];
@@ -384,14 +358,12 @@
             return notes.filter(note => new Date(note.date).getTime() > thirtyDaysAgo);
         } catch(e) { return []; }
     }
-    
     function saveNote(storeId, noteText) {
         if (!noteText.trim()) return;
         const notes = loadNotes(storeId);
         notes.unshift({ id: Date.now().toString(), text: noteText.trim(), date: new Date().toISOString(), formattedDate: new Date().toLocaleString() });
         localStorage.setItem(getNotesKey(storeId), JSON.stringify(notes));
     }
-    
     function updateNote(storeId, noteId, newText) {
         if (!newText.trim()) return;
         const notes = loadNotes(storeId);
@@ -403,7 +375,6 @@
             localStorage.setItem(getNotesKey(storeId), JSON.stringify(notes));
         }
     }
-    
     function deleteNote(storeId, noteId) {
         const notes = loadNotes(storeId);
         localStorage.setItem(getNotesKey(storeId), JSON.stringify(notes.filter(n => n.id !== noteId)));
@@ -479,63 +450,19 @@
     }
     
     window.openNotesModal = openNotesModal;
-    
-    function closeNotesModal() {
-        document.getElementById('notesModal').style.display = 'none';
-        currentNoteStore = null;
-        editingNoteId = null;
-    }
-    
-    function getRegion(r) { return r.Province || r.State || 'Unknown'; }
-    function getStoreId(r) { return (r.Store || '').replace(/[^a-zA-Z0-9]/g, '_') + '_' + (r.City || '').replace(/[^a-zA-Z0-9]/g, '_'); }
-    function getVolume(r) { return parseFloat(r.Tx1Day) || 0; }
-    function getEstRevenue(r) { return getVolume(r) * TRANSACTION_VALUE; }
-    function calcLossFromReject(r) { let tx = getVolume(r); let reject = parseFloat(r.Reject1Day) || 0; return (tx * (reject / 100)) * TRANSACTION_VALUE; }
-    function calcLossFromDowntime(r) { let tx = getVolume(r); let uptime = parseFloat(r.Uptime7Day) || 0; return (tx * ((100 - uptime) / 100) * 0.8) * TRANSACTION_VALUE; }
-    function calcDailyLoss(r) { return calcLossFromReject(r) + calcLossFromDowntime(r); }
-    function getMonthlyLoss(r) { return calcDailyLoss(r) * 30; }
-    function getNetRevenue(r) { return getEstRevenue(r) - calcDailyLoss(r); }
-    function calcRisk(r) {
-        let rej = parseFloat(r.Reject1Day) || 0;
-        let uptime = parseFloat(r.Uptime7Day) || 0;
-        let binFull = parseFloat(r.BinFull) || 0;
-        let isOffline = r.KioskState === 'Offline';
-        let score = (rej * 2.5) + (100 - uptime) * 2 + (binFull / 2);
-        if (isOffline) score += 60;
-        if (binFull > 90) score += 20;
-        return Math.min(Math.max(score, 0), 100);
-    }
-    function getRiskLevel(score) { if (score >= 60) return 'High Risk'; if (score >= 30) return 'Medium Risk'; return 'Low Risk'; }
-    function getLastServiceDate(r) { return r.LastPM || '—'; }
-    function daysSinceService(dateStr) {
-        if (!dateStr || dateStr === '—') return null;
-        try {
-            let parts = dateStr.match(/(\d{2})\/(\d{2})\/(\d{2})/);
-            if (parts) {
-                let date = new Date(2000 + parseInt(parts[3]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                return Math.ceil((new Date() - date) / (1000 * 60 * 60 * 24));
-            }
-        } catch(e) {}
-        return null;
-    }
-    
-    function showToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
+    function closeNotesModal() { document.getElementById('notesModal').style.display = 'none'; }
     function closeModal() { document.getElementById('instructionModal').style.display = 'none'; }
+    function showToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
     
-    document.getElementById('qrBtn')?.addEventListener('click', () => {
-        document.getElementById('instructionModal').style.display = 'flex';
-        setTimeout(() => {
-            const qc = document.getElementById('qrcode');
-            if(qc) { qc.innerHTML = ''; new QRCode(qc, { text: window.location.href, width: 200, height: 200 }); }
-        }, 100);
-    });
-    
+    // Filter and sort
     function filterData() {
         let f = [...allData];
-        let prov = currentProvinceFilter !== 'all' ? currentProvinceFilter : (document.getElementById('provinceFilter')?.value || 'all');
+        let prov = document.getElementById('provinceFilter')?.value || 'all';
         if (prov !== 'all') f = f.filter(r => getRegion(r) === prov);
-        let risk = document.getElementById('riskFilter')?.value || 'all';
-        if (risk !== 'all') f = f.filter(r => getRiskLevel(calcRisk(r)) === risk);
+        let status = document.getElementById('riskFilter')?.value || 'all';
+        if (status === 'critical') f = f.filter(r => getStatusLevel(r) === 'Critical');
+        else if (status === 'warning') f = f.filter(r => getStatusLevel(r) === 'Warning');
+        else if (status === 'good') f = f.filter(r => getStatusLevel(r) === 'Good');
         let s = document.getElementById('searchInput')?.value.toLowerCase() || '';
         if (s) f = f.filter(r => (r.Store || '').toLowerCase().includes(s) || (r.City || '').toLowerCase().includes(s) || (r.Address || '').toLowerCase().includes(s));
         return f;
@@ -551,14 +478,14 @@
                 case 'province': va = getRegion(a); vb = getRegion(b); break;
                 case 'status': va = a.KioskState || ''; vb = b.KioskState || ''; break;
                 case 'volume': va = getVolume(a); vb = getVolume(b); break;
-                case 'reject': va = parseFloat(a.Reject1Day || 0); vb = parseFloat(b.Reject1Day || 0); break;
-                case 'uptime': va = parseFloat(a.Uptime7Day || 0); vb = parseFloat(b.Uptime7Day || 0); break;
+                case 'reject1d': va = getReject1d(a); vb = getReject1d(b); break;
+                case 'reject7d': va = getReject7d(a); vb = getReject7d(b); break;
+                case 'uptime': va = getUptime(a); vb = getUptime(b); break;
                 case 'bin': va = parseFloat(a.BinFull || 0); vb = parseFloat(b.BinFull || 0); break;
                 case 'revenue': va = getEstRevenue(a); vb = getEstRevenue(b); break;
                 case 'loss': va = calcDailyLoss(a); vb = calcDailyLoss(b); break;
-                case 'monthly': va = getMonthlyLoss(a); vb = getMonthlyLoss(b); break;
                 case 'net': va = getNetRevenue(a); vb = getNetRevenue(b); break;
-                case 'risk': va = calcRisk(a); vb = calcRisk(b); break;
+                case 'statusFlag': va = getStatusLevel(a); vb = getStatusLevel(b); break;
                 default: return 0;
             }
             if (typeof va === 'number') return currentSort.direction === 'desc' ? vb - va : va - vb;
@@ -566,6 +493,7 @@
         });
     }
     
+    // Charts
     function updateProvinceChart(data) {
         let provinceReject = {}, provinceDowntime = {};
         data.forEach(r => {
@@ -585,7 +513,7 @@
         lossChart = new Chart(ctx, {
             type: 'bar',
             data: { labels, datasets: [
-                { label: 'Loss from rejected transactions', data: rejectData, backgroundColor: '#dc2626', borderRadius: 4 },
+                { label: 'Loss from rejected transactions (7-day avg)', data: rejectData, backgroundColor: '#dc2626', borderRadius: 4 },
                 { label: 'Loss from downtime', data: downtimeData, backgroundColor: '#f97316', borderRadius: 4 }
             ] },
             options: {
@@ -597,7 +525,6 @@
                         let province = labels[activeElements[0].index];
                         if (province) {
                             document.getElementById('provinceFilter').value = province;
-                            currentProvinceFilter = province;
                             renderAll();
                             showToast(`📌 Filtered to ${province}`);
                         }
@@ -628,7 +555,9 @@
             let locationText = address ? `${address}, ${city}, ${province}` : `${city}, ${province}`;
             let mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationText)}`;
             let serviceText = lastService !== '—' ? (days !== null ? `Last service: ${lastService} (${days} days ago)` : `Last service: ${lastService}`) : 'Last service: Unknown';
-            return `<div class="top-loss-item"><div class="top-loss-left"><span class="top-loss-rank">#${idx + 1}</span><div><div class="top-loss-store">${escapeHtml(storeName)}</div><div class="top-loss-address">📍 <a href="${mapsUrl}" target="_blank" class="top-loss-link">${escapeHtml(locationText)}</a></div><div class="top-loss-service">🕐 ${escapeHtml(serviceText)}</div></div></div><div class="top-loss-loss">$${loss.toFixed(0)}/day <span style="font-size:10px; color:#64748b;">($${monthlyLoss.toFixed(0)}/mo)</span></div></div>`;
+            let statusLevel = getStatusLevel(r);
+            let statusIcon = statusLevel === 'Critical' ? '🔴' : (statusLevel === 'Warning' ? '🟡' : '🟢');
+            return `<div class="top-loss-item"><div class="top-loss-left"><span class="top-loss-rank">#${idx + 1}</span><div><div class="top-loss-store">${statusIcon} ${escapeHtml(storeName)}</div><div class="top-loss-address">📍 <a href="${mapsUrl}" target="_blank" class="top-loss-link">${escapeHtml(locationText)}</a></div><div class="top-loss-service">🕐 ${escapeHtml(serviceText)}</div></div></div><div class="top-loss-loss">$${loss.toFixed(0)}/day <span style="font-size:10px; color:#64748b;">($${monthlyLoss.toFixed(0)}/mo)</span></div></div>`;
         }).join('');
     }
     
@@ -638,19 +567,21 @@
         f = sortData(f);
         
         let total = f.length;
-        let highRisk = f.filter(r => getRiskLevel(calcRisk(r)) === 'High Risk').length;
+        let critical = f.filter(r => getStatusLevel(r) === 'Critical').length;
+        let warning = f.filter(r => getStatusLevel(r) === 'Warning').length;
         let offline = f.filter(r => r.KioskState === 'Offline').length;
         let binAlert = f.filter(r => parseFloat(r.BinFull || 0) > 80).length;
         let totalLoss = f.reduce((s, r) => s + calcDailyLoss(r), 0);
         let totalRevenue = f.reduce((s, r) => s + getEstRevenue(r), 0);
         let totalNet = totalRevenue - totalLoss;
         
-        document.getElementById('alertBar').innerHTML = `<span>⚠️ <strong>Action Required:</strong> ${highRisk} high-risk kiosks need attention. ${offline} are offline. ${binAlert} bins above 80% full.</span><button class="alert-btn" onclick="document.getElementById('riskFilter').value='High'; renderAll();">View High Risk →</button>`;
+        document.getElementById('alertBar').innerHTML = `<span>⚠️ <strong>Action Required:</strong> ${critical} critical (7-day reject >8%) | ${warning} warning (4-8%) | ${offline} offline | ${binAlert} bins >80%</span><button class="alert-btn" id="viewHighRiskBtn" data-tooltip="🔍 Show only Critical status kiosks">View Critical →</button>`;
+        document.getElementById('viewHighRiskBtn').onclick = () => { document.getElementById('riskFilter').value = 'critical'; renderAll(); };
         
         document.getElementById('kpiGrid').innerHTML = `
-            <div class="kpi-card"><div class="kpi-label">📊 Total Kiosks</div><div class="kpi-value">${total}</div></div>
-            <div class="kpi-card"><div class="kpi-label">⚠️ High Risk</div><div class="kpi-value" style="color:#dc2626;">${highRisk}</div></div>
-            <div class="kpi-card"><div class="kpi-label">📡 Offline</div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div>
+            <div class="kpi-card"><div class="kpi-label">📊 Total Kiosks <span class="help-icon" data-tooltip="Total active kiosks in fleet">?</span></div><div class="kpi-value">${total}</div></div>
+            <div class="kpi-card"><div class="kpi-label">🔴 Critical <span class="help-icon" data-tooltip="7-day reject rate >8% - Fix NOW">?</span></div><div class="kpi-value" style="color:#dc2626;">${critical}</div></div>
+            <div class="kpi-card"><div class="kpi-label">🟡 Warning <span class="help-icon" data-tooltip="7-day reject rate 4-8% - Schedule inspection">?</span></div><div class="kpi-value" style="color:#f59e0b;">${warning}</div></div>
             <div class="kpi-card"><div class="kpi-label">💰 Est. Daily Revenue</div><div class="kpi-value kpi-green">$${totalRevenue.toFixed(0)}</div></div>
             <div class="kpi-card"><div class="kpi-label">💸 Daily Loss</div><div class="kpi-value kpi-loss">$${totalLoss.toFixed(0)}</div></div>
             <div class="kpi-card"><div class="kpi-label">📈 Net Revenue</div><div class="kpi-value">$${totalNet.toFixed(0)}</div></div>
@@ -663,34 +594,34 @@
         if (!f.length) { tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; return; }
         
         tbody.innerHTML = f.map(r => {
-            let rej = parseFloat(r.Reject1Day || 0);
+            let reject1d = getReject1d(r);
+            let reject7d = getReject7d(r);
             let bin = parseFloat(r.BinFull || 0);
-            let up = parseFloat(r.Uptime7Day || 0);
+            let up = getUptime(r);
             let volume = getVolume(r);
             let estRevenue = getEstRevenue(r);
             let dailyLoss = calcDailyLoss(r);
-            let monthlyLoss = dailyLoss * 30;
             let netRevenue = estRevenue - dailyLoss;
-            let riskScore = calcRisk(r);
-            let riskLevel = getRiskLevel(riskScore);
-            let cls = riskLevel === 'High Risk' ? 'badge-high' : (riskLevel === 'Medium Risk' ? 'badge-medium' : 'badge-low');
-            let isHigh = riskLevel === 'High Risk';
+            let statusLevel = getStatusLevel(r);
+            let badgeClass = getStatusBadgeClass(statusLevel);
+            let isCritical = statusLevel === 'Critical';
+            let isWarning = statusLevel === 'Warning';
             let isBinAlert = bin > 80;
             let barC = bin > 95 ? '#dc2626' : (bin > 80 ? '#f97316' : '#10b981');
             let storeId = getStoreId(r);
             let storeName = r.Store || '—';
-            let rowClass = isHigh ? 'high-risk-row' : (isBinAlert ? 'bin-alert-row' : '');
+            let rowClass = isCritical ? 'high-risk-row' : (isWarning ? 'warning-row' : (isBinAlert ? 'bin-alert-row' : ''));
             return `<tr class="${rowClass}"><tr><span class="notes-icon" onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">📝</span> <strong onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">${escapeHtml(storeName)}</strong></td>
                 <td>${escapeHtml(r.Address || '—')}</td><td>${escapeHtml(r.City || '—')}</td><td>${getRegion(r)}</td>
                 <td>${r.KioskState || 'Attract'}</td><td>${volume}</td>
-                <td style="color:${rej > 8 ? '#dc2626' : '#16a34a'};font-weight:600;">${rej.toFixed(1)}%</td>
+                <td style="color:${reject1d > 8 ? '#dc2626' : (reject1d > 4 ? '#f59e0b' : '#16a34a')};font-weight:600;">${reject1d.toFixed(1)}%</td>
+                <td style="color:${reject7d >= 8 ? '#dc2626' : (reject7d >= 4 ? '#f59e0b' : '#16a34a')};font-weight:600;background:#fef3c7;">⭐ ${reject7d.toFixed(1)}%</td>
                 <td>${up.toFixed(1)}%</td>
                 <td>${bin.toFixed(0)}%<div class="fill-bar"><div class="fill-bar-fill" style="width:${Math.min(bin, 100)}%;background:${barC};"></div></div></td>
-                <td style="font-weight:600;">$${estRevenue.toFixed(0)}</td>
-                <td style="color:#dc2626;font-weight:600;">$${dailyLoss.toFixed(0)}</td>
-                <td style="color:#f97316;font-weight:600;">$${monthlyLoss.toFixed(0)}</td>
-                <td style="font-weight:600;">$${netRevenue.toFixed(0)}</td>
-                <td><span class="badge ${cls}">${riskLevel}</span> <span style="font-size:11px;color:#64748b;">(${Math.round(riskScore)})</span></td>
+                <td>$${estRevenue.toFixed(0)}</td>
+                <td style="color:#dc2626;">$${dailyLoss.toFixed(0)}</td>
+                <td>$${netRevenue.toFixed(0)}</td>
+                <td><span class="badge ${badgeClass}">${statusLevel}</span></td>
                 <td>${r.EstFillDate || '—'}</td>
             </tr>`;
         }).join('');
@@ -698,45 +629,19 @@
         document.getElementById('lastUpdateTime').innerHTML = new Date().toLocaleString();
     }
     
-    window.filterHighRisk = () => { document.getElementById('riskFilter').value = 'High'; renderAll(); };
-    
-    function populateFilters() {
-        let regions = [...new Set(allData.map(r => getRegion(r)))].filter(r => r && r !== 'Unknown');
-        let sel = document.getElementById('provinceFilter');
-        sel.innerHTML = '<option value="all">🌎 All Provinces</option>';
-        regions.sort().forEach(r => sel.innerHTML += `<option value="${r}">${r}</option>`);
-        document.getElementById('provinceFilter').onchange = () => { currentProvinceFilter = document.getElementById('provinceFilter').value; renderAll(); };
-        document.getElementById('riskFilter').onchange = () => renderAll();
-        document.getElementById('searchInput').oninput = () => renderAll();
-        document.getElementById('resetBtn').onclick = () => {
-            document.getElementById('provinceFilter').value = 'all';
-            document.getElementById('riskFilter').value = 'all';
-            document.getElementById('searchInput').value = '';
-            currentProvinceFilter = 'all';
-            renderAll();
-        };
-    }
-    
-    function setupSorting() {
-        document.querySelectorAll('#dataTable th').forEach(th => th.addEventListener('click', () => {
-            let k = th.getAttribute('data-sort');
-            if (currentSort.column === k) currentSort.direction = currentSort.direction === 'desc' ? 'asc' : 'desc';
-            else { currentSort.column = k; currentSort.direction = 'desc'; }
-            renderAll();
-        }));
-    }
-    
+    // Export functions
     function exportToExcelForBI(tool) {
         let f = filterData();
         let data = f.map(r => ({
             Store: r.Store || '', Address: r.Address || '', City: r.City || '', Province: getRegion(r),
-            Status: r.KioskState || '', 'Volume (Daily TX)': getVolume(r), 'Reject %': parseFloat(r.Reject1Day || 0),
-            'Uptime %': parseFloat(r.Uptime7Day || 0), 'Bin Full %': parseFloat(r.BinFull || 0),
+            Status: r.KioskState || '', 'Volume (Daily TX)': getVolume(r),
+            '1D Reject %': getReject1d(r), '7D Reject %': getReject7d(r),
+            'Uptime %': getUptime(r), 'Bin Full %': parseFloat(r.BinFull || 0),
             'Est. Revenue': getEstRevenue(r), 'Loss from Rejects': calcLossFromReject(r),
             'Loss from Downtime': calcLossFromDowntime(r), 'Total Daily Loss': calcDailyLoss(r),
             'Monthly Loss': getMonthlyLoss(r), 'Net Revenue': getNetRevenue(r),
-            'Risk Score': calcRisk(r), 'Risk Level': getRiskLevel(calcRisk(r)),
-            'Est. Fill Date': r.EstFillDate || '', 'Last Service Date': getLastServiceDate(r)
+            'Status Level': getStatusLevel(r), 'Est. Fill Date': r.EstFillDate || '',
+            'Last Service Date': getLastServiceDate(r)
         }));
         let ws = XLSX.utils.json_to_sheet(data);
         let wb = XLSX.utils.book_new();
@@ -744,16 +649,6 @@
         XLSX.writeFile(wb, `kiosk_export_${tool.toLowerCase().replace(' ', '_')}_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`);
         showToast(`Exported ${f.length} kiosks for ${tool}`);
     }
-    
-    document.getElementById('emailReportBtn')?.addEventListener('click', () => {
-        let totalLoss = allData.reduce((s, r) => s + calcDailyLoss(r), 0);
-        let highRisk = allData.filter(r => getRiskLevel(calcRisk(r)) === 'High Risk').length;
-        let offline = allData.filter(r => r.KioskState === 'Offline').length;
-        let top5 = [...allData].sort((a,b) => calcDailyLoss(b) - calcDailyLoss(a)).slice(0,5).map(r => `- ${r.Store}: $${calcDailyLoss(r).toFixed(0)}/day`).join('\n');
-        let body = `Kiosk Performance Report - ${new Date().toLocaleDateString()}\n\nSummary:\n- Total Daily Loss: $${totalLoss.toFixed(0)} ($${(totalLoss*30).toFixed(0)}/month)\n- High Risk Kiosks: ${highRisk}\n- Offline Kiosks: ${offline}\n\nTop 5 Losses:\n${top5}\n\nRecommendation: Prioritize high-risk and offline kiosks for immediate service.`;
-        window.location.href = `mailto:?subject=Kiosk Performance Report - ${new Date().toLocaleDateString()}&body=${encodeURIComponent(body)}`;
-        showToast('Email draft opened');
-    });
     
     async function takeScreenshot() {
         showToast('Capturing...');
@@ -775,6 +670,51 @@
         } catch(e) { showToast('Failed to capture'); }
     }
     
+    // Event listeners
+    document.getElementById('qrBtn')?.addEventListener('click', () => {
+        document.getElementById('instructionModal').style.display = 'flex';
+        setTimeout(() => {
+            const qc = document.getElementById('qrcode');
+            if(qc) { qc.innerHTML = ''; new QRCode(qc, { text: window.location.href, width: 200, height: 200 }); }
+        }, 100);
+    });
+    
+    document.getElementById('emailReportBtn')?.addEventListener('click', () => {
+        let totalLoss = allData.reduce((s, r) => s + calcDailyLoss(r), 0);
+        let critical = allData.filter(r => getStatusLevel(r) === 'Critical').length;
+        let warning = allData.filter(r => getStatusLevel(r) === 'Warning').length;
+        let offline = allData.filter(r => r.KioskState === 'Offline').length;
+        let top5 = [...allData].sort((a,b) => calcDailyLoss(b) - calcDailyLoss(a)).slice(0,5).map((r,i) => `${i+1}. ${r.Store}: $${calcDailyLoss(r).toFixed(0)}/day (${getStatusLevel(r)})`).join('\n');
+        let body = `Kiosk Performance Report - ${new Date().toLocaleDateString()}\n\nSUMMARY:\n- Total Daily Loss: $${totalLoss.toFixed(0)} ($${(totalLoss*30).toFixed(0)}/month)\n- Critical (reject >8%): ${critical}\n- Warning (reject 4-8%): ${warning}\n- Offline: ${offline}\n\nTOP 5 LOSSES:\n${top5}\n\nRECOMMENDATION: Prioritize critical status kiosks for immediate service inspection.`;
+        window.location.href = `mailto:?subject=Kiosk Performance Report - ${new Date().toLocaleDateString()}&body=${encodeURIComponent(body)}`;
+        showToast('Email draft opened');
+    });
+    
+    function setupSorting() {
+        document.querySelectorAll('#dataTable th').forEach(th => th.addEventListener('click', () => {
+            let k = th.getAttribute('data-sort');
+            if (currentSort.column === k) currentSort.direction = currentSort.direction === 'desc' ? 'asc' : 'desc';
+            else { currentSort.column = k; currentSort.direction = 'desc'; }
+            renderAll();
+        }));
+    }
+    
+    function populateFilters() {
+        let regions = [...new Set(allData.map(r => getRegion(r)))].filter(r => r && r !== 'Unknown');
+        let sel = document.getElementById('provinceFilter');
+        sel.innerHTML = '<option value="all">🌎 All Provinces</option>';
+        regions.sort().forEach(r => sel.innerHTML += `<option value="${r}">${r}</option>`);
+        document.getElementById('provinceFilter').onchange = () => renderAll();
+        document.getElementById('riskFilter').onchange = () => renderAll();
+        document.getElementById('searchInput').oninput = () => renderAll();
+        document.getElementById('resetBtn').onclick = () => {
+            document.getElementById('provinceFilter').value = 'all';
+            document.getElementById('riskFilter').value = 'all';
+            document.getElementById('searchInput').value = '';
+            renderAll();
+        };
+    }
+    
     document.getElementById('powerBIExportBtn')?.addEventListener('click', () => exportToExcelForBI('Power BI'));
     document.getElementById('tableauExportBtn')?.addEventListener('click', () => exportToExcelForBI('Tableau'));
     document.getElementById('snapshotBtn')?.addEventListener('click', takeScreenshot);
@@ -787,7 +727,7 @@
     populateFilters();
     setupSorting();
     renderAll();
-    showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
+    showToast(`✅ Loaded ${allData.length} Canadian kiosks | Using 7-day reject averages for accuracy`);
 </script>
 </body>
 </html>
