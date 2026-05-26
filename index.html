@@ -64,12 +64,10 @@
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
         td:first-child { cursor: pointer; }
         tr:hover td { background: #f8fafc; }
-        .critical-row { background-color: #fee2e2; }
-        .warning-row { background-color: #fffbeb; }
+        .high-reject-row { background-color: #fee2e2; }
         .bin-alert-row { background-color: #e0f2fe; }
         .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-        .badge-critical { background: #fee2e2; color: #dc2626; }
-        .badge-warning { background: #fed7aa; color: #c2410c; }
+        .badge-high { background: #fee2e2; color: #dc2626; }
         .badge-good { background: #dcfce7; color: #16a34a; }
         .notes-icon { cursor: pointer; margin-right: 6px; font-size: 14px; display: inline-block; }
         .fill-bar { background: #e2e8f0; border-radius: 10px; height: 6px; width: 70px; margin-top: 5px; display: inline-block; }
@@ -194,8 +192,8 @@
     
     <div id="dashboard" style="display:none">
         <div class="alert-bar" id="alertBar">
-            <span>⚠️ <strong>Action Required:</strong> Loading data...</span>
-            <button class="alert-btn" id="viewCriticalBtn" data-tooltip="🔍 Show only kiosks with 7-day reject rate above 8%">View Critical →</button>
+            <span>⚠️ Loading data...</span>
+            <button class="alert-btn" id="viewHighRejectBtn" data-tooltip="🔍 Show only kiosks with 7-day reject rate ≥4%">View High Reject →</button>
         </div>
         
         <div class="kpi-grid" id="kpiGrid"></div>
@@ -225,8 +223,8 @@
                 <select id="provinceFilter"><option value="all">All Provinces</option></select>
             </div>
             <div class="filter-group">
-                <label>⚠️ Status <span class="help-icon" data-tooltip="Critical = 7-day reject >8% | Warning = 4-8% | Good = <4%">?</span></label>
-                <select id="riskFilter"><option value="all">All Status</option><option value="critical">Critical Only (Reject >8%)</option><option value="warning">Warning (Reject 4-8%)</option><option value="good">Good (Reject <4%)</option></select>
+                <label>⚠️ Status <span class="help-icon" data-tooltip="High Reject = 7-day reject rate ≥4% | Good = <4%">?</span></label>
+                <select id="riskFilter"><option value="all">All Status</option><option value="high">High Reject Only (≥4%)</option><option value="good">Good Only (<4%)</option></select>
             </div>
             <div class="filter-group">
                 <label>🔍 Search <span class="help-icon" data-tooltip="Search by store name, city, or address">?</span></label>
@@ -246,7 +244,7 @@
                         <th data-sort="status">Status</th>
                         <th data-sort="volume">Volume <span class="help-icon" data-tooltip="Transactions in last 24 hours">?</span></th>
                         <th data-sort="reject1d">1D Reject% <span class="help-icon" data-tooltip="Single day reject rate - may be a spike">?</span></th>
-                        <th data-sort="reject7d">7D Reject% <span class="help-icon" data-tooltip="7-day average - this is the TREND. Use this to decide action.">⭐</span></th>
+                        <th data-sort="reject7d">7D Reject% <span class="help-icon" data-tooltip="7-day average - this is the TREND. ≥4% = High Reject">⭐</span></th>
                         <th data-sort="uptime">Uptime%</th>
                         <th data-sort="bin">Bin% <span class="help-icon" data-tooltip="How full the bin is. >80% = schedule pickup">?</span></th>
                         <th data-sort="revenue">Est. Revenue</th>
@@ -259,7 +257,7 @@
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
-        <div class="footer">💡 <span class="help-icon" data-tooltip="Notes are saved to your browser and auto-delete after 30 days">?</span> Click any store name to add/edit notes | Data uses 7-day averages for accuracy</div>
+        <div class="footer">💡 <span class="help-icon" data-tooltip="Notes are saved to your browser and auto-delete after 30 days">?</span> Click any store name to add/edit notes | High Reject = 7-day reject rate ≥4%</div>
         <div class="copyright">© 2026 Kiosk Intelligence Platform | Built for Canada Operations</div>
     </div>
 </div>
@@ -299,6 +297,7 @@
     let editingNoteId = null;
     
     const TRANSACTION_VALUE = 5;
+    const HIGH_REJECT_THRESHOLD = 4;  // 4% is the trigger - simple and clear
     
     // Helper functions
     function getRegion(r) { return r.Province || r.State || 'Unknown'; }
@@ -309,7 +308,20 @@
     function getReject1d(r) { return parseFloat(r.Reject1Day) || 0; }
     function getUptime(r) { return parseFloat(r.Uptime7Day) || 0; }
     
-    // Loss calculations using 7-day reject (more accurate trend)
+    // SIMPLE status: High Reject if 7-day reject >= 4%, otherwise Good
+    function isHighReject(r) {
+        return getReject7d(r) >= HIGH_REJECT_THRESHOLD;
+    }
+    
+    function getStatusLabel(r) {
+        return isHighReject(r) ? '⚠️ High Reject' : '✅ Good';
+    }
+    
+    function getStatusBadgeClass(r) {
+        return isHighReject(r) ? 'badge-high' : 'badge-good';
+    }
+    
+    // Loss calculations using 7-day reject
     function calcLossFromReject(r) { 
         let tx = getVolume(r); 
         let reject = getReject7d(r);
@@ -323,20 +335,6 @@
     function calcDailyLoss(r) { return calcLossFromReject(r) + calcLossFromDowntime(r); }
     function getMonthlyLoss(r) { return calcDailyLoss(r) * 30; }
     function getNetRevenue(r) { return getEstRevenue(r) - calcDailyLoss(r); }
-    
-    // Status based on 7-day reject (boss's rule: 4% threshold)
-    function getStatusLevel(r) {
-        let reject7d = getReject7d(r);
-        if (reject7d >= 8) return 'Critical';
-        if (reject7d >= 4) return 'Warning';
-        return 'Good';
-    }
-    
-    function getStatusBadgeClass(level) {
-        if (level === 'Critical') return 'badge-critical';
-        if (level === 'Warning') return 'badge-warning';
-        return 'badge-good';
-    }
     
     function getLastServiceDate(r) { return r.LastPM || r['Last PM Date'] || '—'; }
     function daysSinceService(dateStr) {
@@ -505,9 +503,8 @@
         let prov = document.getElementById('provinceFilter')?.value || 'all';
         if (prov !== 'all') f = f.filter(r => getRegion(r) === prov);
         let status = document.getElementById('riskFilter')?.value || 'all';
-        if (status === 'critical') f = f.filter(r => getStatusLevel(r) === 'Critical');
-        else if (status === 'warning') f = f.filter(r => getStatusLevel(r) === 'Warning');
-        else if (status === 'good') f = f.filter(r => getStatusLevel(r) === 'Good');
+        if (status === 'high') f = f.filter(r => isHighReject(r));
+        else if (status === 'good') f = f.filter(r => !isHighReject(r));
         let s = document.getElementById('searchInput')?.value.toLowerCase() || '';
         if (s) f = f.filter(r => (r.Store || '').toLowerCase().includes(s) || (r.City || '').toLowerCase().includes(s) || (r.Address || '').toLowerCase().includes(s));
         return f;
@@ -530,7 +527,7 @@
                 case 'revenue': va = getEstRevenue(a); vb = getEstRevenue(b); break;
                 case 'loss': va = calcDailyLoss(a); vb = calcDailyLoss(b); break;
                 case 'net': va = getNetRevenue(a); vb = getNetRevenue(b); break;
-                case 'statusFlag': va = getStatusLevel(a); vb = getStatusLevel(b); break;
+                case 'statusFlag': va = isHighReject(a) ? 1 : 0; vb = isHighReject(b) ? 1 : 0; break;
                 default: return 0;
             }
             if (typeof va === 'number') return currentSort.direction === 'desc' ? vb - va : va - vb;
@@ -600,8 +597,7 @@
             let locationText = address ? `${address}, ${city}, ${province}` : `${city}, ${province}`;
             let mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationText)}`;
             let serviceText = lastService !== '—' ? (days !== null ? `Last service: ${lastService} (${days} days ago)` : `Last service: ${lastService}`) : 'Last service: Unknown';
-            let statusLevel = getStatusLevel(r);
-            let statusIcon = statusLevel === 'Critical' ? '🔴' : (statusLevel === 'Warning' ? '🟡' : '🟢');
+            let statusIcon = isHighReject(r) ? '⚠️' : '✅';
             return `<div class="top-loss-item"><div class="top-loss-left"><span class="top-loss-rank">#${idx + 1}</span><div><div class="top-loss-store">${statusIcon} ${escapeHtml(storeName)}</div><div class="top-loss-address">📍 <a href="${mapsUrl}" target="_blank" class="top-loss-link">${escapeHtml(locationText)}</a></div><div class="top-loss-service">🕐 ${escapeHtml(serviceText)}</div></div></div><div class="top-loss-loss">$${loss.toFixed(0)}/day <span style="font-size:10px; color:#64748b;">($${monthlyLoss.toFixed(0)}/mo)</span></div></div>`;
         }).join('');
     }
@@ -612,21 +608,20 @@
         f = sortData(f);
         
         let total = f.length;
-        let critical = f.filter(r => getStatusLevel(r) === 'Critical').length;
-        let warning = f.filter(r => getStatusLevel(r) === 'Warning').length;
+        let highReject = f.filter(r => isHighReject(r)).length;
         let offline = f.filter(r => r.KioskState === 'Offline').length;
         let binAlert = f.filter(r => parseFloat(r.BinFull || 0) > 80).length;
         let totalLoss = f.reduce((s, r) => s + calcDailyLoss(r), 0);
         let totalRevenue = f.reduce((s, r) => s + getEstRevenue(r), 0);
         let totalNet = totalRevenue - totalLoss;
         
-        document.getElementById('alertBar').innerHTML = `<span>⚠️ <strong>Action Required:</strong> ${critical} critical (7-day reject >8%) | ${warning} warning (4-8%) | ${offline} offline | ${binAlert} bins >80%</span><button class="alert-btn" id="viewCriticalBtn" data-tooltip="🔍 Show only Critical status kiosks">View Critical →</button>`;
-        document.getElementById('viewCriticalBtn').onclick = () => { document.getElementById('riskFilter').value = 'critical'; renderAll(); };
+        document.getElementById('alertBar').innerHTML = `<span>⚠️ <strong>Action Required:</strong> ${highReject} high reject (7-day ≥4%) | ${offline} offline | ${binAlert} bins >80%</span><button class="alert-btn" id="viewHighRejectBtn" data-tooltip="🔍 Show only High Reject kiosks">View High Reject →</button>`;
+        document.getElementById('viewHighRejectBtn').onclick = () => { document.getElementById('riskFilter').value = 'high'; renderAll(); };
         
         document.getElementById('kpiGrid').innerHTML = `
             <div class="kpi-card"><div class="kpi-label">📊 Total Kiosks <span class="help-icon" data-tooltip="Total active kiosks in fleet">?</span></div><div class="kpi-value">${total}</div></div>
-            <div class="kpi-card"><div class="kpi-label">🔴 Critical <span class="help-icon" data-tooltip="7-day reject rate >8% - Fix NOW">?</span></div><div class="kpi-value" style="color:#dc2626;">${critical}</div></div>
-            <div class="kpi-card"><div class="kpi-label">🟡 Warning <span class="help-icon" data-tooltip="7-day reject rate 4-8% - Schedule inspection">?</span></div><div class="kpi-value" style="color:#f59e0b;">${warning}</div></div>
+            <div class="kpi-card"><div class="kpi-label">⚠️ High Reject <span class="help-icon" data-tooltip="7-day reject rate ≥4% - These need attention">?</span></div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div>
+            <div class="kpi-card"><div class="kpi-label">📡 Offline <span class="help-icon" data-tooltip="Kiosks completely offline">?</span></div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div>
             <div class="kpi-card"><div class="kpi-label">💰 Est. Daily Revenue</div><div class="kpi-value kpi-green">$${totalRevenue.toFixed(0)}</div></div>
             <div class="kpi-card"><div class="kpi-label">💸 Daily Loss</div><div class="kpi-value kpi-loss">$${totalLoss.toFixed(0)}</div></div>
             <div class="kpi-card"><div class="kpi-label">📈 Net Revenue</div><div class="kpi-value">$${totalNet.toFixed(0)}</div></div>
@@ -647,26 +642,26 @@
             let estRevenue = getEstRevenue(r);
             let dailyLoss = calcDailyLoss(r);
             let netRevenue = estRevenue - dailyLoss;
-            let statusLevel = getStatusLevel(r);
-            let badgeClass = getStatusBadgeClass(statusLevel);
-            let isCritical = statusLevel === 'Critical';
-            let isWarning = statusLevel === 'Warning';
+            let highRejectFlag = isHighReject(r);
+            let badgeClass = getStatusBadgeClass(r);
+            let statusLabel = getStatusLabel(r);
+            let isHighRejectRow = highRejectFlag;
             let isBinAlert = bin > 80;
             let barC = bin > 95 ? '#dc2626' : (bin > 80 ? '#f97316' : '#10b981');
             let storeId = getStoreId(r);
             let storeName = r.Store || '—';
-            let rowClass = isCritical ? 'critical-row' : (isWarning ? 'warning-row' : (isBinAlert ? 'bin-alert-row' : ''));
+            let rowClass = isHighRejectRow ? 'high-reject-row' : (isBinAlert ? 'bin-alert-row' : '');
             return `<tr class="${rowClass}"><td><span class="notes-icon" onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">📝</span> <strong onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">${escapeHtml(storeName)}</strong></td>
                 <td>${escapeHtml(r.Address || '—')}</td><td>${escapeHtml(r.City || '—')}</td><td>${getRegion(r)}</td>
                 <td>${r.KioskState || 'Attract'}</td><td>${volume}</td>
-                <td style="color:${reject1d > 8 ? '#dc2626' : (reject1d > 4 ? '#f59e0b' : '#16a34a')};font-weight:600;">${reject1d.toFixed(1)}%</td>
-                <td style="color:${reject7d >= 8 ? '#dc2626' : (reject7d >= 4 ? '#f59e0b' : '#16a34a')};font-weight:600;background:#fef3c7;">⭐ ${reject7d.toFixed(1)}%</td>
+                <td style="color:${reject1d >= 4 ? '#dc2626' : '#16a34a'};font-weight:600;">${reject1d.toFixed(1)}%</td>
+                <td style="color:${reject7d >= 4 ? '#dc2626' : '#16a34a'};font-weight:600;background:#fef3c7;">⭐ ${reject7d.toFixed(1)}%</td>
                 <td>${up.toFixed(1)}%</td>
                 <td>${bin.toFixed(0)}%<div class="fill-bar"><div class="fill-bar-fill" style="width:${Math.min(bin, 100)}%;background:${barC};"></div></div></td>
                 <td style="font-weight:600;">$${estRevenue.toFixed(0)}</td>
                 <td style="color:#dc2626;font-weight:600;">$${dailyLoss.toFixed(0)}</td>
                 <td style="font-weight:600;">$${netRevenue.toFixed(0)}</td>
-                <td><span class="badge ${badgeClass}">${statusLevel}</span></td>
+                <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
                 <td>${r.EstFillDate || '—'}</td>
             </tr>`;
         }).join('');
@@ -685,8 +680,8 @@
             'Est. Revenue': getEstRevenue(r), 'Loss from Rejects': calcLossFromReject(r),
             'Loss from Downtime': calcLossFromDowntime(r), 'Total Daily Loss': calcDailyLoss(r),
             'Monthly Loss': getMonthlyLoss(r), 'Net Revenue': getNetRevenue(r),
-            'Status Level': getStatusLevel(r), 'Est. Fill Date': r.EstFillDate || '',
-            'Last Service Date': getLastServiceDate(r)
+            'High Reject (≥4%)': isHighReject(r) ? 'Yes' : 'No',
+            'Est. Fill Date': r.EstFillDate || '', 'Last Service Date': getLastServiceDate(r)
         }));
         let ws = XLSX.utils.json_to_sheet(data);
         let wb = XLSX.utils.book_new();
@@ -746,11 +741,10 @@
     
     document.getElementById('emailReportBtn')?.addEventListener('click', () => {
         let totalLoss = allData.reduce((s, r) => s + calcDailyLoss(r), 0);
-        let critical = allData.filter(r => getStatusLevel(r) === 'Critical').length;
-        let warning = allData.filter(r => getStatusLevel(r) === 'Warning').length;
+        let highReject = allData.filter(r => isHighReject(r)).length;
         let offline = allData.filter(r => r.KioskState === 'Offline').length;
-        let top5 = [...allData].sort((a,b) => calcDailyLoss(b) - calcDailyLoss(a)).slice(0,5).map((r,i) => `${i+1}. ${r.Store}: $${calcDailyLoss(r).toFixed(0)}/day (${getStatusLevel(r)})`).join('\n');
-        let body = `Kiosk Performance Report - ${new Date().toLocaleDateString()}\n\nSUMMARY:\n- Total Daily Loss: $${totalLoss.toFixed(0)} ($${(totalLoss*30).toFixed(0)}/month)\n- Critical (reject >8%): ${critical}\n- Warning (reject 4-8%): ${warning}\n- Offline: ${offline}\n\nTOP 5 LOSSES:\n${top5}\n\nRECOMMENDATION: Prioritize critical status kiosks for immediate service inspection.`;
+        let top5 = [...allData].sort((a,b) => calcDailyLoss(b) - calcDailyLoss(a)).slice(0,5).map((r,i) => `${i+1}. ${r.Store}: $${calcDailyLoss(r).toFixed(0)}/day (7-day reject: ${getReject7d(r).toFixed(1)}%)`).join('\n');
+        let body = `Kiosk Performance Report - ${new Date().toLocaleDateString()}\n\nSUMMARY:\n- Total Daily Loss: $${totalLoss.toFixed(0)} ($${(totalLoss*30).toFixed(0)}/month)\n- High Reject Kiosks (≥4%): ${highReject}\n- Offline: ${offline}\n\nTOP 5 LOSSES:\n${top5}\n\nRECOMMENDATION: Prioritize high reject kiosks for service inspection.`;
         window.location.href = `mailto:?subject=Kiosk Performance Report - ${new Date().toLocaleDateString()}&body=${encodeURIComponent(body)}`;
         showToast('Email draft opened');
     });
@@ -795,7 +789,7 @@
     populateFilters();
     setupSorting();
     renderAll();
-    showToast(`✅ Loaded ${allData.length} Canadian kiosks (sample) | Upload CSV for full data`);
+    showToast(`✅ Loaded ${allData.length} Canadian kiosks (sample) | High Reject = 7-day ≥4%`);
 </script>
 </body>
 </html>
