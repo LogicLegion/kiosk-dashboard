@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kiosk Intelligence Platform | Canada</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -212,7 +212,7 @@
                         <th data-sort="fill">Est. Fill <span class="help-icon" data-tooltip="Estimated date when bin will be full">?</span></th>
                     </tr>
                 </thead>
-                <tbody id="tableBody"><table><td colspan="14">No data loaded. Upload a CSV file.</tbody>
+                <tbody id="tableBody"><tr><td colspan="14">No data loaded. Upload a CSV file.</td></tr></tbody>
             </table>
         </div>
         <div class="footer">💡 Click any store name to add/edit notes (saved to your browser, auto-delete after 30 days)</div>
@@ -229,7 +229,6 @@
     
     const TRANSACTION_VALUE = 5;
     
-    // Notes functions (same as before)
     function getNotesKey(storeId) { return `kiosk_notes_${storeId}`; }
     
     function loadNotes(storeId) {
@@ -555,7 +554,7 @@
         updateTopLossList(f);
         
         let tbody = document.getElementById('tableBody');
-        if (!f.length) { tbody.innerHTML = '<table><td colspan="14" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; return; }
+        if (!f.length) { tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; return; }
         tbody.innerHTML = f.slice(0, 500).map(r => {
             let rej = parseFloat(r['1 Day Reject %'] || 0), bin = parseFloat(r['Total Bin Full %'] || 0), up = parseFloat(r['7 Day Uptime %'] || 0);
             let volume = getVolume(r), estRevenue = getEstRevenue(r), dailyLoss = calcDailyLoss(r), netRevenue = estRevenue - dailyLoss;
@@ -574,7 +573,8 @@
                 <td style="color:#dc2626;font-weight:600;">$${dailyLoss.toFixed(0)}</td>
                 <td style="font-weight:600;">$${netRevenue.toFixed(0)}</td>
                 <td><span class="badge ${cls}">${riskLevel}</span> <span style="font-size:11px;color:#64748b;">(${Math.round(riskScore)})</span></td>
-                <td>${r['Estimated Fill Date'] || '—'}</td></tr>`;
+                <td>${r['Estimated Fill Date'] || '—'}</td>
+            </tr>`;
         }).join('');
         document.getElementById('lastUpdateTime').innerHTML = new Date().toLocaleString();
     }
