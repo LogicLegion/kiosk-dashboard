@@ -26,10 +26,10 @@
         .upload-area:hover { border-color: #1e3a5f; background: #f8fafc; }
         .upload-area.drag-over { border-color: #10b981; background: #f0fdf4; }
         .hidden-upload { display: none; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .kpi-card { background: white; border-radius: 16px; padding: 16px; border: 1px solid #e2e8f0; }
         .kpi-label { font-size: 11px; color: #64748b; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
-        .kpi-value { font-size: 32px; font-weight: 800; color: #1e293b; margin-top: 8px; }
+        .kpi-value { font-size: 28px; font-weight: 800; color: #1e293b; margin-top: 8px; }
         .kpi-loss { color: #dc2626; }
         .kpi-green { color: #10b981; }
         .info-bar { background: white; border-radius: 12px; padding: 10px 16px; margin-bottom: 20px; font-size: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; flex-wrap: wrap; }
@@ -60,23 +60,30 @@
         select, input, button { padding: 8px 12px; border-radius: 10px; font-size: 12px; background: white; border: 1px solid #e2e8f0; }
         button { background: #1e3a5f; color: white; border: none; cursor: pointer; font-weight: 600; position: relative; }
         .email-btn { background: #10b981; }
-        .table-wrapper { background: white; border-radius: 16px; overflow-x: auto; max-height: 450px; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1200px; }
-        th { text-align: left; padding: 14px 12px; background: #f8fafc; font-weight: 700; border-bottom: 2px solid #e2e8f0; cursor: pointer; position: sticky; top: 0; z-index: 10; }
+        .table-wrapper { background: white; border-radius: 16px; overflow-x: auto; max-height: 500px; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1800px; }
+        th { text-align: left; padding: 12px 8px; background: #f8fafc; font-weight: 700; border-bottom: 2px solid #e2e8f0; cursor: pointer; position: sticky; top: 0; z-index: 10; font-size: 10px; }
         th:hover { background: #e2e8f0; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        td { padding: 10px 8px; border-bottom: 1px solid #f1f5f9; }
         td:first-child { cursor: pointer; }
         tr:hover td { background: #f8fafc; }
         .high-reject-row { background-color: #fee2e2; }
         .bin-alert-row { background-color: #e0f2fe; }
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .paper-alert-row { background-color: #fef3c7; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
         .badge-high { background: #fee2e2; color: #dc2626; }
         .badge-good { background: #dcfce7; color: #16a34a; }
         .badge-traffic-high { background: #dc2626; color: white; }
         .badge-traffic-low { background: #16a34a; color: white; }
         .badge-impact { background: #f97316; color: white; }
+        .badge-trend-up { background: #10b981; color: white; }
+        .badge-trend-down { background: #dc2626; color: white; }
+        .badge-trend-flat { background: #64748b; color: white; }
+        .badge-tem-high { background: #dc2626; color: white; }
+        .badge-tem-med { background: #f59e0b; color: white; }
+        .badge-tem-low { background: #10b981; color: white; }
         .notes-icon { cursor: pointer; margin-right: 6px; font-size: 14px; display: inline-block; }
-        .fill-bar { background: #e2e8f0; border-radius: 10px; height: 6px; width: 70px; margin-top: 5px; display: inline-block; }
+        .fill-bar { background: #e2e8f0; border-radius: 10px; height: 6px; width: 60px; margin-top: 5px; display: inline-block; }
         .fill-bar-fill { height: 100%; border-radius: 10px; display: block; }
         .footer { text-align: center; margin-top: 16px; font-size: 10px; color: #64748b; }
         .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; z-index: 1000; display: none; }
@@ -144,16 +151,7 @@
             pointer-events: none;
         }
         
-        .call-btn {
-            background: none;
-            border: none;
-            font-size: 14px;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 20px;
-            background: #e2e8f0;
-            margin-left: 5px;
-        }
+        .call-btn { background: none; border: none; font-size: 14px; cursor: pointer; padding: 4px 8px; border-radius: 20px; background: #e2e8f0; margin-left: 5px; }
         .call-btn:hover { background: #cbd5e1; }
         
         .priority-buttons { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -164,13 +162,14 @@
         @media (max-width: 768px) {
             body { padding: 12px; }
             .header h1 { font-size: 18px; }
-            .kpi-value { font-size: 24px; }
+            .kpi-value { font-size: 20px; }
             .action-btn { padding: 6px 12px; font-size: 10px; }
             .top-loss-store { font-size: 12px; }
             .top-loss-address { font-size: 10px; }
             .top-loss-loss { font-size: 12px; }
-            th, td { padding: 8px 6px; font-size: 10px; }
+            th, td { padding: 6px 4px; font-size: 9px; }
             .priority-btn { padding: 4px 10px; font-size: 10px; }
+            .badge { padding: 2px 6px; font-size: 9px; }
         }
     </style>
 </head>
@@ -208,7 +207,7 @@
         </div>
     </div>
     
-    <!-- Upload Screen - Visible by default -->
+    <!-- Upload Screen -->
     <div id="uploadScreen">
         <div class="upload-area" id="uploadArea">
             <div style="font-size:64px;">📊</div>
@@ -219,14 +218,16 @@
         </div>
     </div>
     
-    <!-- Dashboard - Hidden until CSV uploaded -->
+    <!-- Dashboard -->
     <div id="dashboard" style="display:none">
         <div class="priority-buttons" id="priorityButtons">
-            <button class="priority-btn" data-filter="all">📊 All</button>
+            <button class="priority-btn active" data-filter="all">📊 All</button>
             <button class="priority-btn" data-filter="urgent">🔥 URGENT (Offline + High Impact)</button>
             <button class="priority-btn" data-filter="high-reject">⚠️ High Reject (≥4%)</button>
             <button class="priority-btn" data-filter="full-bin">🗑️ Full Bin (>80%)</button>
+            <button class="priority-btn" data-filter="paper-out">📄 Paper Low (VPO ≤7 days)</button>
             <button class="priority-btn" data-filter="overdue">📅 Service Overdue (>60 days)</button>
+            <button class="priority-btn" data-filter="high-tem">🔧 High TEMM (>3 attempts)</button>
         </div>
         
         <div class="alert-bar" id="alertBar">
@@ -282,672 +283,730 @@
                         <th data-sort="status">Status</th>
                         <th data-sort="volume">Volume</th>
                         <th data-sort="traffic">Traffic</th>
+                        <th data-sort="trend">Trend</th>
                         <th data-sort="reject7d">7D Reject% ⭐</th>
-                        <th data-sort="impact">Impact Score</th>
+                        <th data-sort="impact">Impact</th>
+                        <th data-sort="tem">TEMM</th>
+                        <th data-sort="paper">Paper ETA</th>
                         <th data-sort="uptime">Uptime%</th>
                         <th data-sort="bin">Bin%</th>
-                        <th data-sort="serviceDays">Days Since Service</th>
-                        <th data-sort="revenue">Est. Revenue</th>
+                        <th data-sort="serviceDays">Service Days</th>
+                        <th data-sort="lastTX">Last TX</th>
+                        <th data-sort="version">Version</th>
+                        <th data-sort="revenue">Est. Rev</th>
                         <th data-sort="loss">Daily Loss</th>
-                        <th data-sort="net">Net Revenue</th>
                         <th data-sort="statusFlag">Status</th>
-                        <th data-sort="fill">Est. Fill</th>
                         <th>Call</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
-        <div class="footer">💡 <span class="help-icon" data-tooltip="Notes are saved to your browser and auto-delete after 30 days">?</span> Click any store name to add/edit notes | High Reject = 7-day reject rate ≥4% | 🔴 HIGH Traffic = >10 tx/day</div>
+        <div class="footer">💡 <span class="help-icon" data-tooltip="Notes are saved to your browser and auto-delete after 30 days">?</span> Click any store name to add/edit notes | High Reject = 7-day reject rate ≥4% | 🔴 HIGH Traffic = >10 tx/day | TEMM = store fix attempts</div>
         <div class="copyright">© 2026 Kiosk Intelligence Platform | Built for Canada Operations</div>
     </div>
 </div>
 <div id="toast" class="toast"></div>
 
 <script>
-    // ============================================================
-    // NO SAMPLE DATA - Dashboard starts with upload screen only
-    // ============================================================
-    
-    let allData = [];
-    let currentSort = { column: 'loss', direction: 'desc' };
-    let lossChart = null;
-    let currentNoteStore = null;
-    let editingNoteId = null;
-    let currentPriorityFilter = 'all';
-    
-    const TRANSACTION_VALUE = 5;
-    const HIGH_REJECT_THRESHOLD = 4;
-    const HIGH_TRAFFIC_THRESHOLD = 10;
-    const HIGH_IMPACT_THRESHOLD = 0.8;
-    const SERVICE_OVERDUE_DAYS = 60;
-    
-    const CANADIAN_PROVINCES = ['ON', 'QC', 'BC', 'AB', 'MB', 'SK', 'NS', 'NB', 'NL', 'PE', 'NT', 'YT', 'NU'];
-    
-    function isCanadian(row) { 
-        let prov = (row.Province || row.State || '').trim().toUpperCase(); 
-        return CANADIAN_PROVINCES.includes(prov); 
-    }
-    
-    // Helper functions
-    function getRegion(r) { return r.Province || r.State || 'Unknown'; }
-    function getStoreId(r) { return (r.Store || '').replace(/[^a-zA-Z0-9]/g, '_') + '_' + (r.City || '').replace(/[^a-zA-Z0-9]/g, '_'); }
-    function getVolume(r) { return parseFloat(r.Tx1Day) || 0; }
-    function getEstRevenue(r) { return getVolume(r) * TRANSACTION_VALUE; }
-    function getReject7d(r) { return parseFloat(r.Reject7Day) || 0; }
-    function getReject1d(r) { return parseFloat(r.Reject1Day) || 0; }
-    function getUptime(r) { return parseFloat(r.Uptime7Day) || 0; }
-    
-    function getTrafficLevel(r) {
-        return getVolume(r) > HIGH_TRAFFIC_THRESHOLD ? 'HIGH' : 'LOW';
-    }
-    
-    function getImpactScore(r) {
-        let volume = getVolume(r);
-        let reject7d = getReject7d(r);
-        return (volume * (reject7d / 100));
-    }
-    
-    function isHighImpact(r) {
-        return getImpactScore(r) > HIGH_IMPACT_THRESHOLD;
-    }
-    
-    function isHighReject(r) {
-        return getReject7d(r) >= HIGH_REJECT_THRESHOLD;
-    }
-    
-    function getStatusLabel(r) {
-        return isHighReject(r) ? '⚠️ High Reject' : '✅ Good';
-    }
-    
-    function getStatusBadgeClass(r) {
-        return isHighReject(r) ? 'badge-high' : 'badge-good';
-    }
-    
-    // Loss calculations
-    function calcLossFromReject(r) { 
-        let tx = getVolume(r); 
-        let reject = getReject7d(r);
-        return (tx * (reject / 100)) * TRANSACTION_VALUE; 
-    }
-    function calcLossFromDowntime(r) { 
-        let tx = getVolume(r); 
-        let uptime = getUptime(r); 
-        return (tx * ((100 - uptime) / 100) * 0.8) * TRANSACTION_VALUE; 
-    }
-    function calcDailyLoss(r) { return calcLossFromReject(r) + calcLossFromDowntime(r); }
-    function getMonthlyLoss(r) { return calcDailyLoss(r) * 30; }
-    function getNetRevenue(r) { return getEstRevenue(r) - calcDailyLoss(r); }
-    
-    function getLastServiceDate(r) { return r.LastPM || r['Last PM Date'] || '—'; }
-    function getDaysSinceService(r) {
-        let dateStr = getLastServiceDate(r);
-        if (!dateStr || dateStr === '—') return null;
-        try {
-            let parts = dateStr.match(/(\d{2})\/(\d{2})\/(\d{2})/);
-            if (parts) {
-                let date = new Date(2000 + parseInt(parts[3]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                return Math.ceil((new Date() - date) / (1000 * 60 * 60 * 24));
-            }
-        } catch(e) {}
-        return null;
-    }
-    
-    function isServiceOverdue(r) {
-        let days = getDaysSinceService(r);
-        return days !== null && days > SERVICE_OVERDUE_DAYS;
-    }
-    
-    function getPhoneNumber(r) {
-        return r.Phone || r['Store Phone Number'] || '';
-    }
-    
-    // Notes functions
-    function getNotesKey(storeId) { return `kiosk_notes_${storeId}`; }
-    function loadNotes(storeId) {
-        const saved = localStorage.getItem(getNotesKey(storeId));
-        if (!saved) return [];
-        try {
-            const notes = JSON.parse(saved);
-            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-            return notes.filter(note => new Date(note.date).getTime() > thirtyDaysAgo);
-        } catch(e) { return []; }
-    }
-    function saveNote(storeId, noteText) {
-        if (!noteText.trim()) return;
-        const notes = loadNotes(storeId);
-        notes.unshift({ id: Date.now().toString(), text: noteText.trim(), date: new Date().toISOString(), formattedDate: new Date().toLocaleString() });
+// ============================================================
+// FULL DASHBOARD SCRIPT - All Features Included
+// ============================================================
+
+let allData = [];
+let currentSort = { column: 'loss', direction: 'desc' };
+let lossChart = null;
+let currentNoteStore = null;
+let editingNoteId = null;
+let currentPriorityFilter = 'all';
+
+const TRANSACTION_VALUE = 5;
+const HIGH_REJECT_THRESHOLD = 4;
+const HIGH_TRAFFIC_THRESHOLD = 10;
+const HIGH_IMPACT_THRESHOLD = 0.8;
+const SERVICE_OVERDUE_DAYS = 60;
+const PAPER_WARNING_DAYS = 7;
+const HIGH_TEM_THRESHOLD = 3;
+
+const CANADIAN_PROVINCES = ['ON', 'QC', 'BC', 'AB', 'MB', 'SK', 'NS', 'NB', 'NL', 'PE', 'NT', 'YT', 'NU'];
+
+function isCanadian(row) { 
+    let prov = (row.Province || row.State || '').trim().toUpperCase(); 
+    return CANADIAN_PROVINCES.includes(prov); 
+}
+
+// Helper functions
+function getRegion(r) { return r.Province || r.State || 'Unknown'; }
+function getStoreId(r) { return (r.Store || '').replace(/[^a-zA-Z0-9]/g, '_') + '_' + (r.City || '').replace(/[^a-zA-Z0-9]/g, '_'); }
+function getVolume(r) { return parseFloat(r.Tx1Day) || 0; }
+function getVolume7Day(r) { return parseFloat(r.Tx7Day) || 0; }
+function getEstRevenue(r) { return getVolume(r) * TRANSACTION_VALUE; }
+function getReject7d(r) { return parseFloat(r.Reject7Day) || 0; }
+function getReject1d(r) { return parseFloat(r.Reject1Day) || 0; }
+function getUptime(r) { return parseFloat(r.Uptime7Day) || 0; }
+function getTEMM(r) { return parseFloat(r.TEMM7Day) || parseFloat(r['7 Day TEMM']) || 0; }
+function getVPO(r) { return r.VPO || r['VPO'] || ''; }
+function getLastTXDate(r) { return r['Last TX Date'] || ''; }
+function getVersion(r) { return r.Version || r['Version'] || ''; }
+
+function getTrafficLevel(r) { return getVolume(r) > HIGH_TRAFFIC_THRESHOLD ? 'HIGH' : 'LOW'; }
+
+function getImpactScore(r) {
+    let volume = getVolume(r);
+    let reject7d = getReject7d(r);
+    return (volume * (reject7d / 100));
+}
+
+function isHighImpact(r) { return getImpactScore(r) > HIGH_IMPACT_THRESHOLD; }
+function isHighReject(r) { return getReject7d(r) >= HIGH_REJECT_THRESHOLD; }
+
+function getVolumeTrend(r) {
+    let vol7d = getVolume7Day(r);
+    let vol1d = getVolume(r);
+    if (vol7d === 0) return 'flat';
+    let percentChange = ((vol1d - vol7d) / vol7d) * 100;
+    if (percentChange > 5) return 'up';
+    if (percentChange < -5) return 'down';
+    return 'flat';
+}
+
+function getTrendIcon(r) {
+    let trend = getVolumeTrend(r);
+    if (trend === 'up') return '📈';
+    if (trend === 'down') return '📉';
+    return '➡️';
+}
+
+function getTrendBadge(r) {
+    let trend = getVolumeTrend(r);
+    if (trend === 'up') return '<span class="badge badge-trend-up">📈 UP</span>';
+    if (trend === 'down') return '<span class="badge badge-trend-down">📉 DOWN</span>';
+    return '<span class="badge badge-trend-flat">➡️ FLAT</span>';
+}
+
+function getTEMBadge(r) {
+    let tem = getTEMM(r);
+    if (tem >= HIGH_TEM_THRESHOLD) return `<span class="badge badge-tem-high">🔧 ${tem} (HIGH)</span>`;
+    if (tem >= 1) return `<span class="badge badge-tem-med">🔧 ${tem}</span>`;
+    return `<span class="badge badge-tem-low">✅ 0</span>`;
+}
+
+function getPaperAlert(r) {
+    let vpo = getVPO(r);
+    if (!vpo || vpo === 'N/A' || vpo === '—') return { text: '—', class: '', daysLeft: null };
+    try {
+        let parts = vpo.match(/(\d{2})\/(\d{2})\/(\d{2})/);
+        if (parts) {
+            let date = new Date(2000 + parseInt(parts[3]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            let daysLeft = Math.ceil((date - new Date()) / (1000 * 60 * 60 * 24));
+            if (daysLeft <= 0) return { text: `🔴 EXPIRED!`, class: 'paper-alert-row', daysLeft: daysLeft };
+            if (daysLeft <= PAPER_WARNING_DAYS) return { text: `🟡 ${daysLeft} days left`, class: 'paper-alert-row', daysLeft: daysLeft };
+            return { text: `✅ ${daysLeft} days`, class: '', daysLeft: daysLeft };
+        }
+    } catch(e) {}
+    return { text: vpo, class: '', daysLeft: null };
+}
+
+function getStatusLabel(r) { return isHighReject(r) ? '⚠️ High Reject' : '✅ Good'; }
+function getStatusBadgeClass(r) { return isHighReject(r) ? 'badge-high' : 'badge-good'; }
+
+// Loss calculations
+function calcLossFromReject(r) { 
+    let tx = getVolume(r); 
+    let reject = getReject7d(r);
+    return (tx * (reject / 100)) * TRANSACTION_VALUE; 
+}
+function calcLossFromDowntime(r) { 
+    let tx = getVolume(r); 
+    let uptime = getUptime(r); 
+    return (tx * ((100 - uptime) / 100) * 0.8) * TRANSACTION_VALUE; 
+}
+function calcDailyLoss(r) { return calcLossFromReject(r) + calcLossFromDowntime(r); }
+function getMonthlyLoss(r) { return calcDailyLoss(r) * 30; }
+function getNetRevenue(r) { return getEstRevenue(r) - calcDailyLoss(r); }
+
+function getLastServiceDate(r) { return r.LastPM || r['Last PM Date'] || '—'; }
+function getDaysSinceService(r) {
+    let dateStr = getLastServiceDate(r);
+    if (!dateStr || dateStr === '—') return null;
+    try {
+        let parts = dateStr.match(/(\d{2})\/(\d{2})\/(\d{2})/);
+        if (parts) {
+            let date = new Date(2000 + parseInt(parts[3]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            return Math.ceil((new Date() - date) / (1000 * 60 * 60 * 24));
+        }
+    } catch(e) {}
+    return null;
+}
+
+function isServiceOverdue(r) {
+    let days = getDaysSinceService(r);
+    return days !== null && days > SERVICE_OVERDUE_DAYS;
+}
+
+function getPhoneNumber(r) { return r.Phone || r['Store Phone Number'] || ''; }
+
+// Notes functions
+function getNotesKey(storeId) { return `kiosk_notes_${storeId}`; }
+function loadNotes(storeId) {
+    const saved = localStorage.getItem(getNotesKey(storeId));
+    if (!saved) return [];
+    try {
+        const notes = JSON.parse(saved);
+        const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+        return notes.filter(note => new Date(note.date).getTime() > thirtyDaysAgo);
+    } catch(e) { return []; }
+}
+function saveNote(storeId, noteText) {
+    if (!noteText.trim()) return;
+    const notes = loadNotes(storeId);
+    notes.unshift({ id: Date.now().toString(), text: noteText.trim(), date: new Date().toISOString(), formattedDate: new Date().toLocaleString() });
+    localStorage.setItem(getNotesKey(storeId), JSON.stringify(notes));
+}
+function updateNote(storeId, noteId, newText) {
+    if (!newText.trim()) return;
+    const notes = loadNotes(storeId);
+    const idx = notes.findIndex(n => n.id === noteId);
+    if (idx !== -1) {
+        notes[idx].text = newText.trim();
+        notes[idx].date = new Date().toISOString();
+        notes[idx].formattedDate = new Date().toLocaleString();
         localStorage.setItem(getNotesKey(storeId), JSON.stringify(notes));
     }
-    function updateNote(storeId, noteId, newText) {
-        if (!newText.trim()) return;
-        const notes = loadNotes(storeId);
-        const idx = notes.findIndex(n => n.id === noteId);
-        if (idx !== -1) {
-            notes[idx].text = newText.trim();
-            notes[idx].date = new Date().toISOString();
-            notes[idx].formattedDate = new Date().toLocaleString();
-            localStorage.setItem(getNotesKey(storeId), JSON.stringify(notes));
-        }
+}
+function deleteNote(storeId, noteId) {
+    const notes = loadNotes(storeId);
+    localStorage.setItem(getNotesKey(storeId), JSON.stringify(notes.filter(n => n.id !== noteId)));
+}
+
+function openNotesModal(storeId, storeName) {
+    currentNoteStore = storeId;
+    editingNoteId = null;
+    document.getElementById('notesModalTitle').innerHTML = `📝 Notes - ${escapeHtml(storeName)}`;
+    const notes = loadNotes(storeId);
+    const notesListDiv = document.getElementById('notesList');
+    if (notes.length === 0) {
+        notesListDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No notes yet. Add one below.</div>';
+    } else {
+        notesListDiv.innerHTML = notes.map(note => `
+            <div class="note-item">
+                <div style="flex:1;"><div class="note-text">${escapeHtml(note.text)}</div><div class="note-date">📅 ${escapeHtml(note.formattedDate)}</div></div>
+                <div><button class="note-edit-btn" onclick="editNote('${storeId}', '${note.id}')">✏️</button><button class="note-edit-btn" onclick="deleteNoteAndRefresh('${storeId}', '${note.id}')">🗑️</button></div>
+            </div>
+        `).join('');
     }
-    function deleteNote(storeId, noteId) {
-        const notes = loadNotes(storeId);
-        localStorage.setItem(getNotesKey(storeId), JSON.stringify(notes.filter(n => n.id !== noteId)));
-    }
-    
-    function openNotesModal(storeId, storeName) {
-        currentNoteStore = storeId;
-        editingNoteId = null;
-        document.getElementById('notesModalTitle').innerHTML = `📝 Notes - ${escapeHtml(storeName)}`;
-        const notes = loadNotes(storeId);
-        const notesListDiv = document.getElementById('notesList');
-        if (notes.length === 0) {
-            notesListDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No notes yet. Add one below.</div>';
-        } else {
-            notesListDiv.innerHTML = notes.map(note => `
-                <div class="note-item">
-                    <div style="flex:1;"><div class="note-text">${escapeHtml(note.text)}</div><div class="note-date">📅 ${escapeHtml(note.formattedDate)}</div></div>
-                    <div><button class="note-edit-btn" onclick="editNote('${storeId}', '${note.id}')">✏️</button><button class="note-edit-btn" onclick="deleteNoteAndRefresh('${storeId}', '${note.id}')">🗑️</button></div>
-                </div>
-            `).join('');
-        }
-        document.getElementById('newNoteInput').value = '';
-        document.getElementById('notesModal').style.display = 'flex';
-        document.getElementById('saveNewNoteBtn').onclick = () => {
-            const text = document.getElementById('newNoteInput').value;
-            if (text.trim()) {
-                if (editingNoteId) {
-                    updateNote(storeId, editingNoteId, text);
-                } else {
-                    saveNote(storeId, text);
-                }
-                refreshNotesModal(storeId);
+    document.getElementById('newNoteInput').value = '';
+    document.getElementById('notesModal').style.display = 'flex';
+    document.getElementById('saveNewNoteBtn').onclick = () => {
+        const text = document.getElementById('newNoteInput').value;
+        if (text.trim()) {
+            if (editingNoteId) {
+                updateNote(storeId, editingNoteId, text);
+            } else {
+                saveNote(storeId, text);
             }
-        };
-    }
-    
-    window.editNote = (storeId, noteId) => {
-        const notes = loadNotes(storeId);
-        const note = notes.find(n => n.id === noteId);
-        if (note) {
-            editingNoteId = noteId;
-            document.getElementById('newNoteInput').value = note.text;
-            document.getElementById('saveNewNoteBtn').textContent = 'Update Note';
-            document.getElementById('saveNewNoteBtn').style.background = '#f59e0b';
+            refreshNotesModal(storeId);
         }
     };
-    
-    window.deleteNoteAndRefresh = (storeId, noteId) => {
-        deleteNote(storeId, noteId);
-        refreshNotesModal(storeId);
-    };
-    
-    function refreshNotesModal(storeId) {
-        const store = allData.find(r => getStoreId(r) === storeId);
-        const storeName = store ? (store.Store || 'Kiosk') : 'Kiosk';
-        document.getElementById('notesModalTitle').innerHTML = `📝 Notes - ${escapeHtml(storeName)}`;
-        const notes = loadNotes(storeId);
-        const notesListDiv = document.getElementById('notesList');
-        if (notes.length === 0) {
-            notesListDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No notes yet. Add one below.</div>';
-        } else {
-            notesListDiv.innerHTML = notes.map(note => `
-                <div class="note-item">
-                    <div style="flex:1;"><div class="note-text">${escapeHtml(note.text)}</div><div class="note-date">📅 ${escapeHtml(note.formattedDate)}</div></div>
-                    <div><button class="note-edit-btn" onclick="editNote('${storeId}', '${note.id}')">✏️</button><button class="note-edit-btn" onclick="deleteNoteAndRefresh('${storeId}', '${note.id}')">🗑️</button></div>
-                </div>
-            `).join('');
-        }
-        document.getElementById('newNoteInput').value = '';
-        document.getElementById('saveNewNoteBtn').textContent = 'Save Note';
-        document.getElementById('saveNewNoteBtn').style.background = '#10b981';
-        editingNoteId = null;
+}
+
+window.editNote = (storeId, noteId) => {
+    const notes = loadNotes(storeId);
+    const note = notes.find(n => n.id === noteId);
+    if (note) {
+        editingNoteId = noteId;
+        document.getElementById('newNoteInput').value = note.text;
+        document.getElementById('saveNewNoteBtn').textContent = 'Update Note';
+        document.getElementById('saveNewNoteBtn').style.background = '#f59e0b';
     }
-    
-    window.openNotesModal = openNotesModal;
-    function closeNotesModal() { document.getElementById('notesModal').style.display = 'none'; }
-    function closeModal() { document.getElementById('instructionModal').style.display = 'none'; }
-    function showToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
-    
-    // Priority filter function
-    function applyPriorityFilter(data, filterType) {
-        if (filterType === 'all') return data;
-        if (filterType === 'urgent') {
-            return data.filter(r => r.KioskState === 'Offline' || isHighImpact(r));
-        }
-        if (filterType === 'high-reject') {
-            return data.filter(r => isHighReject(r));
-        }
-        if (filterType === 'full-bin') {
-            return data.filter(r => parseFloat(r.BinFull || 0) > 80);
-        }
-        if (filterType === 'overdue') {
-            return data.filter(r => isServiceOverdue(r));
-        }
-        return data;
+};
+
+window.deleteNoteAndRefresh = (storeId, noteId) => {
+    deleteNote(storeId, noteId);
+    refreshNotesModal(storeId);
+};
+
+function refreshNotesModal(storeId) {
+    const store = allData.find(r => getStoreId(r) === storeId);
+    const storeName = store ? (store.Store || 'Kiosk') : 'Kiosk';
+    document.getElementById('notesModalTitle').innerHTML = `📝 Notes - ${escapeHtml(storeName)}`;
+    const notes = loadNotes(storeId);
+    const notesListDiv = document.getElementById('notesList');
+    if (notes.length === 0) {
+        notesListDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No notes yet. Add one below.</div>';
+    } else {
+        notesListDiv.innerHTML = notes.map(note => `
+            <div class="note-item">
+                <div style="flex:1;"><div class="note-text">${escapeHtml(note.text)}</div><div class="note-date">📅 ${escapeHtml(note.formattedDate)}</div></div>
+                <div><button class="note-edit-btn" onclick="editNote('${storeId}', '${note.id}')">✏️</button><button class="note-edit-btn" onclick="deleteNoteAndRefresh('${storeId}', '${note.id}')">🗑️</button></div>
+            </div>
+        `).join('');
     }
-    
-    // CSV Parsing
-    function parseCSV(csvText) {
-        let lines = csvText.split(/\r?\n/);
-        if (lines.length < 2) { showToast('Error: Empty file'); return false; }
-        let headers = lines[0].split(',').map(h => h.replace(/^\uFEFF/, '').replace(/"/g, '').trim());
-        let data = [];
-        for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue;
-            let row = {}, inQuote = false, current = '', col = 0;
-            for (let ch of lines[i]) {
-                if (ch === '"') inQuote = !inQuote;
-                else if (ch === ',' && !inQuote) {
-                    row[headers[col]] = current.trim().replace(/"/g, '');
-                    current = '';
-                    col++;
-                } else current += ch;
-            }
-            if (col < headers.length) row[headers[col]] = current.trim().replace(/"/g, '');
-            if (Object.keys(row).length) data.push(row);
+    document.getElementById('newNoteInput').value = '';
+    document.getElementById('saveNewNoteBtn').textContent = 'Save Note';
+    document.getElementById('saveNewNoteBtn').style.background = '#10b981';
+    editingNoteId = null;
+}
+
+window.openNotesModal = openNotesModal;
+function closeNotesModal() { document.getElementById('notesModal').style.display = 'none'; }
+function closeModal() { document.getElementById('instructionModal').style.display = 'none'; }
+function showToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
+
+// Priority filter function
+function applyPriorityFilter(data, filterType) {
+    if (filterType === 'all') return data;
+    if (filterType === 'urgent') return data.filter(r => r.KioskState === 'Offline' || isHighImpact(r));
+    if (filterType === 'high-reject') return data.filter(r => isHighReject(r));
+    if (filterType === 'full-bin') return data.filter(r => parseFloat(r.BinFull || 0) > 80);
+    if (filterType === 'paper-out') return data.filter(r => { let alert = getPaperAlert(r); return alert.daysLeft !== null && alert.daysLeft <= PAPER_WARNING_DAYS; });
+    if (filterType === 'overdue') return data.filter(r => isServiceOverdue(r));
+    if (filterType === 'high-tem') return data.filter(r => getTEMM(r) >= HIGH_TEM_THRESHOLD);
+    return data;
+}
+
+// CSV Parsing
+function parseCSV(csvText) {
+    let lines = csvText.split(/\r?\n/);
+    if (lines.length < 2) { showToast('Error: Empty file'); return false; }
+    let headers = lines[0].split(',').map(h => h.replace(/^\uFEFF/, '').replace(/"/g, '').trim());
+    let data = [];
+    for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        let row = {}, inQuote = false, current = '', col = 0;
+        for (let ch of lines[i]) {
+            if (ch === '"') inQuote = !inQuote;
+            else if (ch === ',' && !inQuote) {
+                row[headers[col]] = current.trim().replace(/"/g, '');
+                current = '';
+                col++;
+            } else current += ch;
         }
-        if (data.length === 0) { showToast('Error: No valid data rows'); return false; }
-        
-        allData = data.filter(row => isCanadian(row)).map(row => ({
-            Store: row.Store || row['Store Name'] || 'Unknown',
-            Address: row.Address || '',
-            City: row.City || '',
-            Province: row.State || row.Province || '',
-            KioskState: row['Kiosk State'] || row.State || 'Attract',
-            Tx1Day: row['1 Day TX'] || row['Volume'] || '0',
-            Reject1Day: row['1 Day Reject %'] || row['Reject %'] || '0',
-            Reject7Day: row['7 Day Reject %'] || row['Reject7Day'] || row['1 Day Reject %'] || '0',
-            Uptime7Day: row['7 Day Uptime %'] || row['Uptime'] || '100',
-            BinFull: row['Total Bin Full %'] || row['Bin Full %'] || '0',
-            EstFillDate: row['Estimated Fill Date'] || '',
-            LastPM: row['Last PM Date'] || row['Last Service Date'] || '',
-            Phone: row['Store Phone Number'] || row.Phone || ''
-        }));
-        
-        return true;
+        if (col < headers.length) row[headers[col]] = current.trim().replace(/"/g, '');
+        if (Object.keys(row).length) data.push(row);
     }
+    if (data.length === 0) { showToast('Error: No valid data rows'); return false; }
     
-    // Filter and sort
-    function filterData() {
-        let f = [...allData];
-        
-        // Apply priority filter first
-        f = applyPriorityFilter(f, currentPriorityFilter);
-        
-        let prov = document.getElementById('provinceFilter')?.value || 'all';
-        if (prov !== 'all') f = f.filter(r => getRegion(r) === prov);
-        let status = document.getElementById('riskFilter')?.value || 'all';
-        if (status === 'high') f = f.filter(r => isHighReject(r));
-        else if (status === 'good') f = f.filter(r => !isHighReject(r));
-        let s = document.getElementById('searchInput')?.value.toLowerCase() || '';
-        if (s) f = f.filter(r => (r.Store || '').toLowerCase().includes(s) || (r.City || '').toLowerCase().includes(s) || (r.Address || '').toLowerCase().includes(s));
-        return f;
-    }
+    allData = data.filter(row => isCanadian(row)).map(row => ({
+        Store: row.Store || row['Store Name'] || 'Unknown',
+        Address: row.Address || '',
+        City: row.City || '',
+        Province: row.State || row.Province || '',
+        KioskState: row['Kiosk State'] || row.State || 'Attract',
+        Tx1Day: row['1 Day TX'] || row['Volume'] || '0',
+        Tx7Day: row['7 Day TX'] || row['Volume7Day'] || '0',
+        Reject1Day: row['1 Day Reject %'] || row['Reject %'] || '0',
+        Reject7Day: row['7 Day Reject %'] || row['Reject7Day'] || row['1 Day Reject %'] || '0',
+        Uptime7Day: row['7 Day Uptime %'] || row['Uptime'] || '100',
+        BinFull: row['Total Bin Full %'] || row['Bin Full %'] || '0',
+        EstFillDate: row['Estimated Fill Date'] || '',
+        LastPM: row['Last PM Date'] || row['Last Service Date'] || '',
+        Phone: row['Store Phone Number'] || row.Phone || '',
+        TEMM7Day: row['7 Day TEMM'] || row['TEMM'] || '0',
+        VPO: row.VPO || row['VPO'] || '',
+        LastTXDate: row['Last TX Date'] || '',
+        Version: row.Version || row['Version'] || ''
+    }));
     
-    function sortData(d) {
-        return [...d].sort((a, b) => {
-            let va, vb;
-            switch (currentSort.column) {
-                case 'store': va = (a.Store || '').toLowerCase(); vb = (b.Store || '').toLowerCase(); break;
-                case 'address': va = (a.Address || '').toLowerCase(); vb = (b.Address || '').toLowerCase(); break;
-                case 'city': va = (a.City || '').toLowerCase(); vb = (b.City || '').toLowerCase(); break;
-                case 'province': va = getRegion(a); vb = getRegion(b); break;
-                case 'status': va = a.KioskState || ''; vb = b.KioskState || ''; break;
-                case 'volume': va = getVolume(a); vb = getVolume(b); break;
-                case 'traffic': va = getTrafficLevel(a); vb = getTrafficLevel(b); break;
-                case 'reject7d': va = getReject7d(a); vb = getReject7d(b); break;
-                case 'impact': va = getImpactScore(a); vb = getImpactScore(b); break;
-                case 'uptime': va = getUptime(a); vb = getUptime(b); break;
-                case 'bin': va = parseFloat(a.BinFull || 0); vb = parseFloat(b.BinFull || 0); break;
-                case 'serviceDays': va = getDaysSinceService(a) || 0; vb = getDaysSinceService(b) || 0; break;
-                case 'revenue': va = getEstRevenue(a); vb = getEstRevenue(b); break;
-                case 'loss': va = calcDailyLoss(a); vb = calcDailyLoss(b); break;
-                case 'net': va = getNetRevenue(a); vb = getNetRevenue(b); break;
-                case 'statusFlag': va = isHighReject(a) ? 1 : 0; vb = isHighReject(b) ? 1 : 0; break;
-                default: return 0;
-            }
-            if (typeof va === 'number') return currentSort.direction === 'desc' ? vb - va : va - vb;
-            if (typeof va === 'string' && (va === 'HIGH' || va === 'LOW')) {
-                let order = { 'HIGH': 1, 'LOW': 2 };
-                return currentSort.direction === 'desc' ? order[vb] - order[va] : order[va] - order[vb];
-            }
-            return currentSort.direction === 'desc' ? String(vb).localeCompare(String(va)) : String(va).localeCompare(String(vb));
-        });
-    }
-    
-    // Charts
-    function updateProvinceChart(data) {
-        let provinceReject = {}, provinceDowntime = {};
-        data.forEach(r => {
-            let prov = getRegion(r);
-            if (prov && prov !== 'Unknown') {
-                provinceReject[prov] = (provinceReject[prov] || 0) + calcLossFromReject(r);
-                provinceDowntime[prov] = (provinceDowntime[prov] || 0) + calcLossFromDowntime(r);
-            }
-        });
-        let provinces = [...new Set([...Object.keys(provinceReject), ...Object.keys(provinceDowntime)])];
-        let sorted = provinces.map(prov => ({ prov, total: (provinceReject[prov] || 0) + (provinceDowntime[prov] || 0) })).sort((a, b) => b.total - a.total);
-        let labels = sorted.map(p => p.prov);
-        let rejectData = sorted.map(p => provinceReject[p.prov] || 0);
-        let downtimeData = sorted.map(p => provinceDowntime[p.prov] || 0);
-        if (lossChart) lossChart.destroy();
-        let ctx = document.getElementById('lossChart').getContext('2d');
-        lossChart = new Chart(ctx, {
-            type: 'bar',
-            data: { labels, datasets: [
-                { label: 'Loss from rejected transactions (7-day avg)', data: rejectData, backgroundColor: '#dc2626', borderRadius: 4 },
-                { label: 'Loss from downtime', data: downtimeData, backgroundColor: '#f97316', borderRadius: 4 }
-            ] },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { position: 'top', labels: { font: { size: 10 } } }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: $${ctx.raw.toFixed(0)}` } } },
-                onClick: (event, activeElements) => {
-                    if (activeElements.length > 0) {
-                        let province = labels[activeElements[0].index];
-                        if (province) {
-                            document.getElementById('provinceFilter').value = province;
-                            renderAll();
-                            showToast(`📌 Filtered to ${province}`);
-                        }
+    return true;
+}
+
+// Filter and sort
+function filterData() {
+    let f = [...allData];
+    f = applyPriorityFilter(f, currentPriorityFilter);
+    let prov = document.getElementById('provinceFilter')?.value || 'all';
+    if (prov !== 'all') f = f.filter(r => getRegion(r) === prov);
+    let status = document.getElementById('riskFilter')?.value || 'all';
+    if (status === 'high') f = f.filter(r => isHighReject(r));
+    else if (status === 'good') f = f.filter(r => !isHighReject(r));
+    let s = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    if (s) f = f.filter(r => (r.Store || '').toLowerCase().includes(s) || (r.City || '').toLowerCase().includes(s) || (r.Address || '').toLowerCase().includes(s));
+    return f;
+}
+
+function sortData(d) {
+    return [...d].sort((a, b) => {
+        let va, vb;
+        switch (currentSort.column) {
+            case 'store': va = (a.Store || '').toLowerCase(); vb = (b.Store || '').toLowerCase(); break;
+            case 'address': va = (a.Address || '').toLowerCase(); vb = (b.Address || '').toLowerCase(); break;
+            case 'city': va = (a.City || '').toLowerCase(); vb = (b.City || '').toLowerCase(); break;
+            case 'province': va = getRegion(a); vb = getRegion(b); break;
+            case 'status': va = a.KioskState || ''; vb = b.KioskState || ''; break;
+            case 'volume': va = getVolume(a); vb = getVolume(b); break;
+            case 'traffic': va = getTrafficLevel(a); vb = getTrafficLevel(b); break;
+            case 'trend': va = getVolumeTrend(a); vb = getVolumeTrend(b); break;
+            case 'reject7d': va = getReject7d(a); vb = getReject7d(b); break;
+            case 'impact': va = getImpactScore(a); vb = getImpactScore(b); break;
+            case 'tem': va = getTEMM(a); vb = getTEMM(b); break;
+            case 'paper': va = getPaperAlert(a).daysLeft || 999; vb = getPaperAlert(b).daysLeft || 999; break;
+            case 'uptime': va = getUptime(a); vb = getUptime(b); break;
+            case 'bin': va = parseFloat(a.BinFull || 0); vb = parseFloat(b.BinFull || 0); break;
+            case 'serviceDays': va = getDaysSinceService(a) || 0; vb = getDaysSinceService(b) || 0; break;
+            case 'lastTX': va = a.LastTXDate || ''; vb = b.LastTXDate || ''; break;
+            case 'version': va = a.Version || ''; vb = b.Version || ''; break;
+            case 'revenue': va = getEstRevenue(a); vb = getEstRevenue(b); break;
+            case 'loss': va = calcDailyLoss(a); vb = calcDailyLoss(b); break;
+            case 'statusFlag': va = isHighReject(a) ? 1 : 0; vb = isHighReject(b) ? 1 : 0; break;
+            default: return 0;
+        }
+        if (typeof va === 'number') return currentSort.direction === 'desc' ? vb - va : va - vb;
+        if (va === 'HIGH' || va === 'LOW') {
+            let order = { 'HIGH': 1, 'LOW': 2 };
+            return currentSort.direction === 'desc' ? order[vb] - order[va] : order[va] - order[vb];
+        }
+        if (va === 'up' || va === 'down' || va === 'flat') {
+            let order = { 'up': 1, 'flat': 2, 'down': 3 };
+            return currentSort.direction === 'desc' ? order[vb] - order[va] : order[va] - order[vb];
+        }
+        return currentSort.direction === 'desc' ? String(vb).localeCompare(String(va)) : String(va).localeCompare(String(vb));
+    });
+}
+
+// Charts
+function updateProvinceChart(data) {
+    let provinceReject = {}, provinceDowntime = {};
+    data.forEach(r => {
+        let prov = getRegion(r);
+        if (prov && prov !== 'Unknown') {
+            provinceReject[prov] = (provinceReject[prov] || 0) + calcLossFromReject(r);
+            provinceDowntime[prov] = (provinceDowntime[prov] || 0) + calcLossFromDowntime(r);
+        }
+    });
+    let provinces = [...new Set([...Object.keys(provinceReject), ...Object.keys(provinceDowntime)])];
+    let sorted = provinces.map(prov => ({ prov, total: (provinceReject[prov] || 0) + (provinceDowntime[prov] || 0) })).sort((a, b) => b.total - a.total);
+    let labels = sorted.map(p => p.prov);
+    let rejectData = sorted.map(p => provinceReject[p.prov] || 0);
+    let downtimeData = sorted.map(p => provinceDowntime[p.prov] || 0);
+    if (lossChart) lossChart.destroy();
+    let ctx = document.getElementById('lossChart').getContext('2d');
+    lossChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [
+            { label: 'Loss from rejected transactions (7-day avg)', data: rejectData, backgroundColor: '#dc2626', borderRadius: 4 },
+            { label: 'Loss from downtime', data: downtimeData, backgroundColor: '#f97316', borderRadius: 4 }
+        ] },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { position: 'top', labels: { font: { size: 10 } } }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: $${ctx.raw.toFixed(0)}` } } },
+            onClick: (event, activeElements) => {
+                if (activeElements.length > 0) {
+                    let province = labels[activeElements[0].index];
+                    if (province) {
+                        document.getElementById('provinceFilter').value = province;
+                        renderAll();
+                        showToast(`📌 Filtered to ${province}`);
                     }
-                },
-                scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v } } }
+                }
+            },
+            scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v } } }
+        }
+    });
+}
+
+function updateTopLossList(data) {
+    let sorted = [...data].sort((a, b) => calcDailyLoss(b) - calcDailyLoss(a));
+    let top10 = sorted.slice(0, 10);
+    let container = document.getElementById('topLossList');
+    if (!top10.length || calcDailyLoss(top10[0]) === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No revenue loss data available</div>';
+        return;
+    }
+    container.innerHTML = top10.map((r, idx) => {
+        let loss = calcDailyLoss(r);
+        let monthlyLoss = loss * 30;
+        let storeName = r.Store || 'Unknown';
+        let address = r.Address || '';
+        let city = r.City || '';
+        let province = getRegion(r);
+        let lastService = getLastServiceDate(r);
+        let days = getDaysSinceService(r);
+        let locationText = address ? `${address}, ${city}, ${province}` : `${city}, ${province}`;
+        let mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationText)}`;
+        let serviceText = lastService !== '—' ? (days !== null ? `Last service: ${lastService} (${days} days ago)` : `Last service: ${lastService}`) : 'Last service: Unknown';
+        let statusIcon = isHighReject(r) ? '⚠️' : '✅';
+        let trafficIcon = getTrafficLevel(r) === 'HIGH' ? '🔴' : '🟢';
+        let trendIcon = getTrendIcon(r);
+        return `<div class="top-loss-item" onclick="document.getElementById('searchInput').value='${escapeHtml(storeName)}'; renderAll();">
+            <div class="top-loss-left">
+                <span class="top-loss-rank">#${idx + 1}</span>
+                <div>
+                    <div class="top-loss-store">${statusIcon} ${trafficIcon} ${trendIcon} ${escapeHtml(storeName)}</div>
+                    <div class="top-loss-address">📍 <a href="${mapsUrl}" target="_blank" class="top-loss-link" onclick="event.stopPropagation()">${escapeHtml(locationText)}</a></div>
+                    <div class="top-loss-service">🕐 ${escapeHtml(serviceText)}</div>
+                </div>
+            </div>
+            <div class="top-loss-loss">$${loss.toFixed(0)}/day <span style="font-size:10px; color:#64748b;">($${monthlyLoss.toFixed(0)}/mo)</span></div>
+        </div>`;
+    }).join('');
+}
+
+function renderAll() {
+    if (!allData.length) return;
+    let f = filterData();
+    f = sortData(f);
+    
+    let total = f.length;
+    let highReject = f.filter(r => isHighReject(r)).length;
+    let offline = f.filter(r => r.KioskState === 'Offline').length;
+    let binAlert = f.filter(r => parseFloat(r.BinFull || 0) > 80).length;
+    let paperAlert = f.filter(r => { let a = getPaperAlert(r); return a.daysLeft !== null && a.daysLeft <= PAPER_WARNING_DAYS; }).length;
+    let highTEM = f.filter(r => getTEMM(r) >= HIGH_TEM_THRESHOLD).length;
+    let totalLoss = f.reduce((s, r) => s + calcDailyLoss(r), 0);
+    let totalRevenue = f.reduce((s, r) => s + getEstRevenue(r), 0);
+    let totalNet = totalRevenue - totalLoss;
+    
+    document.getElementById('alertBar').innerHTML = `<span>⚠️ <strong>Action Required:</strong> ${highReject} high reject | ${offline} offline | ${binAlert} full bins | ${paperAlert} paper low | ${highTEM} high TEMM</span><button class="alert-btn" id="viewHighRejectBtn">View High Reject →</button>`;
+    const viewBtn = document.getElementById('viewHighRejectBtn');
+    if (viewBtn) viewBtn.onclick = () => { document.getElementById('riskFilter').value = 'high'; renderAll(); };
+    
+    document.getElementById('kpiGrid').innerHTML = `
+        <div class="kpi-card"><div class="kpi-label">📊 Total Kiosks</div><div class="kpi-value">${total}</div></div>
+        <div class="kpi-card"><div class="kpi-label">⚠️ High Reject</div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div>
+        <div class="kpi-card"><div class="kpi-label">📡 Offline</div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div>
+        <div class="kpi-card"><div class="kpi-label">🗑️ Full Bin >80%</div><div class="kpi-value" style="color:#f59e0b;">${binAlert}</div></div>
+        <div class="kpi-card"><div class="kpi-label">📄 Paper Low</div><div class="kpi-value" style="color:#f59e0b;">${paperAlert}</div></div>
+        <div class="kpi-card"><div class="kpi-label">🔧 High TEMM</div><div class="kpi-value" style="color:#dc2626;">${highTEM}</div></div>
+        <div class="kpi-card"><div class="kpi-label">💰 Est. Daily Revenue</div><div class="kpi-value kpi-green">$${totalRevenue.toFixed(0)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">💸 Daily Loss</div><div class="kpi-value kpi-loss">$${totalLoss.toFixed(0)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">📈 Net Revenue</div><div class="kpi-value">$${totalNet.toFixed(0)}</div></div>
+    `;
+    
+    updateProvinceChart(f);
+    updateTopLossList(f);
+    
+    let tbody = document.getElementById('tableBody');
+    if (!f.length) { tbody.innerHTML = '<tr><td colspan="21" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; return; }
+    
+    tbody.innerHTML = f.map(r => {
+        let reject7d = getReject7d(r);
+        let bin = parseFloat(r.BinFull || 0);
+        let up = getUptime(r);
+        let volume = getVolume(r);
+        let estRevenue = getEstRevenue(r);
+        let dailyLoss = calcDailyLoss(r);
+        let netRevenue = estRevenue - dailyLoss;
+        let impactScore = getImpactScore(r);
+        let highRejectFlag = isHighReject(r);
+        let trafficLevel = getTrafficLevel(r);
+        let daysSinceService = getDaysSinceService(r);
+        let isOverdue = isServiceOverdue(r);
+        let badgeClass = getStatusBadgeClass(r);
+        let statusLabel = getStatusLabel(r);
+        let isHighRejectRow = highRejectFlag;
+        let isBinAlert = bin > 80;
+        let barC = bin > 95 ? '#dc2626' : (bin > 80 ? '#f97316' : '#10b981');
+        let storeId = getStoreId(r);
+        let storeName = r.Store || '—';
+        let rowClass = isHighRejectRow ? 'high-reject-row' : (isBinAlert ? 'bin-alert-row' : '');
+        let paperAlertData = getPaperAlert(r);
+        if (paperAlertData.class === 'paper-alert-row' && !rowClass) rowClass = 'paper-alert-row';
+        let trafficBadgeClass = trafficLevel === 'HIGH' ? 'badge-traffic-high' : 'badge-traffic-low';
+        let impactBadge = isHighImpact(r) ? '<span class="badge badge-impact" style="margin-left:5px;">⚠️ HIGH</span>' : '';
+        let phone = getPhoneNumber(r);
+        let callButton = phone ? `<button class="call-btn" onclick="window.location.href='tel:${phone}'; event.stopPropagation();" title="Call ${phone}">📞</button>` : '';
+        let serviceDisplay = daysSinceService !== null ? `${daysSinceService} days${isOverdue ? ' 🔴' : ''}` : '—';
+        let serviceColor = isOverdue ? 'style="color:#dc2626;font-weight:600;"' : '';
+        let trendBadge = getTrendBadge(r);
+        let temBadge = getTEMBadge(r);
+        
+        return `<tr class="${rowClass}">
+            <td><span class="notes-icon" onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">📝</span> <strong onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">${escapeHtml(storeName)}</strong>${callButton}</td>
+            <td>${escapeHtml(r.Address || '—')}</td>
+            <td>${escapeHtml(r.City || '—')}</td>
+            <td>${getRegion(r)}</td>
+            <td>${r.KioskState || 'Attract'}</td>
+            <td>${volume}</td>
+            <td><span class="badge ${trafficBadgeClass}">${trafficLevel}</span></td>
+            <td>${trendBadge}</td>
+            <td style="color:${reject7d >= 4 ? '#dc2626' : '#16a34a'};font-weight:600;background:#fef3c7;">⭐ ${reject7d.toFixed(1)}%</td>
+            <td>${impactScore.toFixed(2)}${impactBadge}</td>
+            <td>${temBadge}</td>
+            <td>${paperAlertData.text}</td>
+            <td>${up.toFixed(1)}%</td>
+            <td>${bin.toFixed(0)}%<div class="fill-bar"><div class="fill-bar-fill" style="width:${Math.min(bin, 100)}%;background:${barC};"></div></div></td>
+            <td ${serviceColor}>${serviceDisplay}</td>
+            <td>${r.LastTXDate ? r.LastTXDate.substring(0, 16) : '—'}</td>
+            <td>${r.Version || '—'}</td>
+            <td>$${estRevenue.toFixed(0)}</td>
+            <td style="color:#dc2626;">$${dailyLoss.toFixed(0)}</td>
+            <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
+            <td>${callButton}</td>
+        </tr>`;
+    }).join('');
+    
+    document.getElementById('lastUpdateTime').innerHTML = new Date().toLocaleString();
+}
+
+// Export functions
+function exportToExcelForBI(tool) {
+    let f = filterData();
+    let data = f.map(r => ({
+        Store: r.Store || '', Address: r.Address || '', City: r.City || '', Province: getRegion(r),
+        Status: r.KioskState || '', 'Volume (Daily TX)': getVolume(r), 'Volume (7 Day TX)': getVolume7Day(r),
+        'Traffic (HIGH/LOW)': getTrafficLevel(r), 'Volume Trend': getVolumeTrend(r),
+        '7D Reject %': getReject7d(r), 'Impact Score': getImpactScore(r),
+        'High Impact (>0.8)': isHighImpact(r) ? 'Yes' : 'No',
+        'TEMM (Store Fix Attempts)': getTEMM(r),
+        'Paper ETA (VPO)': getVPO(r), 'Paper Days Left': getPaperAlert(r).daysLeft,
+        'Uptime %': getUptime(r), 'Bin Full %': parseFloat(r.BinFull || 0),
+        'Days Since Service': getDaysSinceService(r) || 'N/A',
+        'Service Overdue (>60 days)': isServiceOverdue(r) ? 'Yes' : 'No',
+        'Last TX Date': r.LastTXDate || '', 'Firmware Version': r.Version || '',
+        'Est. Revenue': getEstRevenue(r), 'Loss from Rejects': calcLossFromReject(r),
+        'Loss from Downtime': calcLossFromDowntime(r), 'Total Daily Loss': calcDailyLoss(r),
+        'Monthly Loss': getMonthlyLoss(r), 'Net Revenue': getNetRevenue(r),
+        'High Reject (≥4%)': isHighReject(r) ? 'Yes' : 'No',
+        'Est. Fill Date': r.EstFillDate || '', 'Last Service Date': getLastServiceDate(r),
+        'Phone Number': getPhoneNumber(r)
+    }));
+    let ws = XLSX.utils.json_to_sheet(data);
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Kiosk_Data');
+    XLSX.writeFile(wb, `kiosk_export_${tool.toLowerCase().replace(' ', '_')}_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`);
+    showToast(`Exported ${f.length} kiosks for ${tool}`);
+}
+
+async function takeScreenshot() {
+    showToast('Capturing...');
+    try {
+        let el = document.querySelector('.container');
+        let canvas = await html2canvas(el, { scale: 2, backgroundColor: '#f0f2f5' });
+        canvas.toBlob(async b => {
+            try {
+                await navigator.clipboard.write([new ClipboardItem({ [b.type]: b })]);
+                showToast('Screenshot copied!');
+            } catch {
+                let a = document.createElement('a');
+                a.href = URL.createObjectURL(b);
+                a.download = `kiosk_snapshot_${Date.now()}.png`;
+                a.click();
+                showToast('Screenshot saved');
             }
         });
-    }
-    
-    function updateTopLossList(data) {
-        let sorted = [...data].sort((a, b) => calcDailyLoss(b) - calcDailyLoss(a));
-        let top10 = sorted.slice(0, 10);
-        let container = document.getElementById('topLossList');
-        if (!top10.length || calcDailyLoss(top10[0]) === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No revenue loss data available</div>';
-            return;
-        }
-        container.innerHTML = top10.map((r, idx) => {
-            let loss = calcDailyLoss(r);
-            let monthlyLoss = loss * 30;
-            let storeName = r.Store || 'Unknown';
-            let address = r.Address || '';
-            let city = r.City || '';
-            let province = getRegion(r);
-            let lastService = getLastServiceDate(r);
-            let days = getDaysSinceService(r);
-            let locationText = address ? `${address}, ${city}, ${province}` : `${city}, ${province}`;
-            let mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationText)}`;
-            let serviceText = lastService !== '—' ? (days !== null ? `Last service: ${lastService} (${days} days ago)` : `Last service: ${lastService}`) : 'Last service: Unknown';
-            let statusIcon = isHighReject(r) ? '⚠️' : '✅';
-            let trafficIcon = getTrafficLevel(r) === 'HIGH' ? '🔴' : '🟢';
-            return `<div class="top-loss-item" onclick="document.getElementById('searchInput').value='${escapeHtml(storeName)}'; renderAll();">
-                <div class="top-loss-left">
-                    <span class="top-loss-rank">#${idx + 1}</span>
-                    <div>
-                        <div class="top-loss-store">${statusIcon} ${trafficIcon} ${escapeHtml(storeName)}</div>
-                        <div class="top-loss-address">📍 <a href="${mapsUrl}" target="_blank" class="top-loss-link" onclick="event.stopPropagation()">${escapeHtml(locationText)}</a></div>
-                        <div class="top-loss-service">🕐 ${escapeHtml(serviceText)}</div>
-                    </div>
-                </div>
-                <div class="top-loss-loss">$${loss.toFixed(0)}/day <span style="font-size:10px; color:#64748b;">($${monthlyLoss.toFixed(0)}/mo)</span></div>
-            </div>`;
-        }).join('');
-    }
-    
-    function renderAll() {
-        if (!allData.length) return;
-        let f = filterData();
-        f = sortData(f);
-        
-        let total = f.length;
-        let highReject = f.filter(r => isHighReject(r)).length;
-        let offline = f.filter(r => r.KioskState === 'Offline').length;
-        let binAlert = f.filter(r => parseFloat(r.BinFull || 0) > 80).length;
-        let totalLoss = f.reduce((s, r) => s + calcDailyLoss(r), 0);
-        let totalRevenue = f.reduce((s, r) => s + getEstRevenue(r), 0);
-        let totalNet = totalRevenue - totalLoss;
-        
-        document.getElementById('alertBar').innerHTML = `<span>⚠️ <strong>Action Required:</strong> ${highReject} high reject (7-day ≥4%) | ${offline} offline | ${binAlert} bins >80%</span><button class="alert-btn" id="viewHighRejectBtn" data-tooltip="🔍 Show only High Reject kiosks">View High Reject →</button>`;
-        const viewBtn = document.getElementById('viewHighRejectBtn');
-        if (viewBtn) viewBtn.onclick = () => { document.getElementById('riskFilter').value = 'high'; renderAll(); };
-        
-        document.getElementById('kpiGrid').innerHTML = `
-            <div class="kpi-card"><div class="kpi-label">📊 Total Kiosks</div><div class="kpi-value">${total}</div></div>
-            <div class="kpi-card"><div class="kpi-label">⚠️ High Reject</div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div>
-            <div class="kpi-card"><div class="kpi-label">📡 Offline</div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div>
-            <div class="kpi-card"><div class="kpi-label">💰 Est. Daily Revenue</div><div class="kpi-value kpi-green">$${totalRevenue.toFixed(0)}</div></div>
-            <div class="kpi-card"><div class="kpi-label">💸 Daily Loss</div><div class="kpi-value kpi-loss">$${totalLoss.toFixed(0)}</div></div>
-            <div class="kpi-card"><div class="kpi-label">📈 Net Revenue</div><div class="kpi-value">$${totalNet.toFixed(0)}</div></div>
-        `;
-        
-        updateProvinceChart(f);
-        updateTopLossList(f);
-        
-        let tbody = document.getElementById('tableBody');
-        if (!f.length) { tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; return; }
-        
-        tbody.innerHTML = f.map(r => {
-            let reject7d = getReject7d(r);
-            let bin = parseFloat(r.BinFull || 0);
-            let up = getUptime(r);
-            let volume = getVolume(r);
-            let estRevenue = getEstRevenue(r);
-            let dailyLoss = calcDailyLoss(r);
-            let netRevenue = estRevenue - dailyLoss;
-            let impactScore = getImpactScore(r);
-            let highRejectFlag = isHighReject(r);
-            let trafficLevel = getTrafficLevel(r);
-            let daysSinceService = getDaysSinceService(r);
-            let isOverdue = isServiceOverdue(r);
-            let badgeClass = getStatusBadgeClass(r);
-            let statusLabel = getStatusLabel(r);
-            let isHighRejectRow = highRejectFlag;
-            let isBinAlert = bin > 80;
-            let barC = bin > 95 ? '#dc2626' : (bin > 80 ? '#f97316' : '#10b981');
-            let storeId = getStoreId(r);
-            let storeName = r.Store || '—';
-            let rowClass = isHighRejectRow ? 'high-reject-row' : (isBinAlert ? 'bin-alert-row' : '');
-            let trafficBadgeClass = trafficLevel === 'HIGH' ? 'badge-traffic-high' : 'badge-traffic-low';
-            let impactBadge = isHighImpact(r) ? '<span class="badge badge-impact" style="margin-left:5px;">⚠️ HIGH</span>' : '';
-            let phone = getPhoneNumber(r);
-            let callButton = phone ? `<button class="call-btn" onclick="window.location.href='tel:${phone}'; event.stopPropagation();" title="Call ${phone}">📞</button>` : '';
-            let serviceDisplay = daysSinceService !== null ? `${daysSinceService} days${isOverdue ? ' 🔴' : ''}` : '—';
-            let serviceColor = isOverdue ? 'style="color:#dc2626;font-weight:600;"' : '';
-            
-            return `<tr class="${rowClass}">
-                <td><span class="notes-icon" onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">📝</span> <strong onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">${escapeHtml(storeName)}</strong>${callButton}</td>
-                <td>${escapeHtml(r.Address || '—')}</td>
-                <td>${escapeHtml(r.City || '—')}</td>
-                <td>${getRegion(r)}</td>
-                <td>${r.KioskState || 'Attract'}</td>
-                <td>${volume}</td>
-                <td><span class="badge ${trafficBadgeClass}">${trafficLevel}</span></td>
-                <td style="color:${reject7d >= 4 ? '#dc2626' : '#16a34a'};font-weight:600;background:#fef3c7;">⭐ ${reject7d.toFixed(1)}%</td>
-                <td>${impactScore.toFixed(2)}${impactBadge}</td>
-                <td>${up.toFixed(1)}%</td>
-                <td>${bin.toFixed(0)}%<div class="fill-bar"><div class="fill-bar-fill" style="width:${Math.min(bin, 100)}%;background:${barC};"></div></div></td>
-                <td ${serviceColor}>${serviceDisplay}</td>
-                <td>$${estRevenue.toFixed(0)}</td>
-                <td style="color:#dc2626;">$${dailyLoss.toFixed(0)}</td>
-                <td>$${netRevenue.toFixed(0)}</td>
-                <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
-                <td>${r.EstFillDate || '—'}</td>
-             </tr>`;
-        }).join('');
-        
-        document.getElementById('lastUpdateTime').innerHTML = new Date().toLocaleString();
-    }
-    
-    // Export functions
-    function exportToExcelForBI(tool) {
-        let f = filterData();
-        let data = f.map(r => ({
-            Store: r.Store || '', Address: r.Address || '', City: r.City || '', Province: getRegion(r),
-            Status: r.KioskState || '', 'Volume (Daily TX)': getVolume(r),
-            'Traffic (HIGH/LOW)': getTrafficLevel(r),
-            '7D Reject %': getReject7d(r), 'Impact Score': getImpactScore(r),
-            'High Impact (>0.8)': isHighImpact(r) ? 'Yes' : 'No',
-            'Uptime %': getUptime(r), 'Bin Full %': parseFloat(r.BinFull || 0),
-            'Days Since Service': getDaysSinceService(r) || 'N/A',
-            'Service Overdue (>60 days)': isServiceOverdue(r) ? 'Yes' : 'No',
-            'Est. Revenue': getEstRevenue(r), 'Loss from Rejects': calcLossFromReject(r),
-            'Loss from Downtime': calcLossFromDowntime(r), 'Total Daily Loss': calcDailyLoss(r),
-            'Monthly Loss': getMonthlyLoss(r), 'Net Revenue': getNetRevenue(r),
-            'High Reject (≥4%)': isHighReject(r) ? 'Yes' : 'No',
-            'Est. Fill Date': r.EstFillDate || '', 'Last Service Date': getLastServiceDate(r),
-            'Phone Number': getPhoneNumber(r)
-        }));
-        let ws = XLSX.utils.json_to_sheet(data);
-        let wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Kiosk_Data');
-        XLSX.writeFile(wb, `kiosk_export_${tool.toLowerCase().replace(' ', '_')}_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`);
-        showToast(`Exported ${f.length} kiosks for ${tool}`);
-    }
-    
-    async function takeScreenshot() {
-        showToast('Capturing...');
-        try {
-            let el = document.querySelector('.container');
-            let canvas = await html2canvas(el, { scale: 2, backgroundColor: '#f0f2f5' });
-            canvas.toBlob(async b => {
-                try {
-                    await navigator.clipboard.write([new ClipboardItem({ [b.type]: b })]);
-                    showToast('Screenshot copied!');
-                } catch {
-                    let a = document.createElement('a');
-                    a.href = URL.createObjectURL(b);
-                    a.download = `kiosk_snapshot_${Date.now()}.png`;
-                    a.click();
-                    showToast('Screenshot saved');
-                }
-            });
-        } catch(e) { showToast('Failed to capture'); }
-    }
-    
-    // Event listeners
-    document.getElementById('showUploadBtn')?.addEventListener('click', () => document.getElementById('csvFile').click());
-    document.getElementById('uploadArea')?.addEventListener('click', () => document.getElementById('csvFile').click());
-    
-    // Drag and drop support
-    const uploadArea = document.getElementById('uploadArea');
-    uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('drag-over');
-    });
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('drag-over');
-    });
-    uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('drag-over');
-        const file = e.dataTransfer.files[0];
-        if (file && file.name.endsWith('.csv')) {
-            const reader = new FileReader();
-            reader.onload = ev => {
-                if (parseCSV(ev.target.result)) {
-                    document.getElementById('uploadScreen').style.display = 'none';
-                    document.getElementById('dashboard').style.display = 'block';
-                    document.getElementById('actionButtons').style.display = 'flex';
-                    populateFilters();
-                    setupSorting();
-                    setupPriorityButtons();
-                    renderAll();
-                    showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
-                }
-            };
-            reader.readAsText(file);
-        } else {
-            showToast('Please drop a CSV file');
-        }
-    });
-    
-    document.getElementById('csvFile').addEventListener('change', e => {
-        if (e.target.files[0]) {
-            let reader = new FileReader();
-            reader.onload = ev => {
-                if (parseCSV(ev.target.result)) {
-                    document.getElementById('uploadScreen').style.display = 'none';
-                    document.getElementById('dashboard').style.display = 'block';
-                    document.getElementById('actionButtons').style.display = 'flex';
-                    populateFilters();
-                    setupSorting();
-                    setupPriorityButtons();
-                    renderAll();
-                    showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
-                }
-            };
-            reader.readAsText(e.target.files[0]);
-            showToast('Loading file...');
-        }
-    });
-    
-    document.getElementById('qrBtn')?.addEventListener('click', () => {
-        document.getElementById('instructionModal').style.display = 'flex';
-        setTimeout(() => {
-            const qc = document.getElementById('qrcode');
-            if(qc) { qc.innerHTML = ''; new QRCode(qc, { text: window.location.href, width: 200, height: 200 }); }
-        }, 100);
-    });
-    
-    document.getElementById('emailReportBtn')?.addEventListener('click', () => {
-        let totalLoss = allData.reduce((s, r) => s + calcDailyLoss(r), 0);
-        let highReject = allData.filter(r => isHighReject(r)).length;
-        let offline = allData.filter(r => r.KioskState === 'Offline').length;
-        let top5 = [...allData].sort((a,b) => calcDailyLoss(b) - calcDailyLoss(a)).slice(0,5).map((r,i) => `${i+1}. ${r.Store}: $${calcDailyLoss(r).toFixed(0)}/day (7-day reject: ${getReject7d(r).toFixed(1)}%)`).join('\n');
-        let body = `Kiosk Performance Report - ${new Date().toLocaleDateString()}\n\nSUMMARY:\n- Total Daily Loss: $${totalLoss.toFixed(0)} ($${(totalLoss*30).toFixed(0)}/month)\n- High Reject Kiosks (≥4%): ${highReject}\n- Offline: ${offline}\n\nTOP 5 LOSSES:\n${top5}\n\nRECOMMENDATION: Prioritize high reject kiosks for service inspection.`;
-        window.location.href = `mailto:?subject=Kiosk Performance Report - ${new Date().toLocaleDateString()}&body=${encodeURIComponent(body)}`;
-        showToast('Email draft opened');
-    });
-    
-    function setupSorting() {
-        document.querySelectorAll('#dataTable th').forEach(th => th.addEventListener('click', () => {
-            let k = th.getAttribute('data-sort');
-            if (currentSort.column === k) currentSort.direction = currentSort.direction === 'desc' ? 'asc' : 'desc';
-            else { currentSort.column = k; currentSort.direction = 'desc'; }
-            renderAll();
-        }));
-    }
-    
-    function setupPriorityButtons() {
-        const buttons = document.querySelectorAll('.priority-btn');
-        buttons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                buttons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentPriorityFilter = btn.getAttribute('data-filter');
+    } catch(e) { showToast('Failed to capture'); }
+}
+
+// Event listeners
+document.getElementById('showUploadBtn')?.addEventListener('click', () => document.getElementById('csvFile').click());
+document.getElementById('uploadArea')?.addEventListener('click', () => document.getElementById('csvFile').click());
+
+// Drag and drop
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('drag-over'); });
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.csv')) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+            if (parseCSV(ev.target.result)) {
+                document.getElementById('uploadScreen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                document.getElementById('actionButtons').style.display = 'flex';
+                populateFilters();
+                setupSorting();
+                setupPriorityButtons();
                 renderAll();
-            });
-        });
-    }
-    
-    function populateFilters() {
-        let regions = [...new Set(allData.map(r => getRegion(r)))].filter(r => r && r !== 'Unknown');
-        let sel = document.getElementById('provinceFilter');
-        sel.innerHTML = '<option value="all">🌎 All Provinces</option>';
-        regions.sort().forEach(r => sel.innerHTML += `<option value="${r}">${r}</option>`);
-        document.getElementById('provinceFilter').onchange = () => renderAll();
-        document.getElementById('riskFilter').onchange = () => renderAll();
-        document.getElementById('searchInput').oninput = () => renderAll();
-        document.getElementById('resetBtn').onclick = () => {
-            document.getElementById('provinceFilter').value = 'all';
-            document.getElementById('riskFilter').value = 'all';
-            document.getElementById('searchInput').value = '';
-            document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector('.priority-btn[data-filter="all"]')?.classList.add('active');
-            currentPriorityFilter = 'all';
-            renderAll();
+                showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
+            }
         };
+        reader.readAsText(file);
+    } else { showToast('Please drop a CSV file'); }
+});
+
+document.getElementById('csvFile').addEventListener('change', e => {
+    if (e.target.files[0]) {
+        let reader = new FileReader();
+        reader.onload = ev => {
+            if (parseCSV(ev.target.result)) {
+                document.getElementById('uploadScreen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                document.getElementById('actionButtons').style.display = 'flex';
+                populateFilters();
+                setupSorting();
+                setupPriorityButtons();
+                renderAll();
+                showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
+            }
+        };
+        reader.readAsText(e.target.files[0]);
+        showToast('Loading file...');
     }
-    
-    document.getElementById('powerBIExportBtn')?.addEventListener('click', () => exportToExcelForBI('Power BI'));
-    document.getElementById('tableauExportBtn')?.addEventListener('click', () => exportToExcelForBI('Tableau'));
-    document.getElementById('snapshotBtn')?.addEventListener('click', takeScreenshot);
-    window.closeModal = closeModal;
-    window.closeNotesModal = closeNotesModal;
-    
-    function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
-    
-    // No data loaded initially - just show upload screen
+});
+
+document.getElementById('qrBtn')?.addEventListener('click', () => {
+    document.getElementById('instructionModal').style.display = 'flex';
+    setTimeout(() => {
+        const qc = document.getElementById('qrcode');
+        if(qc) { qc.innerHTML = ''; new QRCode(qc, { text: window.location.href, width: 200, height: 200 }); }
+    }, 100);
+});
+
+document.getElementById('emailReportBtn')?.addEventListener('click', () => {
+    let totalLoss = allData.reduce((s, r) => s + calcDailyLoss(r), 0);
+    let highReject = allData.filter(r => isHighReject(r)).length;
+    let offline = allData.filter(r => r.KioskState === 'Offline').length;
+    let paperLow = allData.filter(r => { let a = getPaperAlert(r); return a.daysLeft !== null && a.daysLeft <= PAPER_WARNING_DAYS; }).length;
+    let top5 = [...allData].sort((a,b) => calcDailyLoss(b) - calcDailyLoss(a)).slice(0,5).map((r,i) => `${i+1}. ${r.Store}: $${calcDailyLoss(r).toFixed(0)}/day (7-day reject: ${getReject7d(r).toFixed(1)}%)`).join('\n');
+    let body = `KIOSK PERFORMANCE REPORT - ${new Date().toLocaleDateString()}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📊 SUMMARY METRICS\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Total Daily Loss: $${totalLoss.toFixed(0)} ($${(totalLoss*30).toFixed(0)}/month)\n• High Reject Kiosks (≥4%): ${highReject}\n• Offline Kiosks: ${offline}\n• Paper Low (≤7 days): ${paperLow}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🚨 TOP 5 HIGHEST LOSS\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${top5}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📋 RECOMMENDATIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n1. Prioritize high reject kiosks for service inspection\n2. Schedule bin pickups for kiosks >80% full\n3. Replace paper for VPO dates within 7 days\n4. Investigate kiosks with high TEMM (store fix attempts)\n\nReport generated from Kiosk Intelligence Platform`;
+    window.location.href = `mailto:?subject=Kiosk Performance Report - ${new Date().toLocaleDateString()}&body=${encodeURIComponent(body)}`;
+    showToast('Email draft opened');
+});
+
+function setupSorting() {
+    document.querySelectorAll('#dataTable th').forEach(th => th.addEventListener('click', () => {
+        let k = th.getAttribute('data-sort');
+        if (currentSort.column === k) currentSort.direction = currentSort.direction === 'desc' ? 'asc' : 'desc';
+        else { currentSort.column = k; currentSort.direction = 'desc'; }
+        renderAll();
+    }));
+}
+
+function setupPriorityButtons() {
+    const buttons = document.querySelectorAll('.priority-btn');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentPriorityFilter = btn.getAttribute('data-filter');
+            renderAll();
+        });
+    });
+}
+
+function populateFilters() {
+    let regions = [...new Set(allData.map(r => getRegion(r)))].filter(r => r && r !== 'Unknown');
+    let sel = document.getElementById('provinceFilter');
+    sel.innerHTML = '<option value="all">🌎 All Provinces</option>';
+    regions.sort().forEach(r => sel.innerHTML += `<option value="${r}">${r}</option>`);
+    document.getElementById('provinceFilter').onchange = () => renderAll();
+    document.getElementById('riskFilter').onchange = () => renderAll();
+    document.getElementById('searchInput').oninput = () => renderAll();
+    document.getElementById('resetBtn').onclick = () => {
+        document.getElementById('provinceFilter').value = 'all';
+        document.getElementById('riskFilter').value = 'all';
+        document.getElementById('searchInput').value = '';
+        document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('.priority-btn[data-filter="all"]')?.classList.add('active');
+        currentPriorityFilter = 'all';
+        renderAll();
+    };
+}
+
+document.getElementById('powerBIExportBtn')?.addEventListener('click', () => exportToExcelForBI('Power BI'));
+document.getElementById('tableauExportBtn')?.addEventListener('click', () => exportToExcelForBI('Tableau'));
+document.getElementById('snapshotBtn')?.addEventListener('click', takeScreenshot);
+window.closeModal = closeModal;
+window.closeNotesModal = closeNotesModal;
+
+function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
+
+// No data loaded initially - show upload screen only
 </script>
 </body>
 </html>
