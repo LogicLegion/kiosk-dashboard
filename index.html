@@ -69,6 +69,12 @@
         .top-loss-list { display: flex; flex-direction: column; gap: 8px; }
         .top-loss-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: #f8fafc; border-radius: 12px; border-left: 4px solid #dc2626; flex-wrap: wrap; gap: 10px; cursor: pointer; transition: background 0.2s; }
         .top-loss-item:hover { background: #f1f5f9; }
+        .top-loss-left { display: flex; align-items: center; gap: 12px; flex: 2; min-width: 200px; }
+        .top-loss-rank { background: #dc2626; color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+        .top-loss-store { font-weight: 600; color: #1e293b; font-size: 13px; }
+        .top-loss-address { font-size: 11px; color: #64748b; margin-top: 2px; }
+        .top-loss-loss { font-weight: 700; color: #dc2626; white-space: nowrap; }
+        .top-loss-link { color: #3b82f6; text-decoration: none; font-size: 11px; }
         
         .filters { background: white; border-radius: 16px; padding: 16px 20px; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 12px; border: 1px solid #e2e8f0; align-items: flex-end; }
         .filter-group { display: flex; flex-direction: column; gap: 5px; min-width: 120px; flex: 1; }
@@ -87,9 +93,9 @@
         .bin-alert-row { background-color: #e0f2fe; }
         .paper-alert-row { background-color: #fef3c7; }
         .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
-        .badge-high { background: #fee2e2; color: #dc2626; }
-        .badge-good { background: #dcfce7; color: #16a34a; }
+        .badge-critical { background: #fee2e2; color: #dc2626; }
         .badge-warning { background: #fed7aa; color: #c2410c; }
+        .badge-good { background: #dcfce7; color: #16a34a; }
         .badge-traffic-high { background: #dc2626; color: white; }
         .badge-traffic-low { background: #16a34a; color: white; }
         .badge-impact { background: #f97316; color: white; }
@@ -113,8 +119,12 @@
         .modal-close { background: #1e3a5f; color: white; border: none; padding: 10px; border-radius: 30px; cursor: pointer; margin-top: 16px; width: 100%; }
         .notes-list { margin: 15px 0; max-height: 300px; overflow-y: auto; }
         .note-item { background: #f8fafc; border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-        .checkbox-col { width: 30px; text-align: center; }
-        .selected-highlight { background-color: #dbeafe !important; }
+        .note-text { flex: 1; font-size: 12px; color: #1e293b; }
+        .note-date { font-size: 10px; color: #64748b; margin-top: 4px; }
+        .note-edit-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px; }
+        .note-edit-btn:hover { opacity: 0.7; }
+        .note-input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 12px; font-family: inherit; resize: vertical; margin-top: 10px; }
+        .save-note-btn { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-top: 10px; font-size: 12px; }
         
         .help-icon {
             display: inline-flex;
@@ -230,6 +240,17 @@
         
         <div class="kpi-grid" id="kpiGrid"></div>
         
+        <!-- PROVINCE CHART - MOVED HERE (After KPIs, before Route Planner) -->
+        <div class="chart-container">
+            <div class="chart-title">💰 Daily Revenue Loss by Province <span class="help-icon" data-tooltip="🔴 Red = money lost from failed transactions. 🟠 Orange = money lost from downtime. Click any bar to filter the table below.">?</span></div>
+            <canvas id="lossChart"></canvas>
+            <div class="legend">
+                <div><span class="legend-color" style="background: #dc2626;"></span> Loss from rejected transactions</div>
+                <div><span class="legend-color" style="background: #f97316;"></span> Loss from downtime</div>
+            </div>
+            <div class="click-hint">💡 Click any bar to filter the table below</div>
+        </div>
+        
         <!-- Route Planner Section -->
         <div class="route-planner">
             <div class="route-title">🗺️ Route Planner <span class="help-icon" data-tooltip="Select kiosks from the table or map, then enter your starting address to plan the most efficient route.">?</span></div>
@@ -250,7 +271,7 @@
         <!-- Map Section -->
         <div class="map-container">
             <div class="map-title">
-                <span>🗺️ Kiosk Location Map <span class="help-icon" data-tooltip="🔴 Red = High Reject | 🟡 Amber = Warning (4-8%) | 🟢 Green = Good | ⚫ Grey = Offline">?</span></span>
+                <span>🗺️ Kiosk Location Map <span class="help-icon" data-tooltip="🔴 Red = Critical (≥8%) | 🟡 Amber = Warning (4-8%) | 🟢 Green = Good (<4%) | ⚫ Grey = Offline">?</span></span>
                 <div class="view-toggle">
                     <button id="showMapBtn">🗺️ Map</button>
                     <button id="showListBtn" class="active">📋 List</button>
@@ -258,7 +279,7 @@
             </div>
             <div id="map" style="height:400px; display:none;"></div>
             <div class="map-legend" style="display:none;" id="mapLegend">
-                <div><span class="map-legend-dot" style="background: #dc2626;"></span> High Reject (≥4%)</div>
+                <div><span class="map-legend-dot" style="background: #dc2626;"></span> Critical (≥8%)</div>
                 <div><span class="map-legend-dot" style="background: #f59e0b;"></span> Warning (4-8%)</div>
                 <div><span class="map-legend-dot" style="background: #10b981;"></span> Good (<4%)</div>
                 <div><span class="map-legend-dot" style="background: #6b7280;"></span> Offline</div>
@@ -266,18 +287,8 @@
             </div>
         </div>
         
-        <div class="chart-container">
-            <div class="chart-title">💰 Daily Revenue Loss by Province</div>
-            <canvas id="lossChart"></canvas>
-            <div class="legend">
-                <div><span class="legend-color" style="background: #dc2626;"></span> Loss from rejected transactions</div>
-                <div><span class="legend-color" style="background: #f97316;"></span> Loss from downtime</div>
-            </div>
-            <div class="click-hint">💡 Click any bar to filter the table below</div>
-        </div>
-        
         <div class="top-loss-container">
-            <div class="top-loss-title">🚨 TOP 10 HIGHEST DAILY LOSS</div>
+            <div class="top-loss-title">🚨 TOP 10 HIGHEST DAILY LOSS <span class="help-icon" data-tooltip="Daily Loss = (Volume × Reject% × $5) + (Volume × (100-Uptime%) × 0.8 × $5)">?</span></div>
             <div class="top-loss-list" id="topLossList"></div>
         </div>
         
@@ -292,7 +303,7 @@
             </div>
             <div class="filter-group">
                 <label>⚠️ Status</label>
-                <select id="riskFilter"><option value="all">All Status</option><option value="high">High Reject Only</option><option value="good">Good Only</option></select>
+                <select id="riskFilter"><option value="all">All Status</option><option value="critical">Critical (≥8%)</option><option value="warning">Warning (4-8%)</option><option value="good">Good (<4%)</option></select>
             </div>
             <div class="filter-group">
                 <label>📊 Volume</label>
@@ -338,7 +349,7 @@
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
-        <div class="footer">💡 Click any store name to add/edit notes | Check boxes to select kiosks for route planning | High Reject = 7-day reject rate ≥4%</div>
+        <div class="footer">💡 Click any store name to add/edit notes | Check boxes to select kiosks for route planning</div>
         <div class="copyright">Built by J.E. | Kiosk Intelligence Platform 2026</div>
     </div>
 </div>
@@ -346,7 +357,8 @@
 
 <script>
 // ============================================================
-// COMPLETE DASHBOARD - Zone Filter, KHD Colours, Route Planner
+// COMPLETE DASHBOARD - Province Chart MOVED to Top (After KPIs)
+// Zone Filter, KHD Colours, Route Planner
 // ============================================================
 
 let allData = [];
@@ -362,7 +374,6 @@ let currentRoute = null;
 
 // Constants
 const TRANSACTION_VALUE = 5;
-const HIGH_REJECT_THRESHOLD = 4;
 const HIGH_TRAFFIC_THRESHOLD = 10;
 const HIGH_IMPACT_THRESHOLD = 0.8;
 const SERVICE_OVERDUE_DAYS = 60;
@@ -376,7 +387,6 @@ function isCanadian(row) {
     return CANADIAN_PROVINCES.includes(prov); 
 }
 
-// Helper functions
 function getRegion(r) { return r.Province || r.State || 'Unknown'; }
 function getStoreId(r) { return (r.Store || '').replace(/[^a-zA-Z0-9]/g, '_') + '_' + (r.City || '').replace(/[^a-zA-Z0-9]/g, '_'); }
 function getVolume(r) { return parseFloat(r.Tx1Day) || 0; }
@@ -385,26 +395,13 @@ function getVolume7DayAvg(r) { let total = getVolume7DayTotal(r); return total /
 function getUptime1d(r) { return parseFloat(r.Uptime1Day) || 0; }
 function getUptime7d(r) { return parseFloat(r.Uptime7Day) || 0; }
 function getReject7d(r) { return parseFloat(r.Reject7Day) || 0; }
-function getReject1d(r) { return parseFloat(r.Reject1Day) || 0; }
-function isHighReject(r) { return getReject7d(r) >= HIGH_REJECT_THRESHOLD; }
-function getTrafficLevel(r) { return getVolume(r) > HIGH_TRAFFIC_THRESHOLD ? 'HIGH' : 'LOW'; }
-function getImpactScore(r) { return getVolume(r) * (getReject7d(r) / 100); }
-function isHighImpact(r) { return getImpactScore(r) > HIGH_IMPACT_THRESHOLD; }
 function getTEMM(r) { return parseFloat(r.TEMM7Day) || 0; }
 function getVPO(r) { return r.VPO || ''; }
 function getLastServiceDate(r) { return r.LastPM || r['Last PM Date'] || '—'; }
 function getPhoneNumber(r) { return r.Phone || r['Store Phone Number'] || ''; }
 function getZone(r) { return r.Zone || r.District || r['FT Zone'] || '—'; }
 
-function getStatusColor(r) {
-    let reject = getReject7d(r);
-    if (r.KioskState === 'Offline') return '#6b7280';
-    if (reject >= 8) return '#dc2626';
-    if (reject >= 4) return '#f59e0b';
-    return '#10b981';
-}
-
-function getStatusLabel(r) {
+function getStatusLevel(r) {
     let reject = getReject7d(r);
     if (r.KioskState === 'Offline') return 'Offline';
     if (reject >= 8) return 'Critical';
@@ -412,13 +409,33 @@ function getStatusLabel(r) {
     return 'Good';
 }
 
+function getStatusColor(r) {
+    let level = getStatusLevel(r);
+    if (level === 'Offline') return '#6b7280';
+    if (level === 'Critical') return '#dc2626';
+    if (level === 'Warning') return '#f59e0b';
+    return '#10b981';
+}
+
 function getStatusBadgeClass(r) {
-    let reject = getReject7d(r);
-    if (r.KioskState === 'Offline') return 'badge-call';
-    if (reject >= 8) return 'badge-high';
-    if (reject >= 4) return 'badge-warning';
+    let level = getStatusLevel(r);
+    if (level === 'Offline') return 'badge-call';
+    if (level === 'Critical') return 'badge-critical';
+    if (level === 'Warning') return 'badge-warning';
     return 'badge-good';
 }
+
+function getStatusLabel(r) {
+    let level = getStatusLevel(r);
+    if (level === 'Offline') return 'Offline';
+    if (level === 'Critical') return 'Critical';
+    if (level === 'Warning') return 'Warning';
+    return 'Good';
+}
+
+function getTrafficLevel(r) { return getVolume(r) > HIGH_TRAFFIC_THRESHOLD ? 'HIGH' : 'LOW'; }
+function getImpactScore(r) { return getVolume(r) * (getReject7d(r) / 100); }
+function isHighImpact(r) { return getImpactScore(r) > HIGH_IMPACT_THRESHOLD; }
 
 function getTEMBadge(r) {
     let tem = getTEMM(r);
@@ -662,9 +679,9 @@ function closeNotesModal() { document.getElementById('notesModal').style.display
 function closeModal() { document.getElementById('instructionModal').style.display = 'none'; }
 function showToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
 
-// Haversine distance calculation
+// Haversine distance
 function haversineDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Earth's radius in km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -675,8 +692,6 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 }
 
 async function geocodeAddress(address) {
-    // Simple geocoding using Nominatim (OpenStreetMap)
-    // Note: For production, consider using a proper geocoding service
     try {
         const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
         const data = await response.json();
@@ -719,21 +734,12 @@ function formatDuration(minutes) {
 
 async function planRoute() {
     const startAddress = document.getElementById('startAddress').value.trim();
-    if (!startAddress) {
-        showToast('Please enter a starting address');
-        return;
-    }
-    if (selectedKiosks.size === 0) {
-        showToast('Please select at least one kiosk from the table or map');
-        return;
-    }
+    if (!startAddress) { showToast('Please enter a starting address'); return; }
+    if (selectedKiosks.size === 0) { showToast('Please select at least one kiosk'); return; }
     
     showToast('Geocoding starting address...');
     const startCoord = await geocodeAddress(startAddress);
-    if (!startCoord) {
-        showToast('Could not find starting address. Please be more specific.');
-        return;
-    }
+    if (!startCoord) { showToast('Could not find starting address'); return; }
     
     const stops = [];
     for (const storeId of selectedKiosks) {
@@ -748,10 +754,7 @@ async function planRoute() {
         }
     }
     
-    if (stops.length === 0) {
-        showToast('Selected kiosks missing location data');
-        return;
-    }
+    if (stops.length === 0) { showToast('Selected kiosks missing location data'); return; }
     
     showToast('Optimizing route...');
     const optimized = optimizeRoute(startCoord, stops);
@@ -789,7 +792,6 @@ async function planRoute() {
     document.getElementById('routeStopsList').innerHTML = stopsHtml;
     document.getElementById('routeSummary').style.display = 'block';
     
-    // Highlight selected on map
     updateMapHighlights();
 }
 
@@ -817,10 +819,10 @@ function copyRoute() {
 
 // Map functions
 function getMapColor(r) {
-    if (r.KioskState === 'Offline') return '#6b7280';
-    let reject = getReject7d(r);
-    if (reject >= 8) return '#dc2626';
-    if (reject >= 4) return '#f59e0b';
+    let level = getStatusLevel(r);
+    if (level === 'Offline') return '#6b7280';
+    if (level === 'Critical') return '#dc2626';
+    if (level === 'Warning') return '#f59e0b';
     return '#10b981';
 }
 
@@ -901,7 +903,7 @@ function initMap() {
 function applyPriorityFilter(data, filterType) {
     if (filterType === 'all') return data;
     if (filterType === 'urgent') return data.filter(r => isHighImpact(r));
-    if (filterType === 'high-reject') return data.filter(r => isHighReject(r));
+    if (filterType === 'high-reject') return data.filter(r => getReject7d(r) >= 4);
     if (filterType === 'full-bin') return data.filter(r => parseFloat(r.BinFull || 0) > 80);
     if (filterType === 'paper-out') return data.filter(r => { let a = getPaperAlert(r); return a.includes('🟡') || a.includes('🔴'); });
     if (filterType === 'overdue') return data.filter(r => isServiceOverdue(r));
@@ -972,8 +974,9 @@ function filterData() {
     const zone = document.getElementById('zoneFilter')?.value || 'all';
     if (zone !== 'all') f = f.filter(r => getZone(r) === zone);
     const status = document.getElementById('riskFilter')?.value || 'all';
-    if (status === 'high') f = f.filter(r => isHighReject(r));
-    else if (status === 'good') f = f.filter(r => !isHighReject(r));
+    if (status === 'critical') f = f.filter(r => getStatusLevel(r) === 'Critical');
+    else if (status === 'warning') f = f.filter(r => getStatusLevel(r) === 'Warning');
+    else if (status === 'good') f = f.filter(r => getStatusLevel(r) === 'Good');
     const volumeFilter = document.getElementById('volumeFilter')?.value || 'all';
     if (volumeFilter !== 'all') f = f.filter(r => getVolumePriority(r) === volumeFilter);
     const s = document.getElementById('searchInput')?.value.toLowerCase() || '';
@@ -1014,7 +1017,6 @@ function sortData(d) {
     });
 }
 
-// Update checkboxes in table
 function updateTableCheckboxes() {
     document.querySelectorAll('.kiosk-checkbox').forEach(cb => {
         const storeId = cb.getAttribute('data-storeid');
@@ -1129,7 +1131,8 @@ function renderAll() {
     f = sortData(f);
     
     const total = f.length;
-    const highReject = f.filter(r => isHighReject(r)).length;
+    const critical = f.filter(r => getStatusLevel(r) === 'Critical').length;
+    const warning = f.filter(r => getStatusLevel(r) === 'Warning').length;
     const offline = f.filter(r => r.KioskState === 'Offline').length;
     const binAlert = f.filter(r => parseFloat(r.BinFull || 0) > 80).length;
     const highVolume = f.filter(r => getVolumePriority(r) === 'High').length;
@@ -1139,12 +1142,13 @@ function renderAll() {
     const avgUptime1d = f.reduce((s, r) => s + getUptime1d(r), 0) / (f.length || 1);
     const avgUptime7d = f.reduce((s, r) => s + getUptime7d(r), 0) / (f.length || 1);
     
-    document.getElementById('alertBar').innerHTML = `<span>⚠️ Action Required: ${highReject} high reject | ${offline} offline | ${binAlert} full bins | ${highVolume} high volume</span><button class="alert-btn" id="viewHighRejectBtn">View High Reject →</button>`;
-    document.getElementById('viewHighRejectBtn').onclick = () => { document.getElementById('riskFilter').value = 'high'; renderAll(); };
+    document.getElementById('alertBar').innerHTML = `<span>⚠️ Action Required: ${critical} critical | ${warning} warning | ${offline} offline | ${binAlert} full bins | ${highVolume} high volume</span><button class="alert-btn" id="viewHighRejectBtn">View Critical →</button>`;
+    document.getElementById('viewHighRejectBtn').onclick = () => { document.getElementById('riskFilter').value = 'critical'; renderAll(); };
     
     document.getElementById('kpiGrid').innerHTML = `
         <div class="kpi-card"><div class="kpi-label">📊 Total Kiosks</div><div class="kpi-value">${total}</div></div>
-        <div class="kpi-card"><div class="kpi-label">⚠️ High Reject</div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div>
+        <div class="kpi-card"><div class="kpi-label">🔴 Critical (≥8%)</div><div class="kpi-value" style="color:#dc2626;">${critical}</div></div>
+        <div class="kpi-card"><div class="kpi-label">🟡 Warning (4-8%)</div><div class="kpi-value" style="color:#f59e0b;">${warning}</div></div>
         <div class="kpi-card"><div class="kpi-label">📞 Offline</div><div class="kpi-value" style="color:#6b7280;">${offline}</div></div>
         <div class="kpi-card"><div class="kpi-label">📊 High Volume</div><div class="kpi-value" style="color:#dc2626;">${highVolume}</div></div>
         <div class="kpi-card"><div class="kpi-label">📡 Today's Uptime</div><div class="kpi-value" style="color:#10b981;">${avgUptime1d.toFixed(1)}%</div></div>
@@ -1163,7 +1167,7 @@ function renderAll() {
     
     const tbody = document.getElementById('tableBody');
     if (!f.length) {
-        tbody.innerHTML = '<tr><td colspan="25" style="text-align:center;padding:40px;">No kiosks match filters</td></tr>';
+        tbody.innerHTML = '<td><td colspan="25" style="text-align:center;padding:40px;">No kiosks match filters</td></tr>';
         return;
     }
     
@@ -1180,7 +1184,8 @@ function renderAll() {
         const isOverdue = isServiceOverdue(r);
         const storeId = getStoreId(r);
         const storeName = r.Store || '—';
-        const isHighRejectRow = isHighReject(r);
+        const isCritical = getStatusLevel(r) === 'Critical';
+        const isWarning = getStatusLevel(r) === 'Warning';
         const isBinAlert = bin > 80;
         const barC = bin > 95 ? '#dc2626' : (bin > 80 ? '#f59e0b' : '#10b981');
         const phone = getPhoneNumber(r);
@@ -1191,7 +1196,7 @@ function renderAll() {
         const volumeBadge = getVolumeBadge(r);
         const statusLabel = getStatusLabel(r);
         const statusBadgeClass = getStatusBadgeClass(r);
-        const rowClass = `${isHighRejectRow ? 'high-reject-row' : ''} ${selectedKiosks.has(storeId) ? 'selected-row' : ''}`;
+        const rowClass = `${isCritical ? 'high-reject-row' : isWarning ? 'paper-alert-row' : ''} ${selectedKiosks.has(storeId) ? 'selected-row' : ''}`;
         
         return `<tr class="${rowClass}">
             <td class="checkbox-col"><input type="checkbox" class="kiosk-checkbox" data-storeid="${escapeHtml(storeId)}" ${selectedKiosks.has(storeId) ? 'checked' : ''} onclick="toggleKioskSelection('${escapeHtml(storeId)}', this.checked)"></td>
@@ -1205,7 +1210,7 @@ function renderAll() {
             <td>${volumeBadge}</td>
             <td><span class="badge ${trafficLevel === 'HIGH' ? 'badge-traffic-high' : 'badge-traffic-low'}">${trafficLevel}</span></td>
             <td>${trendDisplay}</td>
-            <td style="color:${reject7d >= 4 ? '#dc2626' : '#16a34a'};font-weight:600;background:#fef3c7;">⭐ ${reject7d.toFixed(1)}%</td>
+            <td style="color:${reject7d >= 8 ? '#dc2626' : reject7d >= 4 ? '#f59e0b' : '#16a34a'};font-weight:600;background:#fef3c7;">⭐ ${reject7d.toFixed(1)}%</td>
             <td>${impactScore.toFixed(2)}${impactScore > 0.8 ? '<span class="badge badge-impact" style="margin-left:5px;">HIGH</span>' : ''}</td>
             <td>${temBadge}</td>
             <td>${getPaperAlert(r)}</td>
@@ -1359,11 +1364,12 @@ document.getElementById('qrBtn')?.addEventListener('click', () => {
 
 document.getElementById('emailReportBtn')?.addEventListener('click', () => {
     const totalLoss = allData.reduce((s, r) => s + calcDailyLoss(r), 0);
-    const highReject = allData.filter(r => isHighReject(r)).length;
+    const critical = allData.filter(r => getStatusLevel(r) === 'Critical').length;
+    const warning = allData.filter(r => getStatusLevel(r) === 'Warning').length;
     const offline = allData.filter(r => r.KioskState === 'Offline').length;
     const avgUptime = allData.reduce((s, r) => s + getUptime7d(r), 0) / (allData.length || 1);
     const top5 = [...allData].sort((a,b) => calcDailyLoss(b) - calcDailyLoss(a)).slice(0,5).map((r,i) => `${i+1}. ${r.Store}: $${calcDailyLoss(r).toFixed(0)}/day`).join('\n');
-    const body = `KIOSK PERFORMANCE REPORT - ${new Date().toLocaleDateString()}\n\nTotal Daily Loss: $${totalLoss.toFixed(0)} ($${(totalLoss*30).toFixed(0)}/month)\nHigh Reject: ${highReject}\nOffline: ${offline}\nNetwork Uptime: ${avgUptime.toFixed(1)}%\n\nTOP 5 LOSSES:\n${top5}`;
+    const body = `KIOSK PERFORMANCE REPORT - ${new Date().toLocaleDateString()}\n\nTotal Daily Loss: $${totalLoss.toFixed(0)} ($${(totalLoss*30).toFixed(0)}/month)\nCritical (≥8%): ${critical}\nWarning (4-8%): ${warning}\nOffline: ${offline}\nNetwork Uptime: ${avgUptime.toFixed(1)}%\n\nTOP 5 LOSSES:\n${top5}`;
     window.location.href = `mailto:?subject=Kiosk Performance Report - ${new Date().toLocaleDateString()}&body=${encodeURIComponent(body)}`;
     showToast('Email draft opened');
 });
