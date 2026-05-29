@@ -47,7 +47,7 @@
         .view-toggle { display: flex; gap: 10px; }
         .view-toggle button { background: #f1f5f9; color: #1e293b; border: 1px solid #e2e8f0; padding: 4px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; }
         .view-toggle button.active { background: #1e3a5f; color: white; border-color: #1e3a5f; }
-        #map { height: 400px; width: 100%; border-radius: 12px; z-index: 1; }
+        #map { height: 400px; width: 100%; border-radius: 12px; z-index: 1; display: none; }
         .map-legend { display: flex; justify-content: center; gap: 20px; margin-top: 12px; font-size: 11px; flex-wrap: wrap; }
         .map-legend-dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 5px; }
         
@@ -71,7 +71,7 @@
         select, input, button { padding: 8px 12px; border-radius: 10px; font-size: 12px; background: white; border: 1px solid #e2e8f0; }
         button { background: #1e3a5f; color: white; border: none; cursor: pointer; font-weight: 600; position: relative; }
         .email-btn { background: #10b981; }
-        .table-wrapper { background: white; border-radius: 16px; overflow-x: auto; max-height: 450px; border: 1px solid #e2e8f0; }
+        .table-wrapper { background: white; border-radius: 16px; overflow-x: auto; max-height: 450px; border: 1px solid #e2e8f0; display: block; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1800px; }
         th { text-align: left; padding: 12px 8px; background: #f8fafc; font-weight: 700; border-bottom: 2px solid #e2e8f0; cursor: pointer; position: sticky; top: 0; z-index: 10; font-size: 10px; }
         th:hover { background: #e2e8f0; }
@@ -260,12 +260,12 @@
             <div class="map-title">
                 <span>🗺️ Kiosk Location Map <span class="help-icon" data-tooltip="🔴 Red dot = High Reject (≥4%). 🟢 Green dot = Good (<4%). 🔵 Blue dot = Offline (call first). Click any dot for details and Google Maps link.">?</span></span>
                 <div class="view-toggle">
-                    <button id="showMapBtn" class="active">🗺️ Map</button>
-                    <button id="showListBtn">📋 List</button>
+                    <button id="showMapBtn">🗺️ Map</button>
+                    <button id="showListBtn" class="active">📋 List</button>
                 </div>
             </div>
-            <div id="map" style="height:400px; display:block;"></div>
-            <div class="map-legend">
+            <div id="map" style="height:400px; display:none;"></div>
+            <div class="map-legend" style="display:none;" id="mapLegend">
                 <div><span class="map-legend-dot" style="background: #dc2626;"></span> High Reject (≥4%)</div>
                 <div><span class="map-legend-dot" style="background: #16a34a;"></span> Good (<4%)</div>
                 <div><span class="map-legend-dot" style="background: #3b82f6;"></span> Offline (📞 Call First)</div>
@@ -346,7 +346,7 @@
 
 <script>
 // ============================================================
-// FINAL DASHBOARD - Full Explanations (Tooltips) for Everything
+// FINAL DASHBOARD - List View Default, Map on Demand
 // ============================================================
 
 let allData = [];
@@ -356,7 +356,7 @@ let currentNoteStore = null;
 let editingNoteId = null;
 let currentPriorityFilter = 'all';
 let map = null;
-let currentView = 'map';
+let currentView = 'list';
 
 // ============================================================
 // CONSTANTS & THRESHOLDS
@@ -943,6 +943,7 @@ function renderAll() {
     updateProvinceChart(f);
     updateTopLossList(f);
     
+    // Only update map if map view is active
     if (currentView === 'map') {
         setTimeout(() => initMap(), 100);
     }
@@ -1006,7 +1007,7 @@ function renderAll() {
             <td style="color:#dc2626;">$${dailyLoss.toFixed(0)}</td>
             <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
             <td>${callButton}</td>
-         </tr>`;
+         </td>`;
     }).join('');
     
     document.getElementById('lastUpdateTime').innerHTML = new Date().toLocaleString();
@@ -1073,11 +1074,13 @@ async function takeScreenshot() {
 document.getElementById('showUploadBtn')?.addEventListener('click', () => document.getElementById('csvFile').click());
 document.getElementById('uploadArea')?.addEventListener('click', () => document.getElementById('csvFile').click());
 
+// View toggle - List is default
 document.getElementById('showMapBtn')?.addEventListener('click', () => {
     currentView = 'map';
     document.getElementById('showMapBtn').classList.add('active');
     document.getElementById('showListBtn').classList.remove('active');
     document.getElementById('map').style.display = 'block';
+    document.getElementById('mapLegend').style.display = 'flex';
     document.getElementById('tableWrapper').style.display = 'none';
     setTimeout(() => initMap(), 100);
 });
@@ -1086,6 +1089,7 @@ document.getElementById('showListBtn')?.addEventListener('click', () => {
     document.getElementById('showListBtn').classList.add('active');
     document.getElementById('showMapBtn').classList.remove('active');
     document.getElementById('map').style.display = 'none';
+    document.getElementById('mapLegend').style.display = 'none';
     document.getElementById('tableWrapper').style.display = 'block';
 });
 
@@ -1108,7 +1112,6 @@ uploadArea.addEventListener('drop', (e) => {
                 setupPriorityButtons();
                 renderAll();
                 showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
-                setTimeout(() => initMap(), 500);
             }
         };
         reader.readAsText(file);
@@ -1128,7 +1131,6 @@ document.getElementById('csvFile').addEventListener('change', e => {
                 setupPriorityButtons();
                 renderAll();
                 showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
-                setTimeout(() => initMap(), 500);
             }
         };
         reader.readAsText(e.target.files[0]);
