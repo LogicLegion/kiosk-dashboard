@@ -142,7 +142,7 @@
             padding: 6px 10px;
             border-radius: 8px;
             white-space: normal;
-            width: 220px;
+            width: 260px;
             text-align: center;
             z-index: 100;
             margin-bottom: 8px;
@@ -170,7 +170,7 @@
         .call-btn:hover { background: #cbd5e1; }
         
         .priority-buttons { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .priority-btn { background: #f1f5f9; color: #1e293b; border: 1px solid #e2e8f0; padding: 6px 14px; border-radius: 30px; font-size: 12px; cursor: pointer; }
+        .priority-btn { background: #f1f5f9; color: #1e293b; border: 1px solid #e2e8f0; padding: 6px 14px; border-radius: 30px; font-size: 12px; cursor: pointer; position: relative; }
         .priority-btn:hover { background: #e2e8f0; }
         .priority-btn.active { background: #1e3a5f; color: white; border-color: #1e3a5f; }
         
@@ -195,11 +195,11 @@
         <div><h1>📊 Canada Kiosk Intelligence <span class="live-tag">LIVE</span></h1></div>
         <div class="action-buttons" id="actionButtons" style="display:none;">
             <button class="action-btn" id="showUploadBtn" data-tooltip="📂 Upload a new CSV file to refresh the data">📂 Upload CSV</button>
-            <button class="action-btn qr-btn" id="qrBtn" data-tooltip="📱 Generate QR code to open dashboard on your phone">📱 QR Code</button>
-            <button class="action-btn" id="powerBIExportBtn" data-tooltip="📊 Export filtered data as Excel file for Power BI">📊 Power BI</button>
-            <button class="action-btn" id="tableauExportBtn" data-tooltip="📈 Export filtered data as Excel file for Tableau">📈 Tableau</button>
-            <button class="action-btn" id="snapshotBtn" data-tooltip="📸 Take a screenshot of the dashboard (copies to clipboard)">📸 Screenshot</button>
-            <button class="action-btn email-btn" id="emailReportBtn" data-tooltip="📧 Opens email draft with summary report for your boss">📧 Email Report</button>
+            <button class="action-btn qr-btn" id="qrBtn" data-tooltip="📱 Generate QR code to open this dashboard on your phone">📱 QR Code</button>
+            <button class="action-btn" id="powerBIExportBtn" data-tooltip="📊 Export filtered data as Excel file for Power BI. Includes all calculated fields.">📊 Power BI</button>
+            <button class="action-btn" id="tableauExportBtn" data-tooltip="📈 Export filtered data as Excel file for Tableau. Includes all calculated fields.">📈 Tableau</button>
+            <button class="action-btn" id="snapshotBtn" data-tooltip="📸 Take a screenshot of the entire dashboard. Copies to clipboard or downloads.">📸 Screenshot</button>
+            <button class="action-btn email-btn" id="emailReportBtn" data-tooltip="📧 Opens email draft with summary report including KPIs and top losses.">📧 Email Report</button>
         </div>
     </div>
     
@@ -237,20 +237,20 @@
     <!-- Dashboard -->
     <div id="dashboard" style="display:none">
         <div class="priority-buttons" id="priorityButtons">
-            <button class="priority-btn active" data-filter="all">📊 All</button>
-            <button class="priority-btn" data-filter="urgent">🔥 High Impact</button>
-            <button class="priority-btn" data-filter="high-reject">⚠️ High Reject (≥4%)</button>
-            <button class="priority-btn" data-filter="full-bin">🗑️ Full Bin (>80%)</button>
-            <button class="priority-btn" data-filter="paper-out">📄 Paper Low (≤7 days)</button>
-            <button class="priority-btn" data-filter="overdue">📅 Service Overdue (>60 days)</button>
-            <button class="priority-btn" data-filter="high-tem">🔧 High TEMM (>3 attempts)</button>
-            <button class="priority-btn" data-filter="high-volume">📊 High Volume Priority</button>
-            <button class="priority-btn" data-filter="call-first">📞 Call First (Offline)</button>
+            <button class="priority-btn active" data-filter="all" data-tooltip="📊 Show all kiosks">📊 All</button>
+            <button class="priority-btn" data-filter="urgent" data-tooltip="🔥 Kiosks with Impact Score >0.8 (high customer impact). Fix first.">🔥 High Impact</button>
+            <button class="priority-btn" data-filter="high-reject" data-tooltip="⚠️ 7-day reject rate ≥4%. Customers failing to complete transactions.">⚠️ High Reject</button>
+            <button class="priority-btn" data-filter="full-bin" data-tooltip="🗑️ Bin >80% full. Schedule pickup soon to avoid downtime.">🗑️ Full Bin</button>
+            <button class="priority-btn" data-filter="paper-out" data-tooltip="📄 Paper ETA ≤7 days. Replace receipt paper soon.">📄 Paper Low</button>
+            <button class="priority-btn" data-filter="overdue" data-tooltip="📅 Last service >60 days ago. Preventive maintenance due.">📅 Service Overdue</button>
+            <button class="priority-btn" data-filter="high-tem" data-tooltip="🔧 TEMM ≥3 store fix attempts. Needs tech visit.">🔧 High TEMM</button>
+            <button class="priority-btn" data-filter="high-volume" data-tooltip="📊 Top 33% by transaction volume. Busiest kiosks.">📊 High Volume</button>
+            <button class="priority-btn" data-filter="call-first" data-tooltip="📞 Offline kiosks. Try remote support before dispatching.">📞 Call First</button>
         </div>
         
         <div class="alert-bar" id="alertBar">
             <span>⚠️ Loading data...</span>
-            <button class="alert-btn" id="viewHighRejectBtn" data-tooltip="🔍 Show only High Reject kiosks">View High Reject →</button>
+            <button class="alert-btn" id="viewHighRejectBtn" data-tooltip="🔍 Show only kiosks with 7-day reject rate ≥4%">View High Reject →</button>
         </div>
         
         <div class="kpi-grid" id="kpiGrid"></div>
@@ -258,7 +258,7 @@
         <!-- Map Section -->
         <div class="map-container">
             <div class="map-title">
-                <span>🗺️ Kiosk Location Map <span class="help-icon" data-tooltip="🔴 Red = High Reject (≥4%) | 🟢 Green = Good (<4%) | 📞 Blue = Offline (Call First)">?</span></span>
+                <span>🗺️ Kiosk Location Map <span class="help-icon" data-tooltip="🔴 Red dot = High Reject (≥4%). 🟢 Green dot = Good (<4%). 🔵 Blue dot = Offline (call first). Click any dot for details and Google Maps link.">?</span></span>
                 <div class="view-toggle">
                     <button id="showMapBtn" class="active">🗺️ Map</button>
                     <button id="showListBtn">📋 List</button>
@@ -273,31 +273,31 @@
         </div>
         
         <div class="chart-container">
-            <div class="chart-title">💰 Daily Revenue Loss by Province <span class="help-icon" data-tooltip="Based on 7-day average reject rates and uptime. Red = failed transactions. Orange = downtime. Click any bar to filter table.">?</span></div>
+            <div class="chart-title">💰 Daily Revenue Loss by Province <span class="help-icon" data-tooltip="🔴 Red = money lost from failed transactions (reject rate). 🟠 Orange = money lost from downtime (machine offline). Click any bar to filter the table below.">?</span></div>
             <canvas id="lossChart"></canvas>
             <div class="legend">
-                <div><span class="legend-color" style="background: #dc2626;"></span> Loss from rejected transactions (7-day avg)</div>
+                <div><span class="legend-color" style="background: #dc2626;"></span> Loss from rejected transactions</div>
                 <div><span class="legend-color" style="background: #f97316;"></span> Loss from downtime</div>
             </div>
             <div class="click-hint">💡 Click any bar to filter the table below</div>
         </div>
         
         <div class="top-loss-container">
-            <div class="top-loss-title">🚨 TOP 10 HIGHEST DAILY LOSS <span class="help-icon" data-tooltip="Based on 7-day average reject rates. These cost the most money. Fix first.">?</span></div>
+            <div class="top-loss-title">🚨 TOP 10 HIGHEST DAILY LOSS <span class="help-icon" data-tooltip="Daily Loss = (Volume × Reject% × $5) + (Volume × (100-Uptime%) × 0.8 × $5). $5 per transaction assumed. 80% revenue loss during downtime.">?</span></div>
             <div class="top-loss-list" id="topLossList"></div>
         </div>
         
         <div class="filters">
             <div class="filter-group">
-                <label>📍 Province <span class="help-icon" data-tooltip="Filter by province or territory">?</span></label>
+                <label>📍 Province <span class="help-icon" data-tooltip="Filter kiosks by province or territory">?</span></label>
                 <select id="provinceFilter"><option value="all">All Provinces</option></select>
             </div>
             <div class="filter-group">
-                <label>⚠️ Status <span class="help-icon" data-tooltip="High Reject = 7-day reject rate ≥4% | Good = <4%">?</span></label>
-                <select id="riskFilter"><option value="all">All Status</option><option value="high">High Reject Only (≥4%)</option><option value="good">Good Only (<4%)</option></select>
+                <label>⚠️ Status <span class="help-icon" data-tooltip="High Reject = 7-day reject rate ≥4% (customers failing). Good = below 4%.">?</span></label>
+                <select id="riskFilter"><option value="all">All Status</option><option value="high">High Reject Only</option><option value="good">Good Only</option></select>
             </div>
             <div class="filter-group">
-                <label>📊 Volume <span class="help-icon" data-tooltip="Filter by volume priority (High/Mid/Low)">?</span></label>
+                <label>📊 Volume <span class="help-icon" data-tooltip="Volume Priority: Top 33% of kiosks by daily transactions = HIGH. Middle 33% = MID. Bottom 33% = LOW.">?</span></label>
                 <select id="volumeFilter"><option value="all">All Volumes</option><option value="High">High Priority Only</option><option value="Mid">Mid Priority</option><option value="Low">Low Priority</option></select>
             </div>
             <div class="filter-group">
@@ -311,34 +311,34 @@
             <table id="dataTable">
                 <thead>
                     <tr>
-                        <th data-sort="store">Store 📝</th>
+                        <th data-sort="store">Store 📝 <span class="help-icon" data-tooltip="Click store name to add/edit notes. Notes are saved locally for 30 days.">?</span></th>
                         <th data-sort="address">Address</th>
                         <th data-sort="city">City</th>
                         <th data-sort="province">Province</th>
-                        <th data-sort="status">Status</th>
-                        <th data-sort="volume">Volume</th>
-                        <th data-sort="volumePriority">Vol Priority</th>
-                        <th data-sort="traffic">Traffic</th>
-                        <th data-sort="trend">Trend</th>
-                        <th data-sort="reject7d">7D Reject% ⭐</th>
-                        <th data-sort="impact">Impact</th>
-                        <th data-sort="tem">TEMM</th>
-                        <th data-sort="paper">Paper ETA</th>
-                        <th data-sort="uptime">Uptime%</th>
-                        <th data-sort="bin">Bin%</th>
-                        <th data-sort="serviceDays">Service Days</th>
-                        <th data-sort="lastTX">Last TX</th>
-                        <th data-sort="version">Version</th>
-                        <th data-sort="revenue">Est. Rev</th>
-                        <th data-sort="loss">Daily Loss</th>
-                        <th data-sort="statusFlag">Status</th>
+                        <th data-sort="status">Status <span class="help-icon" data-tooltip="Current operational state from CSV: Attract, Offline, Full, OOS-Mach, etc.">?</span></th>
+                        <th data-sort="volume">Volume <span class="help-icon" data-tooltip="Transactions in the last 24 hours (1 Day TX)">?</span></th>
+                        <th data-sort="volumePriority">Vol Priority <span class="help-icon" data-tooltip="Top 33% = HIGH, Middle 33% = MID, Bottom 33% = LOW based on daily volume">?</span></th>
+                        <th data-sort="traffic">Traffic <span class="help-icon" data-tooltip="HIGH = >10 transactions/day. LOW = ≤10 transactions/day.">?</span></th>
+                        <th data-sort="trend">Trend <span class="help-icon" data-tooltip="Compares today's volume to 7-day average. 📈 = up >5%, 📉 = down >5%, ➡️ = flat.">?</span></th>
+                        <th data-sort="reject7d">7D Reject% ⭐ <span class="help-icon" data-tooltip="7-day average reject rate. ≥4% = High Reject. This is the primary metric for action.">?</span></th>
+                        <th data-sort="impact">Impact <span class="help-icon" data-tooltip="Impact Score = Volume × (Reject% ÷ 100). Number of daily customer failures. >0.8 = HIGH impact.">?</span></th>
+                        <th data-sort="tem">TEMM <span class="help-icon" data-tooltip="Store staff attempts to fix the machine. ≥3 = HIGH (needs tech visit).">?</span></th>
+                        <th data-sort="paper">Paper ETA <span class="help-icon" data-tooltip="VPO = Estimated date when receipt paper will run out. 🔴 = expired, 🟡 = ≤7 days left.">?</span></th>
+                        <th data-sort="uptime">Uptime% <span class="help-icon" data-tooltip="7-day average uptime. Low = machine offline frequently.">?</span></th>
+                        <th data-sort="bin">Bin% <span class="help-icon" data-tooltip="How full the cash/coin bin is. >80% = schedule pickup soon. >95% = urgent.">?</span></th>
+                        <th data-sort="serviceDays">Service Days <span class="help-icon" data-tooltip="Days since last preventive maintenance (Last PM Date). >60 days = overdue 🔴.">?</span></th>
+                        <th data-sort="lastTX">Last TX <span class="help-icon" data-tooltip="Date and time of last successful transaction">?</span></th>
+                        <th data-sort="version">Version <span class="help-icon" data-tooltip="Firmware version running on the kiosk">?</span></th>
+                        <th data-sort="revenue">Est. Rev <span class="help-icon" data-tooltip="Estimated revenue if perfect: Volume × $5 per transaction">?</span></th>
+                        <th data-sort="loss">Daily Loss <span class="help-icon" data-tooltip="(Volume × Reject% × $5) + (Volume × (100-Uptime%) × 0.8 × $5)">?</span></th>
+                        <th data-sort="statusFlag">Status <span class="help-icon" data-tooltip="⚠️ High Reject = ≥4%. ✅ Good = <4%. 📞 Call First = Offline.">?</span></th>
                         <th>Call</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
-        <div class="footer">💡 <span class="help-icon" data-tooltip="Notes are saved to your browser and auto-delete after 30 days">?</span> Click any store name to add/edit notes | High Reject = 7-day reject rate ≥4% | 🔴 HIGH Traffic = >10 tx/day | TEMM = store fix attempts | 📞 Blue dots = Offline (call first)</div>
+        <div class="footer">💡 <span class="help-icon" data-tooltip="Click any store name to add/edit notes. Notes are saved to your browser and auto-delete after 30 days.">?</span> Click any store name for notes | High Reject = 7-day reject rate ≥4% | 🔴 HIGH Traffic = >10 tx/day | TEMM = store fix attempts</div>
         <div class="copyright"> | Built by J.E. | Kiosk Intelligence Platform 2026</div>
     </div>
 </div>
@@ -346,7 +346,7 @@
 
 <script>
 // ============================================================
-// FINAL DASHBOARD - Map View, Call First for Offline, Uptime KPIs
+// FINAL DASHBOARD - Full Explanations (Tooltips) for Everything
 // ============================================================
 
 let allData = [];
@@ -463,8 +463,12 @@ function calcDailyLoss(r) { return calcLossFromReject(r) + calcLossFromDowntime(
 function getMonthlyLoss(r) { return calcDailyLoss(r) * 30; }
 function getNetRevenue(r) { return getEstRevenue(r) - calcDailyLoss(r); }
 
-function getStatusLabel(r) { return isHighReject(r) ? '⚠️ High Reject' : '✅ Good'; }
-function getStatusBadgeClass(r) { return isHighReject(r) ? 'badge-high' : 'badge-good'; }
+function getStatusLabel(r) { return isHighReject(r) ? '⚠️ High Reject' : (r.KioskState === 'Offline' ? '📞 Call First' : '✅ Good'); }
+function getStatusBadgeClass(r) { 
+    if (isHighReject(r)) return 'badge-high';
+    if (r.KioskState === 'Offline') return 'badge-call';
+    return 'badge-good';
+}
 
 function getPhoneNumber(r) { return r.Phone || r['Store Phone Number'] || ''; }
 
@@ -639,9 +643,9 @@ function showToast(m) { let t = document.getElementById('toast'); t.textContent 
 // MAP FUNCTIONS
 // ============================================================
 function getMapColor(r) {
-    if (r.KioskState === 'Offline') return '#3b82f6'; // Blue for offline (call first)
-    if (isHighReject(r)) return '#dc2626'; // Red for high reject
-    return '#16a34a'; // Green for good
+    if (r.KioskState === 'Offline') return '#3b82f6';
+    if (isHighReject(r)) return '#dc2626';
+    return '#16a34a';
 }
 
 function initMap() {
@@ -917,7 +921,6 @@ function renderAll() {
     let totalRevenue = f.reduce((s, r) => s + getEstRevenue(r), 0);
     let totalNet = totalRevenue - totalLoss;
     
-    // Calculate average uptime
     let avgUptime1d = f.reduce((s, r) => s + getUptime1d(r), 0) / (f.length || 1);
     let avgUptime7d = f.reduce((s, r) => s + getUptime7d(r), 0) / (f.length || 1);
     
@@ -926,21 +929,20 @@ function renderAll() {
     if (viewBtn) viewBtn.onclick = () => { document.getElementById('riskFilter').value = 'high'; renderAll(); };
     
     document.getElementById('kpiGrid').innerHTML = `
-        <div class="kpi-card"><div class="kpi-label">📊 Total Kiosks</div><div class="kpi-value">${total}</div></div>
-        <div class="kpi-card"><div class="kpi-label">⚠️ High Reject (≥4%)</div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div>
-        <div class="kpi-card"><div class="kpi-label">📞 Offline (Call First)</div><div class="kpi-value" style="color:#3b82f6;">${offline}</div></div>
-        <div class="kpi-card"><div class="kpi-label">📊 High Volume</div><div class="kpi-value" style="color:#dc2626;">${highVolume}</div></div>
-        <div class="kpi-card"><div class="kpi-label">📡 Today's Uptime</div><div class="kpi-value" style="color:#10b981;">${avgUptime1d.toFixed(1)}%</div></div>
-        <div class="kpi-card"><div class="kpi-label">📆 7-Day Uptime</div><div class="kpi-value" style="color:#10b981;">${avgUptime7d.toFixed(1)}%</div></div>
-        <div class="kpi-card"><div class="kpi-label">💰 Est. Daily Revenue</div><div class="kpi-value kpi-green">$${totalRevenue.toFixed(0)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">💸 Daily Loss</div><div class="kpi-value kpi-loss">$${totalLoss.toFixed(0)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">📈 Net Revenue</div><div class="kpi-value">$${totalNet.toFixed(0)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">📊 Total Kiosks <span class="help-icon" data-tooltip="Total number of kiosks currently in the filtered view">?</span></div><div class="kpi-value">${total}</div></div>
+        <div class="kpi-card"><div class="kpi-label">⚠️ High Reject <span class="help-icon" data-tooltip="Kiosks with 7-day average reject rate ≥4%. Customers are failing to complete transactions.">?</span></div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div>
+        <div class="kpi-card"><div class="kpi-label">📞 Call First <span class="help-icon" data-tooltip="Offline kiosks. Try remote support (phone call) before dispatching a tech.">?</span></div><div class="kpi-value" style="color:#3b82f6;">${offline}</div></div>
+        <div class="kpi-card"><div class="kpi-label">📊 High Volume <span class="help-icon" data-tooltip="Top 33% of kiosks by daily transaction volume. Busiest machines.">?</span></div><div class="kpi-value" style="color:#dc2626;">${highVolume}</div></div>
+        <div class="kpi-card"><div class="kpi-label">📡 Today's Uptime <span class="help-icon" data-tooltip="Average fleet uptime for today (1 Day Uptime %). Lower = more downtime.">?</span></div><div class="kpi-value" style="color:#10b981;">${avgUptime1d.toFixed(1)}%</div></div>
+        <div class="kpi-card"><div class="kpi-label">📆 7-Day Uptime <span class="help-icon" data-tooltip="Average fleet uptime over the last 7 days. Shows trend vs today.">?</span></div><div class="kpi-value" style="color:#10b981;">${avgUptime7d.toFixed(1)}%</div></div>
+        <div class="kpi-card"><div class="kpi-label">💰 Est. Revenue <span class="help-icon" data-tooltip="Estimated daily revenue if all transactions succeeded. Volume × $5 per transaction.">?</span></div><div class="kpi-value kpi-green">$${totalRevenue.toFixed(0)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">💸 Daily Loss <span class="help-icon" data-tooltip="Money lost today from failed transactions + downtime. (Volume × Reject% × $5) + (Volume × (100-Uptime%) × 0.8 × $5)">?</span></div><div class="kpi-value kpi-loss">$${totalLoss.toFixed(0)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">📈 Net Revenue <span class="help-icon" data-tooltip="Estimated Revenue minus Daily Loss. Actual estimated daily income.">?</span></div><div class="kpi-value">$${totalNet.toFixed(0)}</div></div>
     `;
     
     updateProvinceChart(f);
     updateTopLossList(f);
     
-    // Update map if in map view
     if (currentView === 'map') {
         setTimeout(() => initMap(), 100);
     }
@@ -980,8 +982,6 @@ function renderAll() {
         let trendDisplay = getTrendDisplay(r);
         let temBadge = getTEMBadge(r);
         let volumeBadge = getVolumeBadge(r);
-        let statusIcon = isHighReject(r) ? '⚠️ High Reject' : (r.KioskState === 'Offline' ? '📞 Call First' : '✅ Good');
-        let statusBadgeClass = isHighReject(r) ? 'badge-high' : (r.KioskState === 'Offline' ? 'badge-call' : 'badge-good');
         
         return `<tr class="${rowClass}">
             <td><span class="notes-icon" onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">📝</span> <strong onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">${escapeHtml(storeName)}</strong>${callButton}</td>
@@ -1004,7 +1004,7 @@ function renderAll() {
             <td>${r.Version || '—'}</td>
             <td>$${estRevenue.toFixed(0)}</td>
             <td style="color:#dc2626;">$${dailyLoss.toFixed(0)}</td>
-            <td><span class="badge ${statusBadgeClass}">${statusIcon}</span></td>
+            <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
             <td>${callButton}</td>
          </tr>`;
     }).join('');
@@ -1073,7 +1073,6 @@ async function takeScreenshot() {
 document.getElementById('showUploadBtn')?.addEventListener('click', () => document.getElementById('csvFile').click());
 document.getElementById('uploadArea')?.addEventListener('click', () => document.getElementById('csvFile').click());
 
-// View toggle
 document.getElementById('showMapBtn')?.addEventListener('click', () => {
     currentView = 'map';
     document.getElementById('showMapBtn').classList.add('active');
@@ -1109,7 +1108,6 @@ uploadArea.addEventListener('drop', (e) => {
                 setupPriorityButtons();
                 renderAll();
                 showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
-                // Initialize map
                 setTimeout(() => initMap(), 500);
             }
         };
