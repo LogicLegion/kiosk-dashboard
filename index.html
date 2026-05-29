@@ -8,6 +8,8 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; padding: 20px; }
@@ -26,7 +28,7 @@
         .upload-area:hover { border-color: #1e3a5f; background: #f8fafc; }
         .upload-area.drag-over { border-color: #10b981; background: #f0fdf4; }
         .hidden-upload { display: none; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .kpi-card { background: white; border-radius: 16px; padding: 16px; border: 1px solid #e2e8f0; }
         .kpi-label { font-size: 11px; color: #64748b; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
         .kpi-value { font-size: 28px; font-weight: 800; color: #1e293b; margin-top: 8px; }
@@ -39,6 +41,15 @@
         .legend { display: flex; justify-content: center; gap: 20px; margin-top: 12px; font-size: 11px; flex-wrap: wrap; }
         .legend-color { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-right: 5px; }
         .click-hint { font-size: 10px; color: #64748b; margin-top: 8px; text-align: center; }
+        
+        .map-container { background: white; border-radius: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
+        .map-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: space-between; }
+        .view-toggle { display: flex; gap: 10px; }
+        .view-toggle button { background: #f1f5f9; color: #1e293b; border: 1px solid #e2e8f0; padding: 4px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; }
+        .view-toggle button.active { background: #1e3a5f; color: white; border-color: #1e3a5f; }
+        #map { height: 400px; width: 100%; border-radius: 12px; z-index: 1; }
+        .map-legend { display: flex; justify-content: center; gap: 20px; margin-top: 12px; font-size: 11px; flex-wrap: wrap; }
+        .map-legend-dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 5px; }
         
         .top-loss-container { background: white; border-radius: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
         .top-loss-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -60,7 +71,7 @@
         select, input, button { padding: 8px 12px; border-radius: 10px; font-size: 12px; background: white; border: 1px solid #e2e8f0; }
         button { background: #1e3a5f; color: white; border: none; cursor: pointer; font-weight: 600; position: relative; }
         .email-btn { background: #10b981; }
-        .table-wrapper { background: white; border-radius: 16px; overflow-x: auto; max-height: 500px; border: 1px solid #e2e8f0; }
+        .table-wrapper { background: white; border-radius: 16px; overflow-x: auto; max-height: 450px; border: 1px solid #e2e8f0; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1800px; }
         th { text-align: left; padding: 12px 8px; background: #f8fafc; font-weight: 700; border-bottom: 2px solid #e2e8f0; cursor: pointer; position: sticky; top: 0; z-index: 10; font-size: 10px; }
         th:hover { background: #e2e8f0; }
@@ -82,6 +93,10 @@
         .badge-tem-high { background: #dc2626; color: white; }
         .badge-tem-med { background: #f59e0b; color: white; }
         .badge-tem-low { background: #10b981; color: white; }
+        .badge-volume-high { background: #dc2626; color: white; }
+        .badge-volume-mid { background: #f59e0b; color: white; }
+        .badge-volume-low { background: #10b981; color: white; }
+        .badge-call { background: #3b82f6; color: white; }
         .notes-icon { cursor: pointer; margin-right: 6px; font-size: 14px; display: inline-block; }
         .fill-bar { background: #e2e8f0; border-radius: 10px; height: 6px; width: 60px; margin-top: 5px; display: inline-block; }
         .fill-bar-fill { height: 100%; border-radius: 10px; display: block; }
@@ -170,6 +185,7 @@
             th, td { padding: 6px 4px; font-size: 9px; }
             .priority-btn { padding: 4px 10px; font-size: 10px; }
             .badge { padding: 2px 6px; font-size: 9px; }
+            #map { height: 300px; }
         }
     </style>
 </head>
@@ -222,12 +238,14 @@
     <div id="dashboard" style="display:none">
         <div class="priority-buttons" id="priorityButtons">
             <button class="priority-btn active" data-filter="all">📊 All</button>
-            <button class="priority-btn" data-filter="urgent">🔥 URGENT (Offline + High Impact)</button>
+            <button class="priority-btn" data-filter="urgent">🔥 High Impact</button>
             <button class="priority-btn" data-filter="high-reject">⚠️ High Reject (≥4%)</button>
             <button class="priority-btn" data-filter="full-bin">🗑️ Full Bin (>80%)</button>
             <button class="priority-btn" data-filter="paper-out">📄 Paper Low (≤7 days)</button>
             <button class="priority-btn" data-filter="overdue">📅 Service Overdue (>60 days)</button>
             <button class="priority-btn" data-filter="high-tem">🔧 High TEMM (>3 attempts)</button>
+            <button class="priority-btn" data-filter="high-volume">📊 High Volume Priority</button>
+            <button class="priority-btn" data-filter="call-first">📞 Call First (Offline)</button>
         </div>
         
         <div class="alert-bar" id="alertBar">
@@ -236,9 +254,22 @@
         </div>
         
         <div class="kpi-grid" id="kpiGrid"></div>
-        <div class="info-bar">
-            <div>🕐 Last updated: <span id="lastUpdateTime">-</span></div>
-            <div>⚡ <span class="help-icon" data-tooltip="Click column headers to sort table. Click store name to add notes.">?</span> Click headers to sort | Click store for notes</div>
+        
+        <!-- Map Section -->
+        <div class="map-container">
+            <div class="map-title">
+                <span>🗺️ Kiosk Location Map <span class="help-icon" data-tooltip="🔴 Red = High Reject (≥4%) | 🟢 Green = Good (<4%) | 📞 Blue = Offline (Call First)">?</span></span>
+                <div class="view-toggle">
+                    <button id="showMapBtn" class="active">🗺️ Map</button>
+                    <button id="showListBtn">📋 List</button>
+                </div>
+            </div>
+            <div id="map" style="height:400px; display:block;"></div>
+            <div class="map-legend">
+                <div><span class="map-legend-dot" style="background: #dc2626;"></span> High Reject (≥4%)</div>
+                <div><span class="map-legend-dot" style="background: #16a34a;"></span> Good (<4%)</div>
+                <div><span class="map-legend-dot" style="background: #3b82f6;"></span> Offline (📞 Call First)</div>
+            </div>
         </div>
         
         <div class="chart-container">
@@ -266,13 +297,17 @@
                 <select id="riskFilter"><option value="all">All Status</option><option value="high">High Reject Only (≥4%)</option><option value="good">Good Only (<4%)</option></select>
             </div>
             <div class="filter-group">
+                <label>📊 Volume <span class="help-icon" data-tooltip="Filter by volume priority (High/Mid/Low)">?</span></label>
+                <select id="volumeFilter"><option value="all">All Volumes</option><option value="High">High Priority Only</option><option value="Mid">Mid Priority</option><option value="Low">Low Priority</option></select>
+            </div>
+            <div class="filter-group">
                 <label>🔍 Search <span class="help-icon" data-tooltip="Search by store name, city, or address">?</span></label>
                 <input type="text" id="searchInput" placeholder="Store, city, or address...">
             </div>
             <button id="resetBtn" data-tooltip="🔄 Clear all filters and show all kiosks">Reset All</button>
         </div>
         
-        <div class="table-wrapper">
+        <div class="table-wrapper" id="tableWrapper">
             <table id="dataTable">
                 <thead>
                     <tr>
@@ -282,6 +317,7 @@
                         <th data-sort="province">Province</th>
                         <th data-sort="status">Status</th>
                         <th data-sort="volume">Volume</th>
+                        <th data-sort="volumePriority">Vol Priority</th>
                         <th data-sort="traffic">Traffic</th>
                         <th data-sort="trend">Trend</th>
                         <th data-sort="reject7d">7D Reject% ⭐</th>
@@ -302,15 +338,15 @@
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
-        <div class="footer">💡 <span class="help-icon" data-tooltip="Notes are saved to your browser and auto-delete after 30 days">?</span> Click any store name to add/edit notes | High Reject = 7-day reject rate ≥4% | 🔴 HIGH Traffic = >10 tx/day | TEMM = store fix attempts | Trend compares 1D to (7D ÷ 7) daily avg</div>
-        <div class="copyright">© 2026 J.E. | Built by J.E. | Kiosk Intelligence Platform</div>
+        <div class="footer">💡 <span class="help-icon" data-tooltip="Notes are saved to your browser and auto-delete after 30 days">?</span> Click any store name to add/edit notes | High Reject = 7-day reject rate ≥4% | 🔴 HIGH Traffic = >10 tx/day | TEMM = store fix attempts | 📞 Blue dots = Offline (call first)</div>
+        <div class="copyright"> | Built by J.E. | Kiosk Intelligence Platform 2026</div>
     </div>
 </div>
 <div id="toast" class="toast"></div>
 
 <script>
 // ============================================================
-// FULLY CORRECTED DASHBOARD - All Formulas Validated
+// FINAL DASHBOARD - Map View, Call First for Offline, Uptime KPIs
 // ============================================================
 
 let allData = [];
@@ -319,17 +355,19 @@ let lossChart = null;
 let currentNoteStore = null;
 let editingNoteId = null;
 let currentPriorityFilter = 'all';
+let map = null;
+let currentView = 'map';
 
 // ============================================================
-// CORRECTED CONSTANTS & THRESHOLDS
+// CONSTANTS & THRESHOLDS
 // ============================================================
-const TRANSACTION_VALUE = 5;           // $ per transaction (adjustable)
-const HIGH_REJECT_THRESHOLD = 4;       // 4% = high reject trigger
-const HIGH_TRAFFIC_THRESHOLD = 10;     // >10 tx/day = HIGH traffic
-const HIGH_IMPACT_THRESHOLD = 0.8;     // Impact score >0.8 = high impact
-const SERVICE_OVERDUE_DAYS = 60;       // >60 days since PM = overdue
-const PAPER_WARNING_DAYS = 7;          // ≤7 days paper left = warning
-const HIGH_TEM_THRESHOLD = 3;          // ≥3 store attempts = high TEMM
+const TRANSACTION_VALUE = 5;
+const HIGH_REJECT_THRESHOLD = 4;
+const HIGH_TRAFFIC_THRESHOLD = 10;
+const HIGH_IMPACT_THRESHOLD = 0.8;
+const SERVICE_OVERDUE_DAYS = 60;
+const PAPER_WARNING_DAYS = 7;
+const HIGH_TEM_THRESHOLD = 3;
 
 const CANADIAN_PROVINCES = ['ON', 'QC', 'BC', 'AB', 'MB', 'SK', 'NS', 'NB', 'NL', 'PE', 'NT', 'YT', 'NU'];
 
@@ -339,12 +377,11 @@ function isCanadian(row) {
 }
 
 // ============================================================
-// HELPER FUNCTIONS - ALL CORRECTED
+// HELPER FUNCTIONS
 // ============================================================
 function getRegion(r) { return r.Province || r.State || 'Unknown'; }
 function getStoreId(r) { return (r.Store || '').replace(/[^a-zA-Z0-9]/g, '_') + '_' + (r.City || '').replace(/[^a-zA-Z0-9]/g, '_'); }
 
-// Volume functions
 function getVolume(r) { return parseFloat(r.Tx1Day) || 0; }
 function getVolume7DayTotal(r) { return parseFloat(r.Tx7Day) || 0; }
 function getVolume7DayAvg(r) { 
@@ -352,49 +389,15 @@ function getVolume7DayAvg(r) {
     return total / 7;
 }
 
-// CORRECTED: Volume Trend - compares 1D to (7D total ÷ 7)
-function getVolumeTrend(r) {
-    let vol1d = getVolume(r);
-    let vol7dAvg = getVolume7DayAvg(r);
-    if (vol7dAvg === 0) return 'flat';
-    let percentChange = ((vol1d - vol7dAvg) / vol7dAvg) * 100;
-    if (percentChange > 5) return 'up';
-    if (percentChange < -5) return 'down';
-    return 'flat';
-}
+function getUptime1d(r) { return parseFloat(r.Uptime1Day) || 0; }
+function getUptime7d(r) { return parseFloat(r.Uptime7Day) || 0; }
 
-function getTrendIcon(r) {
-    let trend = getVolumeTrend(r);
-    if (trend === 'up') return '📈';
-    if (trend === 'down') return '📉';
-    return '➡️';
-}
-
-function getTrendPercent(r) {
-    let vol1d = getVolume(r);
-    let vol7dAvg = getVolume7DayAvg(r);
-    if (vol7dAvg === 0) return 0;
-    return ((vol1d - vol7dAvg) / vol7dAvg) * 100;
-}
-
-function getTrendDisplay(r) {
-    let trend = getVolumeTrend(r);
-    let percent = getTrendPercent(r);
-    let absPercent = Math.abs(percent).toFixed(0);
-    if (trend === 'up') return `<span class="badge badge-trend-up">📈 +${absPercent}%</span>`;
-    if (trend === 'down') return `<span class="badge badge-trend-down">📉 -${absPercent}%</span>`;
-    return `<span class="badge badge-trend-flat">➡️ 0%</span>`;
-}
-
-// Reject functions
 function getReject7d(r) { return parseFloat(r.Reject7Day) || 0; }
 function getReject1d(r) { return parseFloat(r.Reject1Day) || 0; }
 function isHighReject(r) { return getReject7d(r) >= HIGH_REJECT_THRESHOLD; }
 
-// Traffic
 function getTrafficLevel(r) { return getVolume(r) > HIGH_TRAFFIC_THRESHOLD ? 'HIGH' : 'LOW'; }
 
-// Impact Score: Volume × (Reject% ÷ 100)
 function getImpactScore(r) {
     let volume = getVolume(r);
     let reject7d = getReject7d(r);
@@ -402,10 +405,6 @@ function getImpactScore(r) {
 }
 function isHighImpact(r) { return getImpactScore(r) > HIGH_IMPACT_THRESHOLD; }
 
-// Uptime
-function getUptime(r) { return parseFloat(r.Uptime7Day) || 0; }
-
-// TEMM (store fix attempts)
 function getTEMM(r) { return parseFloat(r.TEMM7Day) || 0; }
 function getTEMBadge(r) {
     let tem = getTEMM(r);
@@ -414,8 +413,7 @@ function getTEMBadge(r) {
     return `<span class="badge badge-tem-low">✅ 0</span>`;
 }
 
-// Paper ETA (VPO)
-function getVPO(r) { return r.VPO || r['VPO'] || ''; }
+function getVPO(r) { return r.VPO || ''; }
 function getPaperAlert(r) {
     let vpo = getVPO(r);
     if (!vpo || vpo === 'N/A' || vpo === '—') return { text: '—', class: '', daysLeft: null };
@@ -432,7 +430,6 @@ function getPaperAlert(r) {
     return { text: vpo, class: '', daysLeft: null };
 }
 
-// Service days
 function getLastServiceDate(r) { return r.LastPM || r['Last PM Date'] || '—'; }
 function getDaysSinceService(r) {
     let dateStr = getLastServiceDate(r);
@@ -451,7 +448,6 @@ function isServiceOverdue(r) {
     return days !== null && days > SERVICE_OVERDUE_DAYS;
 }
 
-// Revenue & Loss Calculations - CORRECTED
 function getEstRevenue(r) { return getVolume(r) * TRANSACTION_VALUE; }
 function calcLossFromReject(r) { 
     let tx = getVolume(r); 
@@ -460,22 +456,78 @@ function calcLossFromReject(r) {
 }
 function calcLossFromDowntime(r) { 
     let tx = getVolume(r); 
-    let uptime = getUptime(r); 
+    let uptime = getUptime7d(r); 
     return (tx * ((100 - uptime) / 100) * 0.8) * TRANSACTION_VALUE; 
 }
 function calcDailyLoss(r) { return calcLossFromReject(r) + calcLossFromDowntime(r); }
 function getMonthlyLoss(r) { return calcDailyLoss(r) * 30; }
 function getNetRevenue(r) { return getEstRevenue(r) - calcDailyLoss(r); }
 
-// Status label
 function getStatusLabel(r) { return isHighReject(r) ? '⚠️ High Reject' : '✅ Good'; }
 function getStatusBadgeClass(r) { return isHighReject(r) ? 'badge-high' : 'badge-good'; }
 
-// Phone
 function getPhoneNumber(r) { return r.Phone || r['Store Phone Number'] || ''; }
 
+// Volume Priority calculation
+let volumePriorityMap = new Map();
+
+function calculateVolumePriorities() {
+    if (!allData.length) return;
+    let volumes = allData.map(r => getVolume(r));
+    volumes.sort((a, b) => b - a);
+    let top33Index = Math.floor(volumes.length * 0.33);
+    let mid33Index = Math.floor(volumes.length * 0.66);
+    let top33Threshold = volumes[top33Index - 1] || 0;
+    let mid33Threshold = volumes[mid33Index - 1] || 0;
+    
+    allData.forEach(r => {
+        let vol = getVolume(r);
+        if (vol >= top33Threshold && top33Threshold > 0) {
+            volumePriorityMap.set(getStoreId(r), 'High');
+        } else if (vol >= mid33Threshold && mid33Threshold > 0) {
+            volumePriorityMap.set(getStoreId(r), 'Mid');
+        } else {
+            volumePriorityMap.set(getStoreId(r), 'Low');
+        }
+    });
+}
+
+function getVolumePriority(r) {
+    let storeId = getStoreId(r);
+    return volumePriorityMap.get(storeId) || 'Low';
+}
+
+function getVolumeBadge(r) {
+    let priority = getVolumePriority(r);
+    if (priority === 'High') return '<span class="badge badge-volume-high">🔴 HIGH</span>';
+    if (priority === 'Mid') return '<span class="badge badge-volume-mid">🟡 MID</span>';
+    return '<span class="badge badge-volume-low">🟢 LOW</span>';
+}
+
+// Volume Trend
+function getVolumeTrend(r) {
+    let vol1d = getVolume(r);
+    let vol7dAvg = getVolume7DayAvg(r);
+    if (vol7dAvg === 0) return 'flat';
+    let percentChange = ((vol1d - vol7dAvg) / vol7dAvg) * 100;
+    if (percentChange > 5) return 'up';
+    if (percentChange < -5) return 'down';
+    return 'flat';
+}
+
+function getTrendDisplay(r) {
+    let trend = getVolumeTrend(r);
+    let vol1d = getVolume(r);
+    let vol7dAvg = getVolume7DayAvg(r);
+    let percent = vol7dAvg === 0 ? 0 : ((vol1d - vol7dAvg) / vol7dAvg) * 100;
+    let absPercent = Math.abs(percent).toFixed(0);
+    if (trend === 'up') return `<span class="badge badge-trend-up">📈 +${absPercent}%</span>`;
+    if (trend === 'down') return `<span class="badge badge-trend-down">📉 -${absPercent}%</span>`;
+    return `<span class="badge badge-trend-flat">➡️ 0%</span>`;
+}
+
 // ============================================================
-// NOTES FUNCTIONS (unchanged, working correctly)
+// NOTES FUNCTIONS
 // ============================================================
 function getNotesKey(storeId) { return `kiosk_notes_${storeId}`; }
 function loadNotes(storeId) {
@@ -584,16 +636,76 @@ function closeModal() { document.getElementById('instructionModal').style.displa
 function showToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
 
 // ============================================================
+// MAP FUNCTIONS
+// ============================================================
+function getMapColor(r) {
+    if (r.KioskState === 'Offline') return '#3b82f6'; // Blue for offline (call first)
+    if (isHighReject(r)) return '#dc2626'; // Red for high reject
+    return '#16a34a'; // Green for good
+}
+
+function initMap() {
+    if (map) {
+        map.remove();
+    }
+    map = L.map('map').setView([56.1304, -106.3468], 4);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CartoDB',
+        subdomains: 'abcd',
+        maxZoom: 19
+    }).addTo(map);
+    
+    let filtered = filterData();
+    let bounds = [];
+    
+    filtered.forEach(r => {
+        let lat = parseFloat(r.Latitude);
+        let lng = parseFloat(r.Longitude);
+        if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+            let color = getMapColor(r);
+            let reject7d = getReject7d(r);
+            let dailyLoss = calcDailyLoss(r);
+            let statusIcon = isHighReject(r) ? '⚠️' : '✅';
+            let offlineBadge = r.KioskState === 'Offline' ? '📞 Call First' : '';
+            let marker = L.circleMarker([lat, lng], {
+                radius: 8,
+                fillColor: color,
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).addTo(map);
+            marker.bindPopup(`
+                <b>${escapeHtml(r.Store)}</b><br>
+                📍 ${escapeHtml(r.Address || '')}, ${escapeHtml(r.City || '')}<br>
+                ${statusIcon} 7D Reject: ${reject7d.toFixed(1)}%<br>
+                💸 Daily Loss: $${dailyLoss.toFixed(0)}<br>
+                📞 ${escapeHtml(getPhoneNumber(r))}<br>
+                ${offlineBadge ? `<span style="color:#3b82f6;">${offlineBadge}</span><br>` : ''}
+                <a href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank">🗺️ Open Maps</a>
+            `);
+            bounds.push([lat, lng]);
+        }
+    });
+    
+    if (bounds.length > 0) {
+        map.fitBounds(bounds);
+    }
+}
+
+// ============================================================
 // PRIORITY FILTER
 // ============================================================
 function applyPriorityFilter(data, filterType) {
     if (filterType === 'all') return data;
-    if (filterType === 'urgent') return data.filter(r => r.KioskState === 'Offline' || isHighImpact(r));
+    if (filterType === 'urgent') return data.filter(r => isHighImpact(r));
     if (filterType === 'high-reject') return data.filter(r => isHighReject(r));
     if (filterType === 'full-bin') return data.filter(r => parseFloat(r.BinFull || 0) > 80);
     if (filterType === 'paper-out') return data.filter(r => { let alert = getPaperAlert(r); return alert.daysLeft !== null && alert.daysLeft <= PAPER_WARNING_DAYS; });
     if (filterType === 'overdue') return data.filter(r => isServiceOverdue(r));
     if (filterType === 'high-tem') return data.filter(r => getTEMM(r) >= HIGH_TEM_THRESHOLD);
+    if (filterType === 'high-volume') return data.filter(r => getVolumePriority(r) === 'High');
+    if (filterType === 'call-first') return data.filter(r => r.KioskState === 'Offline');
     return data;
 }
 
@@ -631,6 +743,7 @@ function parseCSV(csvText) {
         Tx7Day: row['7 Day TX'] || row['Volume7Day'] || '0',
         Reject1Day: row['1 Day Reject %'] || row['Reject %'] || '0',
         Reject7Day: row['7 Day Reject %'] || row['Reject7Day'] || row['1 Day Reject %'] || '0',
+        Uptime1Day: row['1 Day Uptime %'] || '100',
         Uptime7Day: row['7 Day Uptime %'] || row['Uptime'] || '100',
         BinFull: row['Total Bin Full %'] || row['Bin Full %'] || '0',
         EstFillDate: row['Estimated Fill Date'] || '',
@@ -639,9 +752,12 @@ function parseCSV(csvText) {
         TEMM7Day: row['7 Day TEMM'] || row['TEMM'] || '0',
         VPO: row.VPO || row['VPO'] || '',
         LastTXDate: row['Last TX Date'] || '',
-        Version: row.Version || row['Version'] || ''
+        Version: row.Version || row['Version'] || '',
+        Latitude: row.Latitude || '',
+        Longitude: row.Longitude || ''
     }));
     
+    calculateVolumePriorities();
     return true;
 }
 
@@ -656,6 +772,8 @@ function filterData() {
     let status = document.getElementById('riskFilter')?.value || 'all';
     if (status === 'high') f = f.filter(r => isHighReject(r));
     else if (status === 'good') f = f.filter(r => !isHighReject(r));
+    let volumeFilter = document.getElementById('volumeFilter')?.value || 'all';
+    if (volumeFilter !== 'all') f = f.filter(r => getVolumePriority(r) === volumeFilter);
     let s = document.getElementById('searchInput')?.value.toLowerCase() || '';
     if (s) f = f.filter(r => (r.Store || '').toLowerCase().includes(s) || (r.City || '').toLowerCase().includes(s) || (r.Address || '').toLowerCase().includes(s));
     return f;
@@ -671,13 +789,14 @@ function sortData(d) {
             case 'province': va = getRegion(a); vb = getRegion(b); break;
             case 'status': va = a.KioskState || ''; vb = b.KioskState || ''; break;
             case 'volume': va = getVolume(a); vb = getVolume(b); break;
+            case 'volumePriority': va = getVolumePriority(a); vb = getVolumePriority(b); break;
             case 'traffic': va = getTrafficLevel(a); vb = getTrafficLevel(b); break;
             case 'trend': va = getVolumeTrend(a); vb = getVolumeTrend(b); break;
             case 'reject7d': va = getReject7d(a); vb = getReject7d(b); break;
             case 'impact': va = getImpactScore(a); vb = getImpactScore(b); break;
             case 'tem': va = getTEMM(a); vb = getTEMM(b); break;
             case 'paper': va = getPaperAlert(a).daysLeft || 999; vb = getPaperAlert(b).daysLeft || 999; break;
-            case 'uptime': va = getUptime(a); vb = getUptime(b); break;
+            case 'uptime': va = getUptime7d(a); vb = getUptime7d(b); break;
             case 'bin': va = parseFloat(a.BinFull || 0); vb = parseFloat(b.BinFull || 0); break;
             case 'serviceDays': va = getDaysSinceService(a) || 0; vb = getDaysSinceService(b) || 0; break;
             case 'lastTX': va = a.LastTXDate || ''; vb = b.LastTXDate || ''; break;
@@ -688,8 +807,8 @@ function sortData(d) {
             default: return 0;
         }
         if (typeof va === 'number') return currentSort.direction === 'desc' ? vb - va : va - vb;
-        if (va === 'HIGH' || va === 'LOW') {
-            let order = { 'HIGH': 1, 'LOW': 2 };
+        if (va === 'HIGH' || va === 'LOW' || va === 'Mid') {
+            let order = { 'HIGH': 1, 'Mid': 2, 'LOW': 3 };
             return currentSort.direction === 'desc' ? order[vb] - order[va] : order[va] - order[vb];
         }
         if (va === 'up' || va === 'down' || va === 'flat') {
@@ -766,15 +885,15 @@ function updateTopLossList(data) {
         let serviceText = lastService !== '—' ? (days !== null ? `Last service: ${lastService} (${days} days ago)` : `Last service: ${lastService}`) : 'Last service: Unknown';
         let statusIcon = isHighReject(r) ? '⚠️' : '✅';
         let trafficIcon = getTrafficLevel(r) === 'HIGH' ? '🔴' : '🟢';
-        let trendIcon = getTrendIcon(r);
-        let trendPercent = getTrendPercent(r);
+        let volumeIcon = getVolumePriority(r) === 'High' ? '📊' : '';
+        let offlineIcon = r.KioskState === 'Offline' ? '📞' : '';
         return `<div class="top-loss-item" onclick="document.getElementById('searchInput').value='${escapeHtml(storeName)}'; renderAll();">
             <div class="top-loss-left">
                 <span class="top-loss-rank">#${idx + 1}</span>
                 <div>
-                    <div class="top-loss-store">${statusIcon} ${trafficIcon} ${trendIcon} ${escapeHtml(storeName)}</div>
+                    <div class="top-loss-store">${statusIcon} ${trafficIcon} ${volumeIcon} ${offlineIcon} ${escapeHtml(storeName)}</div>
                     <div class="top-loss-address">📍 <a href="${mapsUrl}" target="_blank" class="top-loss-link" onclick="event.stopPropagation()">${escapeHtml(locationText)}</a></div>
-                    <div class="top-loss-service">🕐 ${escapeHtml(serviceText)} | Trend: ${trendPercent > 0 ? '+' : ''}${trendPercent.toFixed(0)}% vs 7-day avg</div>
+                    <div class="top-loss-service">🕐 ${escapeHtml(serviceText)}</div>
                 </div>
             </div>
             <div class="top-loss-loss">$${loss.toFixed(0)}/day <span style="font-size:10px; color:#64748b;">($${monthlyLoss.toFixed(0)}/mo)</span></div>
@@ -793,21 +912,26 @@ function renderAll() {
     let binAlert = f.filter(r => parseFloat(r.BinFull || 0) > 80).length;
     let paperAlert = f.filter(r => { let a = getPaperAlert(r); return a.daysLeft !== null && a.daysLeft <= PAPER_WARNING_DAYS; }).length;
     let highTEM = f.filter(r => getTEMM(r) >= HIGH_TEM_THRESHOLD).length;
+    let highVolume = f.filter(r => getVolumePriority(r) === 'High').length;
     let totalLoss = f.reduce((s, r) => s + calcDailyLoss(r), 0);
     let totalRevenue = f.reduce((s, r) => s + getEstRevenue(r), 0);
     let totalNet = totalRevenue - totalLoss;
     
-    document.getElementById('alertBar').innerHTML = `<span>⚠️ <strong>Action Required:</strong> ${highReject} high reject (≥4%) | ${offline} offline | ${binAlert} full bins | ${paperAlert} paper low | ${highTEM} high TEMM</span><button class="alert-btn" id="viewHighRejectBtn">View High Reject →</button>`;
+    // Calculate average uptime
+    let avgUptime1d = f.reduce((s, r) => s + getUptime1d(r), 0) / (f.length || 1);
+    let avgUptime7d = f.reduce((s, r) => s + getUptime7d(r), 0) / (f.length || 1);
+    
+    document.getElementById('alertBar').innerHTML = `<span>⚠️ <strong>Action Required:</strong> ${highReject} high reject | ${offline} offline (📞 call first) | ${binAlert} full bins | ${paperAlert} paper low | ${highTEM} high TEMM | ${highVolume} high volume</span><button class="alert-btn" id="viewHighRejectBtn">View High Reject →</button>`;
     const viewBtn = document.getElementById('viewHighRejectBtn');
     if (viewBtn) viewBtn.onclick = () => { document.getElementById('riskFilter').value = 'high'; renderAll(); };
     
     document.getElementById('kpiGrid').innerHTML = `
         <div class="kpi-card"><div class="kpi-label">📊 Total Kiosks</div><div class="kpi-value">${total}</div></div>
         <div class="kpi-card"><div class="kpi-label">⚠️ High Reject (≥4%)</div><div class="kpi-value" style="color:#dc2626;">${highReject}</div></div>
-        <div class="kpi-card"><div class="kpi-label">📡 Offline</div><div class="kpi-value" style="color:#c2410c;">${offline}</div></div>
-        <div class="kpi-card"><div class="kpi-label">🗑️ Full Bin >80%</div><div class="kpi-value" style="color:#f59e0b;">${binAlert}</div></div>
-        <div class="kpi-card"><div class="kpi-label">📄 Paper Low (≤7d)</div><div class="kpi-value" style="color:#f59e0b;">${paperAlert}</div></div>
-        <div class="kpi-card"><div class="kpi-label">🔧 High TEMM (≥3)</div><div class="kpi-value" style="color:#dc2626;">${highTEM}</div></div>
+        <div class="kpi-card"><div class="kpi-label">📞 Offline (Call First)</div><div class="kpi-value" style="color:#3b82f6;">${offline}</div></div>
+        <div class="kpi-card"><div class="kpi-label">📊 High Volume</div><div class="kpi-value" style="color:#dc2626;">${highVolume}</div></div>
+        <div class="kpi-card"><div class="kpi-label">📡 Today's Uptime</div><div class="kpi-value" style="color:#10b981;">${avgUptime1d.toFixed(1)}%</div></div>
+        <div class="kpi-card"><div class="kpi-label">📆 7-Day Uptime</div><div class="kpi-value" style="color:#10b981;">${avgUptime7d.toFixed(1)}%</div></div>
         <div class="kpi-card"><div class="kpi-label">💰 Est. Daily Revenue</div><div class="kpi-value kpi-green">$${totalRevenue.toFixed(0)}</div></div>
         <div class="kpi-card"><div class="kpi-label">💸 Daily Loss</div><div class="kpi-value kpi-loss">$${totalLoss.toFixed(0)}</div></div>
         <div class="kpi-card"><div class="kpi-label">📈 Net Revenue</div><div class="kpi-value">$${totalNet.toFixed(0)}</div></div>
@@ -816,15 +940,19 @@ function renderAll() {
     updateProvinceChart(f);
     updateTopLossList(f);
     
+    // Update map if in map view
+    if (currentView === 'map') {
+        setTimeout(() => initMap(), 100);
+    }
+    
     let tbody = document.getElementById('tableBody');
-    if (!f.length) { tbody.innerHTML = '<tr><td colspan="21" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; return; }
+    if (!f.length) { tbody.innerHTML = '<tr><td colspan="22" style="text-align:center;padding:40px;">No kiosks match the selected filters</tbody>'; return; }
     
     tbody.innerHTML = f.map(r => {
         let reject7d = getReject7d(r);
         let bin = parseFloat(r.BinFull || 0);
-        let up = getUptime(r);
+        let up = getUptime7d(r);
         let volume = getVolume(r);
-        let volume7dAvg = getVolume7DayAvg(r);
         let estRevenue = getEstRevenue(r);
         let dailyLoss = calcDailyLoss(r);
         let netRevenue = estRevenue - dailyLoss;
@@ -851,8 +979,9 @@ function renderAll() {
         let serviceColor = isOverdue ? 'style="color:#dc2626;font-weight:600;"' : '';
         let trendDisplay = getTrendDisplay(r);
         let temBadge = getTEMBadge(r);
-        let trendPercent = getTrendPercent(r);
-        let trendTooltip = `1D: ${volume} tx | 7D avg: ${volume7dAvg.toFixed(1)} tx | Change: ${trendPercent > 0 ? '+' : ''}${trendPercent.toFixed(0)}%`;
+        let volumeBadge = getVolumeBadge(r);
+        let statusIcon = isHighReject(r) ? '⚠️ High Reject' : (r.KioskState === 'Offline' ? '📞 Call First' : '✅ Good');
+        let statusBadgeClass = isHighReject(r) ? 'badge-high' : (r.KioskState === 'Offline' ? 'badge-call' : 'badge-good');
         
         return `<tr class="${rowClass}">
             <td><span class="notes-icon" onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">📝</span> <strong onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">${escapeHtml(storeName)}</strong>${callButton}</td>
@@ -861,8 +990,9 @@ function renderAll() {
             <td>${getRegion(r)}</td>
             <td>${r.KioskState || 'Attract'}</td>
             <td>${volume}</td>
+            <td>${volumeBadge}</td>
             <td><span class="badge ${trafficBadgeClass}">${trafficLevel}</span></td>
-            <td><span class="help-icon" data-tooltip="${trendTooltip}">${trendDisplay}</span></td>
+            <td>${trendDisplay}</td>
             <td style="color:${reject7d >= 4 ? '#dc2626' : '#16a34a'};font-weight:600;background:#fef3c7;">⭐ ${reject7d.toFixed(1)}%</td>
             <td>${impactScore.toFixed(2)}${impactBadge}</td>
             <td>${temBadge}</td>
@@ -874,7 +1004,7 @@ function renderAll() {
             <td>${r.Version || '—'}</td>
             <td>$${estRevenue.toFixed(0)}</td>
             <td style="color:#dc2626;">$${dailyLoss.toFixed(0)}</td>
-            <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
+            <td><span class="badge ${statusBadgeClass}">${statusIcon}</span></td>
             <td>${callButton}</td>
          </tr>`;
     }).join('');
@@ -891,13 +1021,14 @@ function exportToExcelForBI(tool) {
         Store: r.Store || '', Address: r.Address || '', City: r.City || '', Province: getRegion(r),
         Status: r.KioskState || '', 'Volume (1 Day TX)': getVolume(r), 'Volume (7 Day Total)': getVolume7DayTotal(r),
         'Volume (7 Day Avg)': getVolume7DayAvg(r).toFixed(1),
-        'Volume Trend %': ((getVolumeTrendPercent(r))).toFixed(1),
+        'Volume Priority (High/Mid/Low)': getVolumePriority(r),
         'Traffic (HIGH/LOW)': getTrafficLevel(r),
         '7D Reject %': getReject7d(r), 'Impact Score': getImpactScore(r).toFixed(2),
         'High Impact (>0.8)': isHighImpact(r) ? 'Yes' : 'No',
         'TEMM (Store Fix Attempts)': getTEMM(r),
         'Paper ETA (VPO)': getVPO(r), 'Paper Days Left': getPaperAlert(r).daysLeft,
-        'Uptime %': getUptime(r), 'Bin Full %': parseFloat(r.BinFull || 0),
+        '1 Day Uptime %': getUptime1d(r), '7 Day Uptime %': getUptime7d(r),
+        'Bin Full %': parseFloat(r.BinFull || 0),
         'Days Since Service': getDaysSinceService(r) || 'N/A',
         'Service Overdue (>60 days)': isServiceOverdue(r) ? 'Yes' : 'No',
         'Last TX Date': r.LastTXDate || '', 'Firmware Version': r.Version || '',
@@ -905,22 +1036,15 @@ function exportToExcelForBI(tool) {
         'Loss from Downtime': calcLossFromDowntime(r).toFixed(2), 'Total Daily Loss': calcDailyLoss(r).toFixed(2),
         'Monthly Loss (30d)': getMonthlyLoss(r).toFixed(2), 'Net Revenue': getNetRevenue(r).toFixed(2),
         'High Reject (≥4%)': isHighReject(r) ? 'Yes' : 'No',
+        'Call First (Offline)': r.KioskState === 'Offline' ? 'Yes' : 'No',
         'Est. Fill Date': r.EstFillDate || '', 'Last Service Date': getLastServiceDate(r),
-        'Phone Number': getPhoneNumber(r)
+        'Phone Number': getPhoneNumber(r), 'Latitude': r.Latitude || '', 'Longitude': r.Longitude || ''
     }));
     let ws = XLSX.utils.json_to_sheet(data);
     let wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Kiosk_Data');
     XLSX.writeFile(wb, `kiosk_export_${tool.toLowerCase().replace(' ', '_')}_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`);
     showToast(`Exported ${f.length} kiosks for ${tool}`);
-}
-
-// Helper for export trend percent
-function getVolumeTrendPercent(r) {
-    let vol1d = getVolume(r);
-    let vol7dAvg = getVolume7DayAvg(r);
-    if (vol7dAvg === 0) return 0;
-    return ((vol1d - vol7dAvg) / vol7dAvg) * 100;
 }
 
 async function takeScreenshot() {
@@ -949,6 +1073,23 @@ async function takeScreenshot() {
 document.getElementById('showUploadBtn')?.addEventListener('click', () => document.getElementById('csvFile').click());
 document.getElementById('uploadArea')?.addEventListener('click', () => document.getElementById('csvFile').click());
 
+// View toggle
+document.getElementById('showMapBtn')?.addEventListener('click', () => {
+    currentView = 'map';
+    document.getElementById('showMapBtn').classList.add('active');
+    document.getElementById('showListBtn').classList.remove('active');
+    document.getElementById('map').style.display = 'block';
+    document.getElementById('tableWrapper').style.display = 'none';
+    setTimeout(() => initMap(), 100);
+});
+document.getElementById('showListBtn')?.addEventListener('click', () => {
+    currentView = 'list';
+    document.getElementById('showListBtn').classList.add('active');
+    document.getElementById('showMapBtn').classList.remove('active');
+    document.getElementById('map').style.display = 'none';
+    document.getElementById('tableWrapper').style.display = 'block';
+});
+
 const uploadArea = document.getElementById('uploadArea');
 uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
 uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('drag-over'); });
@@ -968,6 +1109,8 @@ uploadArea.addEventListener('drop', (e) => {
                 setupPriorityButtons();
                 renderAll();
                 showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
+                // Initialize map
+                setTimeout(() => initMap(), 500);
             }
         };
         reader.readAsText(file);
@@ -987,6 +1130,7 @@ document.getElementById('csvFile').addEventListener('change', e => {
                 setupPriorityButtons();
                 renderAll();
                 showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
+                setTimeout(() => initMap(), 500);
             }
         };
         reader.readAsText(e.target.files[0]);
@@ -1006,9 +1150,10 @@ document.getElementById('emailReportBtn')?.addEventListener('click', () => {
     let totalLoss = allData.reduce((s, r) => s + calcDailyLoss(r), 0);
     let highReject = allData.filter(r => isHighReject(r)).length;
     let offline = allData.filter(r => r.KioskState === 'Offline').length;
-    let highTEM = allData.filter(r => getTEMM(r) >= HIGH_TEM_THRESHOLD).length;
+    let highVolume = allData.filter(r => getVolumePriority(r) === 'High').length;
+    let avgUptime = allData.reduce((s, r) => s + getUptime7d(r), 0) / (allData.length || 1);
     let top5 = [...allData].sort((a,b) => calcDailyLoss(b) - calcDailyLoss(a)).slice(0,5).map((r,i) => `${i+1}. ${r.Store}: $${calcDailyLoss(r).toFixed(0)}/day (7-day reject: ${getReject7d(r).toFixed(1)}%)`).join('\n');
-    let body = `KIOSK PERFORMANCE REPORT - ${new Date().toLocaleDateString()}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📊 SUMMARY METRICS\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Total Daily Loss: $${totalLoss.toFixed(0)} ($${(totalLoss*30).toFixed(0)}/month)\n• High Reject Kiosks (≥4%): ${highReject}\n• Offline Kiosks: ${offline}\n• High TEMM (≥3 store attempts): ${highTEM}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🚨 TOP 5 HIGHEST LOSS\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${top5}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📋 RECOMMENDATIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n1. Prioritize high reject kiosks for service inspection\n2. Schedule bin pickups for kiosks >80% full\n3. Replace paper for VPO dates within 7 days\n4. Investigate kiosks with high TEMM (store fix attempts)\n\nReport generated from Kiosk Intelligence Platform`;
+    let body = `KIOSK PERFORMANCE REPORT - ${new Date().toLocaleDateString()}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📊 SUMMARY METRICS\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Total Daily Loss: $${totalLoss.toFixed(0)} ($${(totalLoss*30).toFixed(0)}/month)\n• High Reject Kiosks (≥4%): ${highReject}\n• Offline Kiosks (Call First): ${offline}\n• High Volume Kiosks: ${highVolume}\n• Network Uptime (7-day avg): ${avgUptime.toFixed(1)}%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🚨 TOP 5 HIGHEST LOSS\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${top5}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📋 RECOMMENDATIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n1. Prioritize high reject kiosks for service inspection\n2. Schedule bin pickups for kiosks >80% full\n3. Replace paper for VPO dates within 7 days\n4. Investigate kiosks with high TEMM (store fix attempts)\n5. For offline kiosks, try remote support before dispatching\n\nReport generated from Kiosk Intelligence Platform`;
     window.location.href = `mailto:?subject=Kiosk Performance Report - ${new Date().toLocaleDateString()}&body=${encodeURIComponent(body)}`;
     showToast('Email draft opened');
 });
@@ -1041,10 +1186,12 @@ function populateFilters() {
     regions.sort().forEach(r => sel.innerHTML += `<option value="${r}">${r}</option>`);
     document.getElementById('provinceFilter').onchange = () => renderAll();
     document.getElementById('riskFilter').onchange = () => renderAll();
+    document.getElementById('volumeFilter').onchange = () => renderAll();
     document.getElementById('searchInput').oninput = () => renderAll();
     document.getElementById('resetBtn').onclick = () => {
         document.getElementById('provinceFilter').value = 'all';
         document.getElementById('riskFilter').value = 'all';
+        document.getElementById('volumeFilter').value = 'all';
         document.getElementById('searchInput').value = '';
         document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
         document.querySelector('.priority-btn[data-filter="all"]')?.classList.add('active');
