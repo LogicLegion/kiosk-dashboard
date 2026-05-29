@@ -102,7 +102,7 @@
         .fill-bar-fill { height: 100%; border-radius: 10px; display: block; }
         .footer { text-align: center; margin-top: 16px; font-size: 10px; color: #64748b; }
         .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; z-index: 1000; display: none; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: align-center; align-items: center; }
         .modal-content { background: white; border-radius: 20px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
         .modal-close { background: #1e3a5f; color: white; border: none; padding: 10px; border-radius: 30px; cursor: pointer; margin-top: 16px; width: 100%; }
         .notes-list { margin: 15px 0; max-height: 300px; overflow-y: auto; }
@@ -114,7 +114,7 @@
         .note-input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 12px; font-family: inherit; resize: vertical; margin-top: 10px; }
         .save-note-btn { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-top: 10px; font-size: 12px; }
         
-        /* FIXED TOOLTIP - appears ABOVE cursor, fully visible */
+        /* Help icon styling - tooltip removed from CSS, handled by JS */
         .help-icon {
             display: inline-flex;
             align-items: center;
@@ -126,56 +126,28 @@
             border-radius: 50%;
             font-size: 10px;
             font-weight: bold;
-            cursor: help;
+            cursor: pointer;
             margin-left: 5px;
             position: relative;
         }
-        .help-icon:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+        
+        /* Global tooltip element - positioned via JS */
+        .global-tooltip {
+            position: fixed;
             background: #1e293b;
             color: white;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: normal;
             padding: 8px 12px;
             border-radius: 8px;
             white-space: normal;
-            width: 260px;
+            max-width: 280px;
             text-align: center;
             z-index: 10000;
-            margin-bottom: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             pointer-events: none;
-        }
-        
-        /* Tooltip for buttons (above cursor) */
-        .action-btn:hover::after, .alert-btn:hover::after, .filter-group button:hover::after, .priority-btn:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1e293b;
-            color: white;
-            font-size: 11px;
-            font-weight: normal;
-            padding: 6px 12px;
-            border-radius: 8px;
-            white-space: nowrap;
-            z-index: 10000;
-            margin-bottom: 8px;
-            pointer-events: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        
-        /* Long tooltip for priority buttons - allow wrap */
-        .priority-btn:hover::after {
-            white-space: normal;
-            width: 220px;
-            text-align: center;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.4;
         }
         
         .call-btn { background: none; border: none; font-size: 14px; cursor: pointer; padding: 4px 8px; border-radius: 20px; background: #e2e8f0; margin-left: 5px; }
@@ -198,10 +170,7 @@
             .priority-btn { padding: 4px 10px; font-size: 10px; }
             .badge { padding: 2px 6px; font-size: 9px; }
             #map { height: 300px; }
-            .help-icon:hover::after {
-                width: 200px;
-                font-size: 10px;
-            }
+            .global-tooltip { font-size: 11px; max-width: 220px; padding: 6px 10px; }
         }
     </style>
 </head>
@@ -362,7 +331,7 @@
 
 <script>
 // ============================================================
-// FINAL DASHBOARD - Fixed Tooltips (Appear Above, Not Cut Off)
+// FINAL DASHBOARD - Smart JavaScript Tooltips (Never Cut Off)
 // List View Default, Map on Demand
 // ============================================================
 
@@ -374,6 +343,103 @@ let editingNoteId = null;
 let currentPriorityFilter = 'all';
 let map = null;
 let currentView = 'list';
+
+// Smart Tooltip System
+let activeTooltip = null;
+let tooltipTimeout = null;
+
+function showTooltip(element, text) {
+    // Clear any existing tooltip
+    if (activeTooltip) {
+        activeTooltip.remove();
+        activeTooltip = null;
+    }
+    if (tooltipTimeout) {
+        clearTimeout(tooltipTimeout);
+    }
+    
+    if (!text) return;
+    
+    // Create tooltip element
+    const tooltip = document.createElement('div');
+    tooltip.className = 'global-tooltip';
+    tooltip.textContent = text;
+    document.body.appendChild(tooltip);
+    
+    // Get element position
+    const rect = element.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    
+    // Calculate position (prefer above, but flip if needed)
+    let top = rect.top - tooltipRect.height - 8;
+    let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+    
+    // If above would go off screen, place below
+    if (top < 8) {
+        top = rect.bottom + 8;
+    }
+    
+    // Ensure left doesn't go off screen
+    if (left < 8) {
+        left = 8;
+    }
+    if (left + tooltipRect.width > window.innerWidth - 8) {
+        left = window.innerWidth - tooltipRect.width - 8;
+    }
+    
+    tooltip.style.top = top + 'px';
+    tooltip.style.left = left + 'px';
+    
+    activeTooltip = tooltip;
+    
+    // Set timeout to hide tooltip
+    tooltipTimeout = setTimeout(() => {
+        if (activeTooltip) {
+            activeTooltip.remove();
+            activeTooltip = null;
+        }
+    }, 3000);
+}
+
+function hideTooltip() {
+    if (tooltipTimeout) {
+        clearTimeout(tooltipTimeout);
+        tooltipTimeout = null;
+    }
+    if (activeTooltip) {
+        activeTooltip.remove();
+        activeTooltip = null;
+    }
+}
+
+// Attach tooltip listeners to all help icons and tooltip-enabled buttons
+function attachTooltipListeners() {
+    // Help icons
+    document.querySelectorAll('.help-icon').forEach(el => {
+        const text = el.getAttribute('data-tooltip');
+        if (text) {
+            el.removeEventListener('mouseenter', window._tooltipHandler);
+            el.removeEventListener('mouseleave', hideTooltip);
+            const handler = () => showTooltip(el, text);
+            el.addEventListener('mouseenter', handler);
+            el.addEventListener('mouseleave', hideTooltip);
+            el._tooltipHandler = handler;
+        }
+    });
+    
+    // Priority buttons
+    document.querySelectorAll('.priority-btn, .action-btn, .alert-btn, #resetBtn').forEach(el => {
+        const text = el.getAttribute('data-tooltip');
+        if (text) {
+            el.removeEventListener('mouseenter', window._btnTooltipHandler);
+            el.removeEventListener('mouseleave', hideTooltip);
+            const handler = () => showTooltip(el, text);
+            el.addEventListener('mouseenter', handler);
+            el.addEventListener('mouseleave', hideTooltip);
+            el._btnTooltipHandler = handler;
+        }
+    });
+}
 
 // ============================================================
 // CONSTANTS & THRESHOLDS
@@ -1027,6 +1093,7 @@ function renderAll() {
     }).join('');
     
     document.getElementById('lastUpdateTime').innerHTML = new Date().toLocaleString();
+    attachTooltipListeners();
 }
 
 // ============================================================
