@@ -22,7 +22,7 @@
         .alert-btn { background: #f59e0b; border: none; padding: 6px 14px; border-radius: 20px; color: white; font-size: 12px; cursor: pointer; }
         .copyright { font-size: 10px; color: #64748b; text-align: center; margin-top: 16px; padding: 8px; border-top: 1px solid #e2e8f0; }
         .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
-        .action-btn { background: rgba(255,255,255,0.15); border: none; padding: 8px 16px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; position: relative; }
+        .action-btn { background: rgba(255,255,255,0.15); border: none; padding: 8px 16px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; }
         .action-btn:hover { background: rgba(255,255,255,0.25); }
         .upload-area { background: white; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 60px 40px; text-align: center; margin-bottom: 24px; cursor: pointer; transition: all 0.2s; }
         .upload-area:hover { border-color: #1e3a5f; background: #f8fafc; }
@@ -80,7 +80,7 @@
         .filter-group { display: flex; flex-direction: column; gap: 5px; min-width: 120px; flex: 1; }
         .filter-group label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
         select, input, button { padding: 8px 12px; border-radius: 10px; font-size: 12px; background: white; border: 1px solid #e2e8f0; }
-        button { background: #1e3a5f; color: white; border: none; cursor: pointer; font-weight: 600; position: relative; }
+        button { background: #1e3a5f; color: white; border: none; cursor: pointer; font-weight: 600; }
         .email-btn { background: #10b981; }
         .table-wrapper { background: white; border-radius: 16px; overflow-x: auto; max-height: 450px; border: 1px solid #e2e8f0; display: block; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1800px; }
@@ -243,7 +243,7 @@
         
         <!-- PROVINCE CHART - MOVED TO TOP -->
         <div class="chart-container">
-            <div class="chart-title">💰 Daily Revenue Loss by Province <span class="help-icon" data-tooltip="🔴 Red = money lost from failed transactions. 🟠 Orange = money lost from downtime. Click any bar to filter the table below.">?</span></div>
+            <div class="chart-title">💰 Daily Revenue Loss by Province <span class="help-icon" data-tooltip="Red bars show money lost from failed transactions. Orange bars show money lost from machine downtime. Click any bar to filter the table below.">?</span></div>
             <canvas id="lossChart"></canvas>
             <div class="legend">
                 <div><span class="legend-color" style="background: #dc2626;"></span> Loss from rejected transactions</div>
@@ -254,7 +254,7 @@
         
         <!-- Route Planner -->
         <div class="route-planner">
-            <div class="route-title">🗺️ Route Planner <span class="help-icon" data-tooltip="Select kiosks from the table or map, then enter your starting address to plan the most efficient route.">?</span></div>
+            <div class="route-title">🗺️ Route Planner <span class="help-icon" data-tooltip="Select kiosks using the checkboxes in the table or click dots on the map. Then enter your starting address and click 'Plan Route' to get the optimized driving order.">?</span></div>
             <div class="route-start">
                 <input type="text" id="startAddress" placeholder="Enter starting address (e.g., 123 Main St, Toronto)" style="flex:2;">
                 <button id="planRouteBtn">🗺️ Plan Route</button>
@@ -272,7 +272,7 @@
         <!-- Map -->
         <div class="map-container">
             <div class="map-title">
-                <span>🗺️ Kiosk Location Map <span class="help-icon" data-tooltip="🔴 Red = Critical (≥8%) | 🟡 Amber = Warning (4-8%) | 🟢 Green = Good (<4%) | ⚫ Grey = Offline | 🔵 Blue = Selected">?</span></span>
+                <span>🗺️ Kiosk Location Map <span class="help-icon" data-tooltip="Red = Critical (reject rate 8% or higher). Amber = Warning (4-8%). Green = Good (below 4%). Grey = Offline (call first). Blue = Selected for route.">?</span></span>
                 <div class="view-toggle">
                     <button id="showMapBtn">🗺️ Map</button>
                     <button id="showListBtn" class="active">📋 List</button>
@@ -289,29 +289,29 @@
         </div>
         
         <div class="top-loss-container">
-            <div class="top-loss-title">🚨 TOP 10 HIGHEST DAILY LOSS <span class="help-icon" data-tooltip="Daily Loss = (Volume × Reject% × $5) + (Volume × (100-Uptime%) × 0.8 × $5)">?</span></div>
+            <div class="top-loss-title">🚨 TOP 10 HIGHEST DAILY LOSS <span class="help-icon" data-tooltip="Daily Loss = (Volume × Reject% × $5) + (Volume × (100 - Uptime%) × 0.8 × $5). $5 per transaction assumed.">?</span></div>
             <div class="top-loss-list" id="topLossList"></div>
         </div>
         
         <div class="filters">
             <div class="filter-group">
-                <label>📍 Province</label>
+                <label>📍 Province <span class="help-icon" data-tooltip="Filter kiosks by province or territory">?</span></label>
                 <select id="provinceFilter"><option value="all">All Provinces</option></select>
             </div>
             <div class="filter-group">
-                <label>🗺️ Zone</label>
+                <label>🗺️ Zone <span class="help-icon" data-tooltip="Filter by FT Zone or District">?</span></label>
                 <select id="zoneFilter"><option value="all">All Zones</option></select>
             </div>
             <div class="filter-group">
-                <label>⚠️ Status</label>
+                <label>⚠️ Status <span class="help-icon" data-tooltip="Critical = 8%+ reject rate, Warning = 4-8%, Good = below 4%">?</span></label>
                 <select id="riskFilter"><option value="all">All Status</option><option value="critical">Critical (≥8%)</option><option value="warning">Warning (4-8%)</option><option value="good">Good (<4%)</option></select>
             </div>
             <div class="filter-group">
-                <label>📊 Volume</label>
+                <label>📊 Volume <span class="help-icon" data-tooltip="Volume Priority based on daily transactions. Top 33% = High, Middle 33% = Mid, Bottom 33% = Low.">?</span></label>
                 <select id="volumeFilter"><option value="all">All Volumes</option><option value="High">High Priority</option><option value="Mid">Mid Priority</option><option value="Low">Low Priority</option></select>
             </div>
             <div class="filter-group">
-                <label>🔍 Search</label>
+                <label>🔍 Search <span class="help-icon" data-tooltip="Search by store name, city, or address">?</span></label>
                 <input type="text" id="searchInput" placeholder="Store, city, or address...">
             </div>
             <button id="resetBtn">Reset All</button>
@@ -358,7 +358,7 @@
 
 <script>
 // ============================================================
-// COMPLETE DASHBOARD - All Features Working
+// COMPLETE DASHBOARD - All Features Working with Tooltips
 // ============================================================
 
 let allData = [];
@@ -535,17 +535,20 @@ function getTrendDisplay(r) {
     return `<span class="badge badge-trend-flat">➡️ 0%</span>`;
 }
 
+// Tooltip System - FIXED
 let activeTooltip = null;
 let tooltipTimeout = null;
 
 function showTooltip(element, text) {
+    if (!text || text === '') return;
     if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; }
     if (tooltipTimeout) clearTimeout(tooltipTimeout);
-    if (!text) return;
+    
     const tooltip = document.createElement('div');
     tooltip.className = 'global-tooltip';
     tooltip.textContent = text;
     document.body.appendChild(tooltip);
+    
     const rect = element.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
     let top = rect.top - tooltipRect.height - 8;
@@ -556,7 +559,7 @@ function showTooltip(element, text) {
     tooltip.style.top = top + 'px';
     tooltip.style.left = left + 'px';
     activeTooltip = tooltip;
-    tooltipTimeout = setTimeout(() => { if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; } }, 3000);
+    tooltipTimeout = setTimeout(() => { if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; } }, 4000);
 }
 
 function hideTooltip() {
@@ -565,17 +568,24 @@ function hideTooltip() {
 }
 
 function attachTooltips() {
-    document.querySelectorAll('.help-icon').forEach(el => {
-        const text = el.getAttribute('data-tooltip');
-        if (text) {
-            el.removeEventListener('mouseenter', (e) => showTooltip(e.target, text));
-            el.removeEventListener('mouseleave', hideTooltip);
-            el.addEventListener('mouseenter', (e) => showTooltip(e.target, text));
-            el.addEventListener('mouseleave', hideTooltip);
+    const helpIcons = document.querySelectorAll('.help-icon');
+    helpIcons.forEach(icon => {
+        const text = icon.getAttribute('data-tooltip');
+        if (text && text !== '') {
+            icon.removeEventListener('mouseenter', icon._tooltipHandler);
+            icon.removeEventListener('mouseleave', hideTooltip);
+            const handler = (e) => {
+                e.stopPropagation();
+                showTooltip(icon, text);
+            };
+            icon.addEventListener('mouseenter', handler);
+            icon.addEventListener('mouseleave', hideTooltip);
+            icon._tooltipHandler = handler;
         }
     });
 }
 
+// Notes functions
 function getNotesKey(storeId) { return `kiosk_notes_${storeId}`; }
 function loadNotes(storeId) {
     const saved = localStorage.getItem(getNotesKey(storeId));
@@ -1154,8 +1164,7 @@ function renderAll() {
     
     const tbody = document.getElementById('tableBody');
     if (!f.length) {
-        tbody.innerHTML = '<tr><td colspan="25" style="text-align:center;padding:40px;">No kiosks match filters</td></tr>';
-        return;
+        tbody.innerHTML = '<tr><td colspan="25" style="text-align:center;padding:40px;">No kiosks match filters</tbody>';        return;
     }
     
     tbody.innerHTML = f.map(r => {
@@ -1173,7 +1182,6 @@ function renderAll() {
         const storeName = r.Store || '—';
         const isCritical = getStatusLevel(r) === 'Critical';
         const isWarning = getStatusLevel(r) === 'Warning';
-        const isBinAlert = bin > 80;
         const barC = bin > 95 ? '#dc2626' : (bin > 80 ? '#f59e0b' : '#10b981');
         const phone = getPhoneNumber(r);
         const callButton = phone ? `<button class="call-btn" onclick="window.location.href='tel:${phone}'; event.stopPropagation();">📞</button>` : '';
