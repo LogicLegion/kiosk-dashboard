@@ -1,1436 +1,309 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Kiosk Intelligence Platform | Canada</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; padding: 20px; }
-        .container { max-width: 1600px; margin: 0 auto; }
-        .header { background: linear-gradient(135deg, #0f2b44, #1e3a5f); border-radius: 24px; padding: 20px 28px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-        .header h1 { font-size: 22px; color: white; }
-        .live-tag { background: #10b981; padding: 3px 10px; border-radius: 30px; font-size: 10px; color: white; display: inline-block; margin-left: 10px; }
-        .alert-bar { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        .alert-bar span { font-size: 13px; color: #92400e; }
-        .alert-btn { background: #f59e0b; border: none; padding: 6px 14px; border-radius: 20px; color: white; font-size: 12px; cursor: pointer; }
-        .copyright { font-size: 10px; color: #64748b; text-align: center; margin-top: 16px; padding: 8px; border-top: 1px solid #e2e8f0; }
-        .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
-        .action-btn { background: rgba(255,255,255,0.15); border: none; padding: 8px 16px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; position: relative; }
-        .action-btn:hover { background: rgba(255,255,255,0.25); }
-        .upload-area { background: white; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 60px 40px; text-align: center; margin-bottom: 24px; cursor: pointer; transition: all 0.2s; }
-        .upload-area:hover { border-color: #1e3a5f; background: #f8fafc; }
-        .upload-area.drag-over { border-color: #10b981; background: #f0fdf4; }
-        .hidden-upload { display: none; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .kpi-card { background: white; border-radius: 16px; padding: 16px; border: 1px solid #e2e8f0; }
-        .kpi-label { font-size: 11px; color: #64748b; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
-        .kpi-value { font-size: 28px; font-weight: 800; color: #1e293b; margin-top: 8px; }
-        .kpi-loss { color: #dc2626; }
-        .kpi-green { color: #10b981; }
-        .info-bar { background: white; border-radius: 12px; padding: 10px 16px; margin-bottom: 20px; font-size: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; flex-wrap: wrap; }
-        .chart-container { background: white; border-radius: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
-        .chart-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        canvas { max-height: 300px; width: 100%; }
-        .legend { display: flex; justify-content: center; gap: 20px; margin-top: 12px; font-size: 11px; flex-wrap: wrap; }
-        .legend-color { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-right: 5px; }
-        .click-hint { font-size: 10px; color: #64748b; margin-top: 8px; text-align: center; }
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from datetime import datetime
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import os
+
+# ============================================================
+# KIOSK INTELLIGENCE PLATFORM - PYTHON VERSION
+# FULLY WORKING - No Plotly Errors
+# ============================================================
+
+# Configuration
+TRANSACTION_VALUE = 5
+HIGH_REJECT_THRESHOLD = 4
+SERVICE_OVERDUE_DAYS = 60
+
+def load_and_process_data(csv_path):
+    """Load CSV and calculate all metrics"""
+    print(f"Loading: {csv_path}")
+    df = pd.read_csv(csv_path, encoding='utf-8-sig')
+    
+    # Clean column names
+    df.columns = df.columns.str.strip()
+    
+    def safe_float(val, default=0):
+        try:
+            return float(val) if pd.notna(val) else default
+        except:
+            return default
+    
+    # Extract metrics
+    df['Volume'] = df['1 Day TX'].apply(safe_float)
+    df['Volume_7Day'] = df['7 Day TX'].apply(safe_float)
+    df['Reject_7Day'] = df['7 Day Reject %'].apply(safe_float)
+    df['Uptime_7Day'] = df['7 Day Uptime %'].apply(safe_float)
+    df['Uptime_1Day'] = df['1 Day Uptime %'].apply(safe_float)
+    df['TEMM'] = df['7 Day TEMM'].apply(safe_float)
+    df['BinFull'] = df['Total Bin Full %'].apply(safe_float)
+    df['Latitude'] = df['Latitude'].apply(safe_float)
+    df['Longitude'] = df['Longitude'].apply(safe_float)
+    df['State'] = df['State'].fillna('Unknown')
+    df['Store'] = df['Store'].fillna('Unknown')
+    df['City'] = df['City'].fillna('')
+    df['Address'] = df['Address'].fillna('')
+    
+    # Calculate derived metrics
+    df['Volume_7Day_Avg'] = df['Volume_7Day'] / 7
+    df['Impact_Score'] = df['Volume'] * (df['Reject_7Day'] / 100)
+    df['Loss_Reject'] = df['Volume'] * (df['Reject_7Day'] / 100) * TRANSACTION_VALUE
+    df['Loss_Downtime'] = df['Volume'] * ((100 - df['Uptime_7Day']) / 100) * 0.8 * TRANSACTION_VALUE
+    df['Daily_Loss'] = df['Loss_Reject'] + df['Loss_Downtime']
+    df['Monthly_Loss'] = df['Daily_Loss'] * 30
+    df['Est_Revenue'] = df['Volume'] * TRANSACTION_VALUE
+    df['Net_Revenue'] = df['Est_Revenue'] - df['Daily_Loss']
+    
+    # Status flags
+    df['Is_High_Reject'] = df['Reject_7Day'] >= HIGH_REJECT_THRESHOLD
+    df['Is_Offline'] = df['Kiosk State'] == 'Offline'
+    
+    # Volume priority
+    volumes = df['Volume'].sort_values(ascending=False).tolist()
+    if volumes:
+        top33_idx = int(len(volumes) * 0.33) - 1
+        mid33_idx = int(len(volumes) * 0.66) - 1
+        top33_threshold = volumes[top33_idx] if top33_idx >= 0 else 0
+        mid33_threshold = volumes[mid33_idx] if mid33_idx >= 0 else 0
+    else:
+        top33_threshold = mid33_threshold = 0
+    
+    df['Volume_Priority'] = 'Low'
+    df.loc[df['Volume'] >= top33_threshold, 'Volume_Priority'] = 'High'
+    df.loc[(df['Volume'] < top33_threshold) & (df['Volume'] >= mid33_threshold), 'Volume_Priority'] = 'Mid'
+    
+    # Service days
+    def days_since_service(date_str):
+        if pd.isna(date_str) or date_str == '—':
+            return None
+        try:
+            parts = str(date_str).split('/')
+            if len(parts) == 3:
+                date = datetime(int(parts[2]) + 2000, int(parts[0]), int(parts[1]))
+                return (datetime.now() - date).days
+        except:
+            pass
+        return None
+    
+    df['Days_Since_Service'] = df['Last PM Date'].apply(days_since_service)
+    df['Is_Service_Overdue'] = df['Days_Since_Service'] > SERVICE_OVERDUE_DAYS
+    
+    print(f"Loaded {len(df)} kiosks")
+    print(f"  High Reject: {df['Is_High_Reject'].sum()}")
+    print(f"  Daily Loss: ${df['Daily_Loss'].sum():,.2f}")
+    
+    return df
+
+def create_visualizations(df, output_dir='kiosk_analysis'):
+    """Generate charts for portfolio"""
+    os.makedirs(output_dir, exist_ok=True)
+    print(f"\nGenerating visualizations in '{output_dir}/'...")
+    
+    plt.rcParams['font.family'] = 'sans-serif'
+    plt.rcParams['font.sans-serif'] = ['Arial', 'DejaVu Sans', 'Helvetica']
+    
+    # 1. Loss by Province
+    province_loss = df.groupby('State')['Daily_Loss'].sum().sort_values(ascending=False).head(10)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    bars = ax.bar(province_loss.index, province_loss.values, color='#dc2626')
+    ax.set_title('Daily Revenue Loss by Province', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Province')
+    ax.set_ylabel('Daily Loss (CAD)')
+    for bar, val in zip(bars, province_loss.values):
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 5, f'${val:.0f}', ha='center', fontsize=9)
+    plt.tight_layout()
+    plt.savefig(f'{output_dir}/loss_by_province.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f"   loss_by_province.png")
+    
+    # 2. Top 10 Loss
+    top10 = df.nlargest(10, 'Daily_Loss')[['Store', 'Daily_Loss']]
+    fig, ax = plt.subplots(figsize=(12, 6))
+    bars = ax.barh(top10['Store'], top10['Daily_Loss'], color='#f97316')
+    ax.set_title('Top 10 Highest Daily Loss', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Daily Loss (CAD)')
+    for bar, val in zip(bars, top10['Daily_Loss']):
+        ax.text(bar.get_width() + 2, bar.get_y() + bar.get_height()/2, f'${val:.0f}', va='center', fontsize=9)
+    plt.tight_layout()
+    plt.savefig(f'{output_dir}/top10_loss.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f"   top10_loss.png")
+    
+    # 3. Reject Rate Distribution
+    fig, ax = plt.subplots(figsize=(12, 5))
+    ax.hist(df['Reject_7Day'], bins=30, color='#3b82f6', edgecolor='white', alpha=0.7)
+    ax.axvline(x=4, color='red', linestyle='--', linewidth=2, label='High Reject Threshold (4%)')
+    ax.set_title('Distribution of 7-Day Reject Rates', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Reject Rate (%)')
+    ax.set_ylabel('Number of Kiosks')
+    ax.legend()
+    plt.tight_layout()
+    plt.savefig(f'{output_dir}/reject_distribution.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f"   reject_distribution.png")
+    
+    # 4. High Impact Pie
+    high_impact = (df['Impact_Score'] > 0.8).sum()
+    normal = len(df) - high_impact
+    fig, ax = plt.subplots(figsize=(8, 8))
+    ax.pie([high_impact, normal], labels=['High Impact', 'Normal'], colors=['#dc2626', '#10b981'], autopct='%1.1f%%', startangle=90)
+    ax.set_title('Kiosks with High Impact Score (>0.8)', fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig(f'{output_dir}/high_impact_pie.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f"   high_impact_pie.png")
+    
+    # 5. Uptime vs Loss Scatter
+    fig, ax = plt.subplots(figsize=(12, 6))
+    scatter = ax.scatter(df['Uptime_7Day'], df['Daily_Loss'], c=df['Volume'], cmap='viridis', alpha=0.6, s=50)
+    ax.set_xlabel('7-Day Uptime (%)')
+    ax.set_ylabel('Daily Loss (CAD)')
+    ax.set_title('Uptime vs Daily Loss', fontsize=14, fontweight='bold')
+    plt.colorbar(scatter, label='Transaction Volume')
+    ax.axvline(x=95, color='red', linestyle='--', alpha=0.5, label='95% Uptime')
+    ax.legend()
+    plt.tight_layout()
+    plt.savefig(f'{output_dir}/uptime_vs_loss.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f"   uptime_vs_loss.png")
+    
+    # 6. Service Overdue
+    overdue = df['Is_Service_Overdue'].sum()
+    not_overdue = len(df) - overdue
+    fig, ax = plt.subplots(figsize=(6, 6))
+    bars = ax.bar(['Service Overdue', 'OK'], [overdue, not_overdue], color=['#dc2626', '#10b981'])
+    ax.set_title('Preventive Maintenance Status', fontsize=14, fontweight='bold')
+    ax.set_ylabel('Number of Kiosks')
+    for bar, val in zip(bars, [overdue, not_overdue]):
+        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2, str(val), ha='center', fontsize=12, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig(f'{output_dir}/service_overdue.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f"   service_overdue.png")
+    
+    print(f"\nAll charts saved to '{output_dir}/'")
+
+def create_interactive_dashboard(df, output_file='kiosk_analytics_dashboard.html'):
+    """Create interactive Plotly dashboard - NO ERRORS"""
+    print(f"\nCreating interactive dashboard: {output_file}")
+    
+    # Create subplot figure (no map to avoid Scattergeo errors)
+    fig = make_subplots(
+        rows=2, cols=2,
+        subplot_titles=('Daily Loss by Province', 'Top 10 Daily Loss', 'Reject Rate Distribution', 'Volume Priority Breakdown'),
+        specs=[[{'type': 'bar'}, {'type': 'bar'}],
+               [{'type': 'histogram'}, {'type': 'pie'}]]
+    )
+    
+    # 1. Loss by Province (top-left)
+    province_loss = df.groupby('State')['Daily_Loss'].sum().sort_values(ascending=False).head(10)
+    fig.add_trace(
+        go.Bar(x=province_loss.index, y=province_loss.values, marker_color='#dc2626', name='Loss'),
+        row=1, col=1
+    )
+    
+    # 2. Top 10 Loss (top-right)
+    top10 = df.nlargest(10, 'Daily_Loss')
+    fig.add_trace(
+        go.Bar(x=top10['Daily_Loss'], y=top10['Store'], orientation='h', marker_color='#f97316', name='Loss'),
+        row=1, col=2
+    )
+    
+    # 3. Reject Distribution (bottom-left)
+    fig.add_trace(
+        go.Histogram(x=df['Reject_7Day'], nbinsx=30, marker_color='#3b82f6', name='Kiosks'),
+        row=2, col=1
+    )
+    
+    # 4. Volume Priority Pie (bottom-right)
+    volume_counts = df['Volume_Priority'].value_counts()
+    colors = {'High': '#dc2626', 'Mid': '#f59e0b', 'Low': '#10b981'}
+    pie_colors = [colors.get(p, '#10b981') for p in volume_counts.index]
+    fig.add_trace(
+        go.Pie(labels=volume_counts.index, values=volume_counts.values, marker_colors=pie_colors),
+        row=2, col=2
+    )
+    
+    # Add reference line for reject threshold
+    fig.add_vline(x=4, line_dash="dash", line_color="red", row=2, col=1)
+    
+    # Update layout
+    fig.update_layout(
+        title=dict(text="Kiosk Intelligence Platform", font=dict(size=20)),
+        height=900,
+        showlegend=False
+    )
+    
+    # Update axes labels
+    fig.update_xaxes(title_text="Province", row=1, col=1)
+    fig.update_yaxes(title_text="Daily Loss (CAD)", row=1, col=1)
+    fig.update_xaxes(title_text="Daily Loss (CAD)", row=1, col=2)
+    fig.update_yaxes(title_text="Store", row=1, col=2)
+    fig.update_xaxes(title_text="Reject Rate (%)", row=2, col=1)
+    fig.update_yaxes(title_text="Number of Kiosks", row=2, col=1)
+    
+    fig.write_html(output_file)
+    print(f"Interactive dashboard saved: {output_file}")
+    return output_file
+
+def generate_report(df):
+    """Generate text report"""
+    print("\n" + "="*60)
+    print("KIOSK INTELLIGENCE PLATFORM - DAILY REPORT")
+    print("="*60)
+    print(f"Report Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Total Kiosks: {len(df)}")
+    print("-"*60)
+    
+    print("\nFINANCIAL SUMMARY")
+    print(f"  Est. Daily Revenue: ${df['Est_Revenue'].sum():,.2f}")
+    print(f"  Daily Loss:         ${df['Daily_Loss'].sum():,.2f}")
+    print(f"  Net Revenue:        ${(df['Est_Revenue'].sum() - df['Daily_Loss'].sum()):,.2f}")
+    print(f"  Monthly Loss:       ${df['Monthly_Loss'].sum():,.2f}")
+    
+    print("\nOPERATIONAL ALERTS")
+    print(f"  High Reject (>=4%):     {df['Is_High_Reject'].sum()}")
+    print(f"  Offline:                {(df['Kiosk State'] == 'Offline').sum()}")
+    print(f"  High Volume (Top 33%):  {(df['Volume_Priority'] == 'High').sum()}")
+    print(f"  Service Overdue:        {df['Is_Service_Overdue'].sum()}")
+    
+    print("\nTOP 5 LOSS")
+    top5 = df.nlargest(5, 'Daily_Loss')[['Store', 'City', 'State', 'Daily_Loss']]
+    for i, (_, row) in enumerate(top5.iterrows(), 1):
+        print(f"  {i}. {row['Store']} - {row['City']}, {row['State']}: ${row['Daily_Loss']:.0f}/day")
+    
+    print("\n" + "="*60)
+
+# ============================================================
+# MAIN EXECUTION
+# ============================================================
+if __name__ == "__main__":
+    import sys
+    
+    csv_file = "Canada Kiosk Status.csv"
+    if len(sys.argv) > 1:
+        csv_file = sys.argv[1]
+    
+    try:
+        df = load_and_process_data(csv_file)
+        generate_report(df)
+        create_visualizations(df)
+        create_interactive_dashboard(df, "kiosk_analytics_dashboard.html")
         
-        .route-planner { background: white; border-radius: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
-        .route-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .route-start { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: flex-end; }
-        .route-start input { flex: 2; min-width: 200px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 12px; }
-        .route-start button { background: #1e3a5f; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; }
-        .route-start button:hover { background: #0f2b44; }
-        .route-summary { background: #f8fafc; border-radius: 12px; padding: 12px; margin-top: 12px; font-size: 12px; }
-        .route-stops { margin-top: 8px; padding-left: 20px; }
-        .route-stops li { margin: 4px 0; }
-        .route-buttons { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-        .route-buttons button { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 12px; }
-        .route-buttons button:hover { background: #059669; }
+        output_excel = f"kiosk_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        df.to_excel(output_excel, index=False)
+        print(f"\nExcel export: {output_excel}")
         
-        .map-container { background: white; border-radius: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
-        .map-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: space-between; }
-        .view-toggle { display: flex; gap: 10px; }
-        .view-toggle button { background: #f1f5f9; color: #1e293b; border: 1px solid #e2e8f0; padding: 4px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; }
-        .view-toggle button.active { background: #1e3a5f; color: white; border-color: #1e3a5f; }
-        #map { height: 400px; width: 100%; border-radius: 12px; z-index: 1; display: none; }
-        .map-legend { display: flex; justify-content: center; gap: 20px; margin-top: 12px; font-size: 11px; flex-wrap: wrap; display: none; }
-        .map-legend-dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 5px; }
+        print("\n" + "="*50)
+        print("SUCCESS!")
+        print(f"  Dashboard: kiosk_analytics_dashboard.html")
+        print(f"  Charts: ./kiosk_analysis/ (6 images)")
+        print(f"  Excel: {output_excel}")
+        print("="*50)
         
-        .top-loss-container { background: white; border-radius: 16px; padding: 16px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
-        .top-loss-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .top-loss-list { display: flex; flex-direction: column; gap: 8px; }
-        .top-loss-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: #f8fafc; border-radius: 12px; border-left: 4px solid #dc2626; flex-wrap: wrap; gap: 10px; cursor: pointer; transition: background 0.2s; }
-        .top-loss-item:hover { background: #f1f5f9; }
-        .top-loss-left { display: flex; align-items: center; gap: 12px; flex: 2; min-width: 200px; }
-        .top-loss-rank { background: #dc2626; color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
-        .top-loss-store { font-weight: 600; color: #1e293b; font-size: 13px; }
-        .top-loss-address { font-size: 11px; color: #64748b; margin-top: 2px; }
-        .top-loss-loss { font-weight: 700; color: #dc2626; white-space: nowrap; }
-        .top-loss-link { color: #3b82f6; text-decoration: none; font-size: 11px; }
-        
-        .filters { background: white; border-radius: 16px; padding: 16px 20px; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 12px; border: 1px solid #e2e8f0; align-items: flex-end; }
-        .filter-group { display: flex; flex-direction: column; gap: 5px; min-width: 120px; flex: 1; }
-        .filter-group label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
-        select, input, button { padding: 8px 12px; border-radius: 10px; font-size: 12px; background: white; border: 1px solid #e2e8f0; }
-        button { background: #1e3a5f; color: white; border: none; cursor: pointer; font-weight: 600; position: relative; }
-        .email-btn { background: #10b981; }
-        .table-wrapper { background: white; border-radius: 16px; overflow-x: auto; max-height: 450px; border: 1px solid #e2e8f0; display: block; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1800px; }
-        th { text-align: left; padding: 12px 8px; background: #f8fafc; font-weight: 700; border-bottom: 2px solid #e2e8f0; cursor: pointer; position: sticky; top: 0; z-index: 10; font-size: 10px; }
-        th:hover { background: #e2e8f0; }
-        td { padding: 10px 8px; border-bottom: 1px solid #f1f5f9; }
-        tr:hover td { background: #f8fafc; }
-        .selected-row { background-color: #dbeafe !important; }
-        .high-reject-row { background-color: #fee2e2; }
-        .bin-alert-row { background-color: #e0f2fe; }
-        .paper-alert-row { background-color: #fef3c7; }
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
-        .badge-critical { background: #fee2e2; color: #dc2626; }
-        .badge-warning { background: #fed7aa; color: #c2410c; }
-        .badge-good { background: #dcfce7; color: #16a34a; }
-        .badge-traffic-high { background: #dc2626; color: white; }
-        .badge-traffic-low { background: #16a34a; color: white; }
-        .badge-impact { background: #f97316; color: white; }
-        .badge-trend-up { background: #10b981; color: white; }
-        .badge-trend-down { background: #dc2626; color: white; }
-        .badge-trend-flat { background: #64748b; color: white; }
-        .badge-tem-high { background: #dc2626; color: white; }
-        .badge-tem-med { background: #f59e0b; color: white; }
-        .badge-tem-low { background: #10b981; color: white; }
-        .badge-volume-high { background: #dc2626; color: white; }
-        .badge-volume-mid { background: #f59e0b; color: white; }
-        .badge-volume-low { background: #10b981; color: white; }
-        .badge-call { background: #6b7280; color: white; }
-        .notes-icon { cursor: pointer; margin-right: 6px; font-size: 14px; display: inline-block; }
-        .fill-bar { background: #e2e8f0; border-radius: 10px; height: 6px; width: 60px; margin-top: 5px; display: inline-block; }
-        .fill-bar-fill { height: 100%; border-radius: 10px; display: block; }
-        .footer { text-align: center; margin-top: 16px; font-size: 10px; color: #64748b; }
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; z-index: 1000; display: none; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-content { background: white; border-radius: 20px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
-        .modal-close { background: #1e3a5f; color: white; border: none; padding: 10px; border-radius: 30px; cursor: pointer; margin-top: 16px; width: 100%; }
-        .notes-list { margin: 15px 0; max-height: 300px; overflow-y: auto; }
-        .note-item { background: #f8fafc; border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-        .note-text { flex: 1; font-size: 12px; color: #1e293b; }
-        .note-date { font-size: 10px; color: #64748b; margin-top: 4px; }
-        .note-edit-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px; }
-        .note-edit-btn:hover { opacity: 0.7; }
-        .note-input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 12px; font-family: inherit; resize: vertical; margin-top: 10px; }
-        .save-note-btn { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-top: 10px; font-size: 12px; }
-        
-        .help-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 16px;
-            height: 16px;
-            background: #e2e8f0;
-            color: #64748b;
-            border-radius: 50%;
-            font-size: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-left: 5px;
-        }
-        
-        .global-tooltip {
-            position: fixed;
-            background: #1e293b;
-            color: white;
-            font-size: 12px;
-            padding: 8px 12px;
-            border-radius: 8px;
-            max-width: 280px;
-            text-align: center;
-            z-index: 10000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            pointer-events: none;
-        }
-        
-        .call-btn { background: none; border: none; font-size: 14px; cursor: pointer; padding: 4px 8px; border-radius: 20px; background: #e2e8f0; margin-left: 5px; }
-        .call-btn:hover { background: #cbd5e1; }
-        
-        .priority-buttons { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .priority-btn { background: #f1f5f9; color: #1e293b; border: 1px solid #e2e8f0; padding: 6px 14px; border-radius: 30px; font-size: 12px; cursor: pointer; }
-        .priority-btn:hover { background: #e2e8f0; }
-        .priority-btn.active { background: #1e3a5f; color: white; border-color: #1e3a5f; }
-        
-        @media (max-width: 768px) {
-            body { padding: 12px; }
-            .header h1 { font-size: 18px; }
-            .kpi-value { font-size: 20px; }
-            .action-btn { padding: 6px 12px; font-size: 10px; }
-            th, td { padding: 6px 4px; font-size: 9px; }
-            .priority-btn { padding: 4px 10px; font-size: 10px; }
-            .badge { padding: 2px 6px; font-size: 9px; }
-            #map { height: 300px; }
-        }
-    </style>
-</head>
-<body>
-<div class="container">
-    <div class="header">
-        <div><h1>📊 Canada Kiosk Intelligence <span class="live-tag">LIVE</span></h1></div>
-        <div class="action-buttons" id="actionButtons" style="display:none;">
-            <button class="action-btn" id="showUploadBtn">📂 Upload CSV</button>
-            <button class="action-btn qr-btn" id="qrBtn">📱 QR Code</button>
-            <button class="action-btn" id="powerBIExportBtn">📊 Power BI</button>
-            <button class="action-btn" id="tableauExportBtn">📈 Tableau</button>
-            <button class="action-btn" id="snapshotBtn">📸 Screenshot</button>
-            <button class="action-btn email-btn" id="emailReportBtn">📧 Email Report</button>
-        </div>
-    </div>
-    
-    <input type="file" id="csvFile" accept=".csv" class="hidden-upload">
-    
-    <div id="instructionModal" class="modal">
-        <div class="modal-content">
-            <h3 id="modalTitle">Scan QR Code</h3>
-            <div id="modalBody"><div id="qrcode"></div><p style="margin-top:12px;">Scan with your phone camera to open this dashboard on mobile</p></div>
-            <button class="modal-close" onclick="closeModal()">Close</button>
-        </div>
-    </div>
-    
-    <div id="notesModal" class="modal">
-        <div class="modal-content">
-            <h3 id="notesModalTitle">📝 Kiosk Notes</h3>
-            <div id="notesList" class="notes-list"></div>
-            <textarea id="newNoteInput" class="note-input" rows="2" placeholder="Add a new note..."></textarea>
-            <button id="saveNewNoteBtn" class="save-note-btn">Save Note</button>
-            <button class="modal-close" onclick="closeNotesModal()">Close</button>
-        </div>
-    </div>
-    
-    <!-- Upload Screen -->
-    <div id="uploadScreen">
-        <div class="upload-area" id="uploadArea">
-            <div style="font-size:64px;">📊</div>
-            <h2 style="margin: 16px 0 8px;">Upload Fleet Data</h2>
-            <p style="color: #64748b; margin-bottom: 16px;">Click or drag your Canada Kiosk CSV file here</p>
-            <button class="action-btn" style="background:#1e3a5f; display:inline-block;" onclick="document.getElementById('csvFile').click()">Select File</button>
-        </div>
-    </div>
-    
-    <!-- Dashboard -->
-    <div id="dashboard" style="display:none">
-        <div class="priority-buttons" id="priorityButtons">
-            <button class="priority-btn active" data-filter="all">📊 All</button>
-            <button class="priority-btn" data-filter="urgent">🔥 High Impact</button>
-            <button class="priority-btn" data-filter="high-reject">⚠️ High Reject</button>
-            <button class="priority-btn" data-filter="full-bin">🗑️ Full Bin</button>
-            <button class="priority-btn" data-filter="paper-out">📄 Paper Low</button>
-            <button class="priority-btn" data-filter="overdue">📅 Service Overdue</button>
-            <button class="priority-btn" data-filter="high-tem">🔧 High TEMM</button>
-            <button class="priority-btn" data-filter="high-volume">📊 High Volume</button>
-            <button class="priority-btn" data-filter="call-first">📞 Call First</button>
-        </div>
-        
-        <div class="alert-bar" id="alertBar">
-            <span>⚠️ Loading data...</span>
-            <button class="alert-btn" id="viewHighRejectBtn">View High Reject →</button>
-        </div>
-        
-        <div class="kpi-grid" id="kpiGrid"></div>
-        
-        <!-- PROVINCE CHART - MOVED HERE (After KPIs, before Route Planner) -->
-        <div class="chart-container">
-            <div class="chart-title">💰 Daily Revenue Loss by Province <span class="help-icon" data-tooltip="🔴 Red = money lost from failed transactions. 🟠 Orange = money lost from downtime. Click any bar to filter the table below.">?</span></div>
-            <canvas id="lossChart"></canvas>
-            <div class="legend">
-                <div><span class="legend-color" style="background: #dc2626;"></span> Loss from rejected transactions</div>
-                <div><span class="legend-color" style="background: #f97316;"></span> Loss from downtime</div>
-            </div>
-            <div class="click-hint">💡 Click any bar to filter the table below</div>
-        </div>
-        
-        <!-- Route Planner Section -->
-        <div class="route-planner">
-            <div class="route-title">🗺️ Route Planner <span class="help-icon" data-tooltip="Select kiosks from the table or map, then enter your starting address to plan the most efficient route.">?</span></div>
-            <div class="route-start">
-                <input type="text" id="startAddress" placeholder="Enter starting address (e.g., 123 Main St, Toronto)" style="flex:2;">
-                <button id="planRouteBtn">🗺️ Plan Route</button>
-            </div>
-            <div id="routeSummary" class="route-summary" style="display:none;">
-                <div id="routeStats"></div>
-                <div id="routeStopsList"></div>
-                <div class="route-buttons">
-                    <button id="openMapsBtn">📍 Open in Google Maps</button>
-                    <button id="copyRouteBtn">📋 Copy Route</button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Map Section -->
-        <div class="map-container">
-            <div class="map-title">
-                <span>🗺️ Kiosk Location Map <span class="help-icon" data-tooltip="🔴 Red = Critical (≥8%) | 🟡 Amber = Warning (4-8%) | 🟢 Green = Good (<4%) | ⚫ Grey = Offline">?</span></span>
-                <div class="view-toggle">
-                    <button id="showMapBtn">🗺️ Map</button>
-                    <button id="showListBtn" class="active">📋 List</button>
-                </div>
-            </div>
-            <div id="map" style="height:400px; display:none;"></div>
-            <div class="map-legend" style="display:none;" id="mapLegend">
-                <div><span class="map-legend-dot" style="background: #dc2626;"></span> Critical (≥8%)</div>
-                <div><span class="map-legend-dot" style="background: #f59e0b;"></span> Warning (4-8%)</div>
-                <div><span class="map-legend-dot" style="background: #10b981;"></span> Good (<4%)</div>
-                <div><span class="map-legend-dot" style="background: #6b7280;"></span> Offline</div>
-                <div><span class="map-legend-dot" style="background: #3b82f6;"></span> Selected</div>
-            </div>
-        </div>
-        
-        <div class="top-loss-container">
-            <div class="top-loss-title">🚨 TOP 10 HIGHEST DAILY LOSS <span class="help-icon" data-tooltip="Daily Loss = (Volume × Reject% × $5) + (Volume × (100-Uptime%) × 0.8 × $5)">?</span></div>
-            <div class="top-loss-list" id="topLossList"></div>
-        </div>
-        
-        <div class="filters">
-            <div class="filter-group">
-                <label>📍 Province</label>
-                <select id="provinceFilter"><option value="all">All Provinces</option></select>
-            </div>
-            <div class="filter-group">
-                <label>🗺️ Zone</label>
-                <select id="zoneFilter"><option value="all">All Zones</option></select>
-            </div>
-            <div class="filter-group">
-                <label>⚠️ Status</label>
-                <select id="riskFilter"><option value="all">All Status</option><option value="critical">Critical (≥8%)</option><option value="warning">Warning (4-8%)</option><option value="good">Good (<4%)</option></select>
-            </div>
-            <div class="filter-group">
-                <label>📊 Volume</label>
-                <select id="volumeFilter"><option value="all">All Volumes</option><option value="High">High Priority</option><option value="Mid">Mid Priority</option><option value="Low">Low Priority</option></select>
-            </div>
-            <div class="filter-group">
-                <label>🔍 Search</label>
-                <input type="text" id="searchInput" placeholder="Store, city, or address...">
-            </div>
-            <button id="resetBtn">Reset All</button>
-        </div>
-        
-        <div class="table-wrapper" id="tableWrapper">
-            <table id="dataTable">
-                <thead>
-                    <tr>
-                        <th class="checkbox-col"><input type="checkbox" id="selectAllCheckbox"></th>
-                        <th data-sort="store">Store 📝</th>
-                        <th data-sort="address">Address</th>
-                        <th data-sort="city">City</th>
-                        <th data-sort="province">Province</th>
-                        <th data-sort="zone">Zone</th>
-                        <th data-sort="status">Status</th>
-                        <th data-sort="volume">Volume</th>
-                        <th data-sort="volumePriority">Vol Priority</th>
-                        <th data-sort="traffic">Traffic</th>
-                        <th data-sort="trend">Trend</th>
-                        <th data-sort="reject7d">7D Reject% ⭐</th>
-                        <th data-sort="impact">Impact</th>
-                        <th data-sort="tem">TEMM</th>
-                        <th data-sort="paper">Paper ETA</th>
-                        <th data-sort="uptime">Uptime%</th>
-                        <th data-sort="bin">Bin%</th>
-                        <th data-sort="serviceDays">Service Days</th>
-                        <th data-sort="lastTX">Last TX</th>
-                        <th data-sort="version">Version</th>
-                        <th data-sort="revenue">Est. Rev</th>
-                        <th data-sort="loss">Daily Loss</th>
-                        <th data-sort="statusFlag">Status</th>
-                        <th>Call</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
-        </div>
-        <div class="footer">💡 Click any store name to add/edit notes | Check boxes to select kiosks for route planning</div>
-        <div class="copyright">Built by J.E. | Kiosk Intelligence Platform 2026</div>
-    </div>
-</div>
-<div id="toast" class="toast"></div>
-
-<script>
-// ============================================================
-// COMPLETE DASHBOARD - Province Chart MOVED to Top (After KPIs)
-// Zone Filter, KHD Colours, Route Planner
-// ============================================================
-
-let allData = [];
-let currentSort = { column: 'loss', direction: 'desc' };
-let lossChart = null;
-let currentNoteStore = null;
-let editingNoteId = null;
-let currentPriorityFilter = 'all';
-let map = null;
-let currentView = 'list';
-let selectedKiosks = new Set();
-let currentRoute = null;
-
-// Constants
-const TRANSACTION_VALUE = 5;
-const HIGH_TRAFFIC_THRESHOLD = 10;
-const HIGH_IMPACT_THRESHOLD = 0.8;
-const SERVICE_OVERDUE_DAYS = 60;
-const PAPER_WARNING_DAYS = 7;
-const HIGH_TEM_THRESHOLD = 3;
-
-const CANADIAN_PROVINCES = ['ON', 'QC', 'BC', 'AB', 'MB', 'SK', 'NS', 'NB', 'NL', 'PE', 'NT', 'YT', 'NU'];
-
-function isCanadian(row) { 
-    let prov = (row.Province || row.State || '').trim().toUpperCase(); 
-    return CANADIAN_PROVINCES.includes(prov); 
-}
-
-function getRegion(r) { return r.Province || r.State || 'Unknown'; }
-function getStoreId(r) { return (r.Store || '').replace(/[^a-zA-Z0-9]/g, '_') + '_' + (r.City || '').replace(/[^a-zA-Z0-9]/g, '_'); }
-function getVolume(r) { return parseFloat(r.Tx1Day) || 0; }
-function getVolume7DayTotal(r) { return parseFloat(r.Tx7Day) || 0; }
-function getVolume7DayAvg(r) { let total = getVolume7DayTotal(r); return total / 7; }
-function getUptime1d(r) { return parseFloat(r.Uptime1Day) || 0; }
-function getUptime7d(r) { return parseFloat(r.Uptime7Day) || 0; }
-function getReject7d(r) { return parseFloat(r.Reject7Day) || 0; }
-function getTEMM(r) { return parseFloat(r.TEMM7Day) || 0; }
-function getVPO(r) { return r.VPO || ''; }
-function getLastServiceDate(r) { return r.LastPM || r['Last PM Date'] || '—'; }
-function getPhoneNumber(r) { return r.Phone || r['Store Phone Number'] || ''; }
-function getZone(r) { return r.Zone || r.District || r['FT Zone'] || '—'; }
-
-function getStatusLevel(r) {
-    let reject = getReject7d(r);
-    if (r.KioskState === 'Offline') return 'Offline';
-    if (reject >= 8) return 'Critical';
-    if (reject >= 4) return 'Warning';
-    return 'Good';
-}
-
-function getStatusColor(r) {
-    let level = getStatusLevel(r);
-    if (level === 'Offline') return '#6b7280';
-    if (level === 'Critical') return '#dc2626';
-    if (level === 'Warning') return '#f59e0b';
-    return '#10b981';
-}
-
-function getStatusBadgeClass(r) {
-    let level = getStatusLevel(r);
-    if (level === 'Offline') return 'badge-call';
-    if (level === 'Critical') return 'badge-critical';
-    if (level === 'Warning') return 'badge-warning';
-    return 'badge-good';
-}
-
-function getStatusLabel(r) {
-    let level = getStatusLevel(r);
-    if (level === 'Offline') return 'Offline';
-    if (level === 'Critical') return 'Critical';
-    if (level === 'Warning') return 'Warning';
-    return 'Good';
-}
-
-function getTrafficLevel(r) { return getVolume(r) > HIGH_TRAFFIC_THRESHOLD ? 'HIGH' : 'LOW'; }
-function getImpactScore(r) { return getVolume(r) * (getReject7d(r) / 100); }
-function isHighImpact(r) { return getImpactScore(r) > HIGH_IMPACT_THRESHOLD; }
-
-function getTEMBadge(r) {
-    let tem = getTEMM(r);
-    if (tem >= HIGH_TEM_THRESHOLD) return `<span class="badge badge-tem-high">🔧 ${tem}</span>`;
-    if (tem >= 1) return `<span class="badge badge-tem-med">🔧 ${tem}</span>`;
-    return `<span class="badge badge-tem-low">✅ 0</span>`;
-}
-
-function getPaperAlert(r) {
-    let vpo = getVPO(r);
-    if (!vpo || vpo === 'N/A' || vpo === '—') return '—';
-    try {
-        let parts = vpo.match(/(\d{2})\/(\d{2})\/(\d{2})/);
-        if (parts) {
-            let date = new Date(2000 + parseInt(parts[3]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-            let daysLeft = Math.ceil((date - new Date()) / (1000 * 60 * 60 * 24));
-            if (daysLeft <= 0) return '🔴 EXPIRED';
-            if (daysLeft <= PAPER_WARNING_DAYS) return `🟡 ${daysLeft}d`;
-            return `✅ ${daysLeft}d`;
-        }
-    } catch(e) {}
-    return vpo;
-}
-
-function getDaysSinceService(r) {
-    let dateStr = getLastServiceDate(r);
-    if (!dateStr || dateStr === '—') return null;
-    try {
-        let parts = dateStr.match(/(\d{2})\/(\d{2})\/(\d{2})/);
-        if (parts) {
-            let date = new Date(2000 + parseInt(parts[3]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-            return Math.ceil((new Date() - date) / (1000 * 60 * 60 * 24));
-        }
-    } catch(e) {}
-    return null;
-}
-
-function isServiceOverdue(r) {
-    let days = getDaysSinceService(r);
-    return days !== null && days > SERVICE_OVERDUE_DAYS;
-}
-
-function getEstRevenue(r) { return getVolume(r) * TRANSACTION_VALUE; }
-function calcLossFromReject(r) { return getVolume(r) * (getReject7d(r) / 100) * TRANSACTION_VALUE; }
-function calcLossFromDowntime(r) { return getVolume(r) * ((100 - getUptime7d(r)) / 100) * 0.8 * TRANSACTION_VALUE; }
-function calcDailyLoss(r) { return calcLossFromReject(r) + calcLossFromDowntime(r); }
-function getNetRevenue(r) { return getEstRevenue(r) - calcDailyLoss(r); }
-
-// Volume Priority
-let volumePriorityMap = new Map();
-
-function calculateVolumePriorities() {
-    if (!allData.length) return;
-    let volumes = allData.map(r => getVolume(r));
-    volumes.sort((a, b) => b - a);
-    let top33Index = Math.floor(volumes.length * 0.33);
-    let mid33Index = Math.floor(volumes.length * 0.66);
-    let top33Threshold = volumes[top33Index - 1] || 0;
-    let mid33Threshold = volumes[mid33Index - 1] || 0;
-    
-    allData.forEach(r => {
-        let vol = getVolume(r);
-        if (vol >= top33Threshold && top33Threshold > 0) {
-            volumePriorityMap.set(getStoreId(r), 'High');
-        } else if (vol >= mid33Threshold && mid33Threshold > 0) {
-            volumePriorityMap.set(getStoreId(r), 'Mid');
-        } else {
-            volumePriorityMap.set(getStoreId(r), 'Low');
-        }
-    });
-}
-
-function getVolumePriority(r) { return volumePriorityMap.get(getStoreId(r)) || 'Low'; }
-function getVolumeBadge(r) {
-    let priority = getVolumePriority(r);
-    if (priority === 'High') return '<span class="badge badge-volume-high">HIGH</span>';
-    if (priority === 'Mid') return '<span class="badge badge-volume-mid">MID</span>';
-    return '<span class="badge badge-volume-low">LOW</span>';
-}
-
-function getVolumeTrend(r) {
-    let vol1d = getVolume(r);
-    let vol7dAvg = getVolume7DayAvg(r);
-    if (vol7dAvg === 0) return 'flat';
-    let change = ((vol1d - vol7dAvg) / vol7dAvg) * 100;
-    if (change > 5) return 'up';
-    if (change < -5) return 'down';
-    return 'flat';
-}
-
-function getTrendDisplay(r) {
-    let trend = getVolumeTrend(r);
-    let vol1d = getVolume(r);
-    let vol7dAvg = getVolume7DayAvg(r);
-    let pct = vol7dAvg === 0 ? 0 : ((vol1d - vol7dAvg) / vol7dAvg) * 100;
-    let absPct = Math.abs(pct).toFixed(0);
-    if (trend === 'up') return `<span class="badge badge-trend-up">📈 +${absPct}%</span>`;
-    if (trend === 'down') return `<span class="badge badge-trend-down">📉 -${absPct}%</span>`;
-    return `<span class="badge badge-trend-flat">➡️ 0%</span>`;
-}
-
-// Tooltip system
-let activeTooltip = null;
-let tooltipTimeout = null;
-
-function showTooltip(element, text) {
-    if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; }
-    if (tooltipTimeout) clearTimeout(tooltipTimeout);
-    if (!text) return;
-    const tooltip = document.createElement('div');
-    tooltip.className = 'global-tooltip';
-    tooltip.textContent = text;
-    document.body.appendChild(tooltip);
-    const rect = element.getBoundingClientRect();
-    const tooltipRect = tooltip.getBoundingClientRect();
-    let top = rect.top - tooltipRect.height - 8;
-    let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-    if (top < 8) top = rect.bottom + 8;
-    if (left < 8) left = 8;
-    if (left + tooltipRect.width > window.innerWidth - 8) left = window.innerWidth - tooltipRect.width - 8;
-    tooltip.style.top = top + 'px';
-    tooltip.style.left = left + 'px';
-    activeTooltip = tooltip;
-    tooltipTimeout = setTimeout(() => { if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; } }, 3000);
-}
-
-function hideTooltip() {
-    if (tooltipTimeout) clearTimeout(tooltipTimeout);
-    if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; }
-}
-
-function attachTooltips() {
-    document.querySelectorAll('.help-icon').forEach(el => {
-        const text = el.getAttribute('data-tooltip');
-        if (text) {
-            el.removeEventListener('mouseenter', (e) => showTooltip(e.target, text));
-            el.removeEventListener('mouseleave', hideTooltip);
-            el.addEventListener('mouseenter', (e) => showTooltip(e.target, text));
-            el.addEventListener('mouseleave', hideTooltip);
-        }
-    });
-}
-
-// Notes functions
-function getNotesKey(storeId) { return `kiosk_notes_${storeId}`; }
-function loadNotes(storeId) {
-    const saved = localStorage.getItem(getNotesKey(storeId));
-    if (!saved) return [];
-    try { return JSON.parse(saved).filter(n => new Date(n.date).getTime() > Date.now() - 30*24*60*60*1000); } catch(e) { return []; }
-}
-function saveNote(storeId, noteText) {
-    if (!noteText.trim()) return;
-    const notes = loadNotes(storeId);
-    notes.unshift({ id: Date.now().toString(), text: noteText.trim(), date: new Date().toISOString(), formattedDate: new Date().toLocaleString() });
-    localStorage.setItem(getNotesKey(storeId), JSON.stringify(notes));
-}
-function updateNote(storeId, noteId, newText) {
-    if (!newText.trim()) return;
-    const notes = loadNotes(storeId);
-    const idx = notes.findIndex(n => n.id === noteId);
-    if (idx !== -1) {
-        notes[idx].text = newText.trim();
-        notes[idx].date = new Date().toISOString();
-        notes[idx].formattedDate = new Date().toLocaleString();
-        localStorage.setItem(getNotesKey(storeId), JSON.stringify(notes));
-    }
-}
-function deleteNote(storeId, noteId) {
-    const notes = loadNotes(storeId);
-    localStorage.setItem(getNotesKey(storeId), JSON.stringify(notes.filter(n => n.id !== noteId)));
-}
-
-function openNotesModal(storeId, storeName) {
-    currentNoteStore = storeId;
-    editingNoteId = null;
-    document.getElementById('notesModalTitle').innerHTML = `📝 Notes - ${escapeHtml(storeName)}`;
-    const notes = loadNotes(storeId);
-    const notesListDiv = document.getElementById('notesList');
-    if (notes.length === 0) {
-        notesListDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No notes yet. Add one below.</div>';
-    } else {
-        notesListDiv.innerHTML = notes.map(note => `
-            <div class="note-item">
-                <div style="flex:1;"><div class="note-text">${escapeHtml(note.text)}</div><div class="note-date">📅 ${escapeHtml(note.formattedDate)}</div></div>
-                <div><button class="note-edit-btn" onclick="editNote('${storeId}', '${note.id}')">✏️</button><button class="note-edit-btn" onclick="deleteNoteAndRefresh('${storeId}', '${note.id}')">🗑️</button></div>
-            </div>
-        `).join('');
-    }
-    document.getElementById('newNoteInput').value = '';
-    document.getElementById('notesModal').style.display = 'flex';
-    document.getElementById('saveNewNoteBtn').onclick = () => {
-        const text = document.getElementById('newNoteInput').value;
-        if (text.trim()) {
-            if (editingNoteId) updateNote(storeId, editingNoteId, text);
-            else saveNote(storeId, text);
-            refreshNotesModal(storeId);
-        }
-    };
-}
-
-window.editNote = (storeId, noteId) => {
-    const notes = loadNotes(storeId);
-    const note = notes.find(n => n.id === noteId);
-    if (note) {
-        editingNoteId = noteId;
-        document.getElementById('newNoteInput').value = note.text;
-        document.getElementById('saveNewNoteBtn').textContent = 'Update Note';
-        document.getElementById('saveNewNoteBtn').style.background = '#f59e0b';
-    }
-};
-
-window.deleteNoteAndRefresh = (storeId, noteId) => {
-    deleteNote(storeId, noteId);
-    refreshNotesModal(storeId);
-};
-
-function refreshNotesModal(storeId) {
-    const store = allData.find(r => getStoreId(r) === storeId);
-    const storeName = store ? (store.Store || 'Kiosk') : 'Kiosk';
-    document.getElementById('notesModalTitle').innerHTML = `📝 Notes - ${escapeHtml(storeName)}`;
-    const notes = loadNotes(storeId);
-    const notesListDiv = document.getElementById('notesList');
-    if (notes.length === 0) {
-        notesListDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">No notes yet. Add one below.</div>';
-    } else {
-        notesListDiv.innerHTML = notes.map(note => `
-            <div class="note-item">
-                <div style="flex:1;"><div class="note-text">${escapeHtml(note.text)}</div><div class="note-date">📅 ${escapeHtml(note.formattedDate)}</div></div>
-                <div><button class="note-edit-btn" onclick="editNote('${storeId}', '${note.id}')">✏️</button><button class="note-edit-btn" onclick="deleteNoteAndRefresh('${storeId}', '${note.id}')">🗑️</button></div>
-            </div>
-        `).join('');
-    }
-    document.getElementById('newNoteInput').value = '';
-    document.getElementById('saveNewNoteBtn').textContent = 'Save Note';
-    document.getElementById('saveNewNoteBtn').style.background = '#10b981';
-    editingNoteId = null;
-}
-
-window.openNotesModal = openNotesModal;
-function closeNotesModal() { document.getElementById('notesModal').style.display = 'none'; }
-function closeModal() { document.getElementById('instructionModal').style.display = 'none'; }
-function showToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
-
-// Haversine distance
-function haversineDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-}
-
-async function geocodeAddress(address) {
-    try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
-        const data = await response.json();
-        if (data && data.length > 0) {
-            return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
-        }
-    } catch(e) { console.error('Geocoding error:', e); }
-    return null;
-}
-
-function optimizeRoute(startCoord, stops) {
-    if (!stops.length) return [];
-    const unvisited = [...stops];
-    const route = [];
-    let current = startCoord;
-    
-    while (unvisited.length > 0) {
-        let closestIdx = 0;
-        let closestDist = haversineDistance(current.lat, current.lon, unvisited[0].coord.lat, unvisited[0].coord.lon);
-        for (let i = 1; i < unvisited.length; i++) {
-            const dist = haversineDistance(current.lat, current.lon, unvisited[i].coord.lat, unvisited[i].coord.lon);
-            if (dist < closestDist) {
-                closestDist = dist;
-                closestIdx = i;
-            }
-        }
-        route.push(unvisited[closestIdx]);
-        current = unvisited[closestIdx].coord;
-        unvisited.splice(closestIdx, 1);
-    }
-    return route;
-}
-
-function formatDuration(minutes) {
-    if (minutes < 60) return `${Math.round(minutes)} min`;
-    const hours = Math.floor(minutes / 60);
-    const mins = Math.round(minutes % 60);
-    return `${hours}h ${mins}m`;
-}
-
-async function planRoute() {
-    const startAddress = document.getElementById('startAddress').value.trim();
-    if (!startAddress) { showToast('Please enter a starting address'); return; }
-    if (selectedKiosks.size === 0) { showToast('Please select at least one kiosk'); return; }
-    
-    showToast('Geocoding starting address...');
-    const startCoord = await geocodeAddress(startAddress);
-    if (!startCoord) { showToast('Could not find starting address'); return; }
-    
-    const stops = [];
-    for (const storeId of selectedKiosks) {
-        const kiosk = allData.find(r => getStoreId(r) === storeId);
-        if (kiosk && kiosk.Latitude && kiosk.Longitude) {
-            stops.push({
-                id: storeId,
-                name: kiosk.Store,
-                address: `${kiosk.Address || ''}, ${kiosk.City || ''}, ${kiosk.Province || ''}`,
-                coord: { lat: parseFloat(kiosk.Latitude), lon: parseFloat(kiosk.Longitude) }
-            });
-        }
-    }
-    
-    if (stops.length === 0) { showToast('Selected kiosks missing location data'); return; }
-    
-    showToast('Optimizing route...');
-    const optimized = optimizeRoute(startCoord, stops);
-    currentRoute = { start: startCoord, startAddress: startAddress, stops: optimized };
-    
-    let totalDist = 0;
-    let current = startCoord;
-    for (const stop of optimized) {
-        totalDist += haversineDistance(current.lat, current.lon, stop.coord.lat, stop.coord.lon);
-        current = stop.coord;
-    }
-    
-    const avgSpeedKmh = 50;
-    const totalMinutes = (totalDist / avgSpeedKmh) * 60;
-    
-    document.getElementById('routeStats').innerHTML = `
-        <strong>Total Stops: ${optimized.length}</strong><br>
-        📍 Start: ${escapeHtml(startAddress)}<br>
-        🗺️ Total Distance: ${totalDist.toFixed(1)} km<br>
-        ⏱️ Est. Drive Time: ${formatDuration(totalMinutes)}
-    `;
-    
-    let stopsHtml = '<div style="margin-top:10px;"><strong>Optimized Route:</strong><ol class="route-stops" style="margin-top:5px; padding-left:20px;">';
-    let cumulativeDist = 0;
-    let currentPos = startCoord;
-    for (let i = 0; i < optimized.length; i++) {
-        const stop = optimized[i];
-        const segmentDist = i === 0 ? haversineDistance(startCoord.lat, startCoord.lon, stop.coord.lat, stop.coord.lon)
-                                   : haversineDistance(optimized[i-1].coord.lat, optimized[i-1].coord.lon, stop.coord.lat, stop.coord.lon);
-        cumulativeDist += segmentDist;
-        const segmentTime = (segmentDist / avgSpeedKmh) * 60;
-        stopsHtml += `<li><strong>${escapeHtml(stop.name)}</strong><br><span style="font-size:10px; color:#666;">${escapeHtml(stop.address)} — ${segmentDist.toFixed(1)} km (${formatDuration(segmentTime)})</span></li>`;
-    }
-    stopsHtml += '</ol></div>';
-    document.getElementById('routeStopsList').innerHTML = stopsHtml;
-    document.getElementById('routeSummary').style.display = 'block';
-    
-    updateMapHighlights();
-}
-
-function openRouteInMaps() {
-    if (!currentRoute || !currentRoute.stops.length) return;
-    let url = 'https://www.google.com/maps/dir/?api=1';
-    url += `&origin=${encodeURIComponent(currentRoute.startAddress)}`;
-    const destinations = currentRoute.stops.map(s => encodeURIComponent(s.address));
-    url += `&destination=${destinations[destinations.length-1]}`;
-    if (destinations.length > 1) {
-        url += `&waypoints=${destinations.slice(0, -1).join('|')}`;
-    }
-    window.open(url, '_blank');
-}
-
-function copyRoute() {
-    if (!currentRoute || !currentRoute.stops.length) return;
-    let text = `Route from: ${currentRoute.startAddress}\n\n`;
-    for (let i = 0; i < currentRoute.stops.length; i++) {
-        text += `${i+1}. ${currentRoute.stops[i].name} - ${currentRoute.stops[i].address}\n`;
-    }
-    navigator.clipboard.writeText(text);
-    showToast('Route copied to clipboard');
-}
-
-// Map functions
-function getMapColor(r) {
-    let level = getStatusLevel(r);
-    if (level === 'Offline') return '#6b7280';
-    if (level === 'Critical') return '#dc2626';
-    if (level === 'Warning') return '#f59e0b';
-    return '#10b981';
-}
-
-function updateMapHighlights() {
-    if (!map) return;
-    map.eachLayer(layer => {
-        if (layer.options && layer.options.pane === 'markerPane') {
-            const storeId = layer.options.storeId;
-            if (storeId && selectedKiosks.has(storeId)) {
-                layer.setStyle({ fillColor: '#3b82f6', color: '#1e3a5f', weight: 3 });
-            } else if (layer.options.originalColor) {
-                layer.setStyle({ fillColor: layer.options.originalColor, color: '#fff', weight: 2 });
-            }
-        }
-    });
-}
-
-function initMap() {
-    if (map) map.remove();
-    map = L.map('map').setView([56.1304, -106.3468], 4);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-        subdomains: 'abcd',
-        maxZoom: 19
-    }).addTo(map);
-    
-    const filtered = filterData();
-    const bounds = [];
-    
-    filtered.forEach(r => {
-        const lat = parseFloat(r.Latitude);
-        const lng = parseFloat(r.Longitude);
-        if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
-            const color = getMapColor(r);
-            const storeId = getStoreId(r);
-            const isSelected = selectedKiosks.has(storeId);
-            const marker = L.circleMarker([lat, lng], {
-                radius: 8,
-                fillColor: isSelected ? '#3b82f6' : color,
-                color: '#fff',
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 0.9,
-                storeId: storeId,
-                originalColor: color
-            }).addTo(map);
-            
-            marker.on('click', () => {
-                if (selectedKiosks.has(storeId)) {
-                    selectedKiosks.delete(storeId);
-                    marker.setStyle({ fillColor: color, color: '#fff', weight: 2 });
-                } else {
-                    selectedKiosks.add(storeId);
-                    marker.setStyle({ fillColor: '#3b82f6', color: '#1e3a5f', weight: 3 });
-                }
-                updateTableCheckboxes();
-                updateSelectAllCheckbox();
-            });
-            
-            const reject7d = getReject7d(r);
-            const dailyLoss = calcDailyLoss(r);
-            marker.bindPopup(`
-                <b>${escapeHtml(r.Store)}</b><br>
-                📍 ${escapeHtml(r.Address || '')}, ${escapeHtml(r.City || '')}<br>
-                ${getStatusLabel(r)}: ${reject7d.toFixed(1)}%<br>
-                💸 Daily Loss: $${dailyLoss.toFixed(0)}<br>
-                📞 ${escapeHtml(getPhoneNumber(r))}<br>
-                <a href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank">🗺️ Directions</a>
-            `);
-            bounds.push([lat, lng]);
-        }
-    });
-    
-    if (bounds.length > 0) map.fitBounds(bounds);
-}
-
-// Priority filter
-function applyPriorityFilter(data, filterType) {
-    if (filterType === 'all') return data;
-    if (filterType === 'urgent') return data.filter(r => isHighImpact(r));
-    if (filterType === 'high-reject') return data.filter(r => getReject7d(r) >= 4);
-    if (filterType === 'full-bin') return data.filter(r => parseFloat(r.BinFull || 0) > 80);
-    if (filterType === 'paper-out') return data.filter(r => { let a = getPaperAlert(r); return a.includes('🟡') || a.includes('🔴'); });
-    if (filterType === 'overdue') return data.filter(r => isServiceOverdue(r));
-    if (filterType === 'high-tem') return data.filter(r => getTEMM(r) >= HIGH_TEM_THRESHOLD);
-    if (filterType === 'high-volume') return data.filter(r => getVolumePriority(r) === 'High');
-    if (filterType === 'call-first') return data.filter(r => r.KioskState === 'Offline');
-    return data;
-}
-
-// CSV Parsing
-function parseCSV(csvText) {
-    const lines = csvText.split(/\r?\n/);
-    if (lines.length < 2) { showToast('Error: Empty file'); return false; }
-    const headers = lines[0].split(',').map(h => h.replace(/^\uFEFF/, '').replace(/"/g, '').trim());
-    const data = [];
-    for (let i = 1; i < lines.length; i++) {
-        if (!lines[i].trim()) continue;
-        const row = {};
-        let inQuote = false, current = '', col = 0;
-        for (const ch of lines[i]) {
-            if (ch === '"') inQuote = !inQuote;
-            else if (ch === ',' && !inQuote) {
-                row[headers[col]] = current.trim().replace(/"/g, '');
-                current = '';
-                col++;
-            } else current += ch;
-        }
-        if (col < headers.length) row[headers[col]] = current.trim().replace(/"/g, '');
-        if (Object.keys(row).length) data.push(row);
-    }
-    if (data.length === 0) { showToast('Error: No valid data rows'); return false; }
-    
-    allData = data.filter(row => isCanadian(row)).map(row => ({
-        Store: row.Store || row['Store Name'] || 'Unknown',
-        Address: row.Address || '',
-        City: row.City || '',
-        Province: row.State || row.Province || '',
-        KioskState: row['Kiosk State'] || row.State || 'Attract',
-        Tx1Day: row['1 Day TX'] || row['Volume'] || '0',
-        Tx7Day: row['7 Day TX'] || '0',
-        Reject1Day: row['1 Day Reject %'] || row['Reject %'] || '0',
-        Reject7Day: row['7 Day Reject %'] || row['Reject7Day'] || row['1 Day Reject %'] || '0',
-        Uptime1Day: row['1 Day Uptime %'] || '100',
-        Uptime7Day: row['7 Day Uptime %'] || row['Uptime'] || '100',
-        BinFull: row['Total Bin Full %'] || row['Bin Full %'] || '0',
-        EstFillDate: row['Estimated Fill Date'] || '',
-        LastPM: row['Last PM Date'] || row['Last Service Date'] || '',
-        Phone: row['Store Phone Number'] || row.Phone || '',
-        TEMM7Day: row['7 Day TEMM'] || row['TEMM'] || '0',
-        VPO: row.VPO || row['VPO'] || '',
-        LastTXDate: row['Last TX Date'] || '',
-        Version: row.Version || row['Version'] || '',
-        Latitude: row.Latitude || '',
-        Longitude: row.Longitude || '',
-        Zone: row['FT Zone'] || row.District || row.Zone || ''
-    }));
-    
-    calculateVolumePriorities();
-    return true;
-}
-
-// Filter data
-function filterData() {
-    let f = [...allData];
-    f = applyPriorityFilter(f, currentPriorityFilter);
-    const prov = document.getElementById('provinceFilter')?.value || 'all';
-    if (prov !== 'all') f = f.filter(r => getRegion(r) === prov);
-    const zone = document.getElementById('zoneFilter')?.value || 'all';
-    if (zone !== 'all') f = f.filter(r => getZone(r) === zone);
-    const status = document.getElementById('riskFilter')?.value || 'all';
-    if (status === 'critical') f = f.filter(r => getStatusLevel(r) === 'Critical');
-    else if (status === 'warning') f = f.filter(r => getStatusLevel(r) === 'Warning');
-    else if (status === 'good') f = f.filter(r => getStatusLevel(r) === 'Good');
-    const volumeFilter = document.getElementById('volumeFilter')?.value || 'all';
-    if (volumeFilter !== 'all') f = f.filter(r => getVolumePriority(r) === volumeFilter);
-    const s = document.getElementById('searchInput')?.value.toLowerCase() || '';
-    if (s) f = f.filter(r => (r.Store || '').toLowerCase().includes(s) || (r.City || '').toLowerCase().includes(s) || (r.Address || '').toLowerCase().includes(s));
-    return f;
-}
-
-function sortData(d) {
-    return [...d].sort((a, b) => {
-        let va, vb;
-        switch (currentSort.column) {
-            case 'store': va = (a.Store || '').toLowerCase(); vb = (b.Store || '').toLowerCase(); break;
-            case 'address': va = (a.Address || '').toLowerCase(); vb = (b.Address || '').toLowerCase(); break;
-            case 'city': va = (a.City || '').toLowerCase(); vb = (b.City || '').toLowerCase(); break;
-            case 'province': va = getRegion(a); vb = getRegion(b); break;
-            case 'zone': va = getZone(a); vb = getZone(b); break;
-            case 'status': va = a.KioskState || ''; vb = b.KioskState || ''; break;
-            case 'volume': va = getVolume(a); vb = getVolume(b); break;
-            case 'volumePriority': va = getVolumePriority(a); vb = getVolumePriority(b); break;
-            case 'traffic': va = getTrafficLevel(a); vb = getTrafficLevel(b); break;
-            case 'trend': va = getVolumeTrend(a); vb = getVolumeTrend(b); break;
-            case 'reject7d': va = getReject7d(a); vb = getReject7d(b); break;
-            case 'impact': va = getImpactScore(a); vb = getImpactScore(b); break;
-            case 'tem': va = getTEMM(a); vb = getTEMM(b); break;
-            case 'paper': va = getPaperAlert(a); vb = getPaperAlert(b); break;
-            case 'uptime': va = getUptime7d(a); vb = getUptime7d(b); break;
-            case 'bin': va = parseFloat(a.BinFull || 0); vb = parseFloat(b.BinFull || 0); break;
-            case 'serviceDays': va = getDaysSinceService(a) || 0; vb = getDaysSinceService(b) || 0; break;
-            case 'lastTX': va = a.LastTXDate || ''; vb = b.LastTXDate || ''; break;
-            case 'version': va = a.Version || ''; vb = b.Version || ''; break;
-            case 'revenue': va = getEstRevenue(a); vb = getEstRevenue(b); break;
-            case 'loss': va = calcDailyLoss(a); vb = calcDailyLoss(b); break;
-            case 'statusFlag': va = getStatusLabel(a); vb = getStatusLabel(b); break;
-            default: return 0;
-        }
-        if (typeof va === 'number') return currentSort.direction === 'desc' ? vb - va : va - vb;
-        return currentSort.direction === 'desc' ? String(vb).localeCompare(String(va)) : String(va).localeCompare(String(vb));
-    });
-}
-
-function updateTableCheckboxes() {
-    document.querySelectorAll('.kiosk-checkbox').forEach(cb => {
-        const storeId = cb.getAttribute('data-storeid');
-        cb.checked = selectedKiosks.has(storeId);
-        const row = cb.closest('tr');
-        if (row) {
-            if (selectedKiosks.has(storeId)) row.classList.add('selected-row');
-            else row.classList.remove('selected-row');
-        }
-    });
-    updateSelectAllCheckbox();
-}
-
-function updateSelectAllCheckbox() {
-    const selectAll = document.getElementById('selectAllCheckbox');
-    if (!selectAll) return;
-    const checkboxes = document.querySelectorAll('.kiosk-checkbox');
-    const allChecked = checkboxes.length > 0 && Array.from(checkboxes).every(cb => cb.checked);
-    selectAll.checked = allChecked;
-}
-
-function selectAllKiosks() {
-    const selectAll = document.getElementById('selectAllCheckbox');
-    const isChecked = selectAll.checked;
-    document.querySelectorAll('.kiosk-checkbox').forEach(cb => {
-        cb.checked = isChecked;
-        const storeId = cb.getAttribute('data-storeid');
-        if (isChecked) selectedKiosks.add(storeId);
-        else selectedKiosks.delete(storeId);
-        const row = cb.closest('tr');
-        if (row) {
-            if (isChecked) row.classList.add('selected-row');
-            else row.classList.remove('selected-row');
-        }
-    });
-    if (currentView === 'map' && map) updateMapHighlights();
-}
-
-// Province chart
-function updateProvinceChart(data) {
-    const provinceReject = {}, provinceDowntime = {};
-    data.forEach(r => {
-        const prov = getRegion(r);
-        if (prov && prov !== 'Unknown') {
-            provinceReject[prov] = (provinceReject[prov] || 0) + calcLossFromReject(r);
-            provinceDowntime[prov] = (provinceDowntime[prov] || 0) + calcLossFromDowntime(r);
-        }
-    });
-    const provinces = [...new Set([...Object.keys(provinceReject), ...Object.keys(provinceDowntime)])];
-    const sorted = provinces.map(p => ({ prov: p, total: (provinceReject[p] || 0) + (provinceDowntime[p] || 0) })).sort((a, b) => b.total - a.total);
-    if (lossChart) lossChart.destroy();
-    lossChart = new Chart(document.getElementById('lossChart'), {
-        type: 'bar',
-        data: {
-            labels: sorted.map(p => p.prov),
-            datasets: [
-                { label: 'Loss from rejected transactions', data: sorted.map(p => provinceReject[p.prov] || 0), backgroundColor: '#dc2626', borderRadius: 4 },
-                { label: 'Loss from downtime', data: sorted.map(p => provinceDowntime[p.prov] || 0), backgroundColor: '#f97316', borderRadius: 4 }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } },
-            onClick: (event, activeElements) => {
-                if (activeElements.length > 0) {
-                    const province = sorted[activeElements[0].index].prov;
-                    document.getElementById('provinceFilter').value = province;
-                    renderAll();
-                    showToast(`📌 Filtered to ${province}`);
-                }
-            },
-            scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v } } }
-        }
-    });
-}
-
-function updateTopLossList(data) {
-    const sorted = [...data].sort((a, b) => calcDailyLoss(b) - calcDailyLoss(a));
-    const top10 = sorted.slice(0, 10);
-    const container = document.getElementById('topLossList');
-    if (!top10.length) {
-        container.innerHTML = '<div style="text-align:center; padding:20px;">No data available</div>';
-        return;
-    }
-    container.innerHTML = top10.map((r, idx) => {
-        const loss = calcDailyLoss(r);
-        const monthlyLoss = loss * 30;
-        const address = r.Address || '';
-        const city = r.City || '';
-        const province = getRegion(r);
-        const locationText = address ? `${address}, ${city}, ${province}` : `${city}, ${province}`;
-        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationText)}`;
-        const statusIcon = getStatusLabel(r);
-        const trafficIcon = getTrafficLevel(r) === 'HIGH' ? '🔴' : '🟢';
-        return `<div class="top-loss-item" onclick="document.getElementById('searchInput').value='${escapeHtml(r.Store)}'; renderAll();">
-            <div class="top-loss-left">
-                <span class="top-loss-rank">#${idx + 1}</span>
-                <div>
-                    <div class="top-loss-store">${statusIcon} ${trafficIcon} ${escapeHtml(r.Store)}</div>
-                    <div class="top-loss-address">📍 <a href="${mapsUrl}" target="_blank" class="top-loss-link" onclick="event.stopPropagation()">${escapeHtml(locationText)}</a></div>
-                </div>
-            </div>
-            <div class="top-loss-loss">$${loss.toFixed(0)}/day <span style="font-size:10px;">($${monthlyLoss.toFixed(0)}/mo)</span></div>
-        </div>`;
-    }).join('');
-}
-
-function renderAll() {
-    if (!allData.length) return;
-    let f = filterData();
-    f = sortData(f);
-    
-    const total = f.length;
-    const critical = f.filter(r => getStatusLevel(r) === 'Critical').length;
-    const warning = f.filter(r => getStatusLevel(r) === 'Warning').length;
-    const offline = f.filter(r => r.KioskState === 'Offline').length;
-    const binAlert = f.filter(r => parseFloat(r.BinFull || 0) > 80).length;
-    const highVolume = f.filter(r => getVolumePriority(r) === 'High').length;
-    const totalLoss = f.reduce((s, r) => s + calcDailyLoss(r), 0);
-    const totalRevenue = f.reduce((s, r) => s + getEstRevenue(r), 0);
-    const totalNet = totalRevenue - totalLoss;
-    const avgUptime1d = f.reduce((s, r) => s + getUptime1d(r), 0) / (f.length || 1);
-    const avgUptime7d = f.reduce((s, r) => s + getUptime7d(r), 0) / (f.length || 1);
-    
-    document.getElementById('alertBar').innerHTML = `<span>⚠️ Action Required: ${critical} critical | ${warning} warning | ${offline} offline | ${binAlert} full bins | ${highVolume} high volume</span><button class="alert-btn" id="viewHighRejectBtn">View Critical →</button>`;
-    document.getElementById('viewHighRejectBtn').onclick = () => { document.getElementById('riskFilter').value = 'critical'; renderAll(); };
-    
-    document.getElementById('kpiGrid').innerHTML = `
-        <div class="kpi-card"><div class="kpi-label">📊 Total Kiosks</div><div class="kpi-value">${total}</div></div>
-        <div class="kpi-card"><div class="kpi-label">🔴 Critical (≥8%)</div><div class="kpi-value" style="color:#dc2626;">${critical}</div></div>
-        <div class="kpi-card"><div class="kpi-label">🟡 Warning (4-8%)</div><div class="kpi-value" style="color:#f59e0b;">${warning}</div></div>
-        <div class="kpi-card"><div class="kpi-label">📞 Offline</div><div class="kpi-value" style="color:#6b7280;">${offline}</div></div>
-        <div class="kpi-card"><div class="kpi-label">📊 High Volume</div><div class="kpi-value" style="color:#dc2626;">${highVolume}</div></div>
-        <div class="kpi-card"><div class="kpi-label">📡 Today's Uptime</div><div class="kpi-value" style="color:#10b981;">${avgUptime1d.toFixed(1)}%</div></div>
-        <div class="kpi-card"><div class="kpi-label">📆 7-Day Uptime</div><div class="kpi-value" style="color:#10b981;">${avgUptime7d.toFixed(1)}%</div></div>
-        <div class="kpi-card"><div class="kpi-label">💰 Est. Revenue</div><div class="kpi-value kpi-green">$${totalRevenue.toFixed(0)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">💸 Daily Loss</div><div class="kpi-value kpi-loss">$${totalLoss.toFixed(0)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">📈 Net Revenue</div><div class="kpi-value">$${totalNet.toFixed(0)}</div></div>
-    `;
-    
-    updateProvinceChart(f);
-    updateTopLossList(f);
-    
-    if (currentView === 'map' && map) {
-        setTimeout(() => initMap(), 100);
-    }
-    
-    const tbody = document.getElementById('tableBody');
-    if (!f.length) {
-        tbody.innerHTML = '<td><td colspan="25" style="text-align:center;padding:40px;">No kiosks match filters</td></tr>';
-        return;
-    }
-    
-    tbody.innerHTML = f.map(r => {
-        const reject7d = getReject7d(r);
-        const bin = parseFloat(r.BinFull || 0);
-        const up = getUptime7d(r);
-        const volume = getVolume(r);
-        const estRevenue = getEstRevenue(r);
-        const dailyLoss = calcDailyLoss(r);
-        const impactScore = getImpactScore(r);
-        const trafficLevel = getTrafficLevel(r);
-        const daysSinceService = getDaysSinceService(r);
-        const isOverdue = isServiceOverdue(r);
-        const storeId = getStoreId(r);
-        const storeName = r.Store || '—';
-        const isCritical = getStatusLevel(r) === 'Critical';
-        const isWarning = getStatusLevel(r) === 'Warning';
-        const isBinAlert = bin > 80;
-        const barC = bin > 95 ? '#dc2626' : (bin > 80 ? '#f59e0b' : '#10b981');
-        const phone = getPhoneNumber(r);
-        const callButton = phone ? `<button class="call-btn" onclick="window.location.href='tel:${phone}'; event.stopPropagation();">📞</button>` : '';
-        const serviceDisplay = daysSinceService !== null ? `${daysSinceService} days${isOverdue ? ' 🔴' : ''}` : '—';
-        const trendDisplay = getTrendDisplay(r);
-        const temBadge = getTEMBadge(r);
-        const volumeBadge = getVolumeBadge(r);
-        const statusLabel = getStatusLabel(r);
-        const statusBadgeClass = getStatusBadgeClass(r);
-        const rowClass = `${isCritical ? 'high-reject-row' : isWarning ? 'paper-alert-row' : ''} ${selectedKiosks.has(storeId) ? 'selected-row' : ''}`;
-        
-        return `<tr class="${rowClass}">
-            <td class="checkbox-col"><input type="checkbox" class="kiosk-checkbox" data-storeid="${escapeHtml(storeId)}" ${selectedKiosks.has(storeId) ? 'checked' : ''} onclick="toggleKioskSelection('${escapeHtml(storeId)}', this.checked)"></td>
-            <td><span class="notes-icon" onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">📝</span> <strong onclick="openNotesModal('${escapeHtml(storeId)}', '${escapeHtml(storeName)}')">${escapeHtml(storeName)}</strong>${callButton}</td>
-            <td>${escapeHtml(r.Address || '—')}</td>
-            <td>${escapeHtml(r.City || '—')}</td>
-            <td>${getRegion(r)}</td>
-            <td>${escapeHtml(getZone(r))}</td>
-            <td>${r.KioskState || 'Attract'}</td>
-            <td>${volume}</td>
-            <td>${volumeBadge}</td>
-            <td><span class="badge ${trafficLevel === 'HIGH' ? 'badge-traffic-high' : 'badge-traffic-low'}">${trafficLevel}</span></td>
-            <td>${trendDisplay}</td>
-            <td style="color:${reject7d >= 8 ? '#dc2626' : reject7d >= 4 ? '#f59e0b' : '#16a34a'};font-weight:600;background:#fef3c7;">⭐ ${reject7d.toFixed(1)}%</td>
-            <td>${impactScore.toFixed(2)}${impactScore > 0.8 ? '<span class="badge badge-impact" style="margin-left:5px;">HIGH</span>' : ''}</td>
-            <td>${temBadge}</td>
-            <td>${getPaperAlert(r)}</td>
-            <td>${up.toFixed(1)}%</td>
-            <td>${bin.toFixed(0)}%<div class="fill-bar"><div class="fill-bar-fill" style="width:${Math.min(bin, 100)}%;background:${barC};"></div></div></td>
-            <td ${isOverdue ? 'style="color:#dc2626;font-weight:600;"' : ''}>${serviceDisplay}</td>
-            <td>${r.LastTXDate ? r.LastTXDate.substring(0, 16) : '—'}</td>
-            <td>${r.Version || '—'}</td>
-            <td>$${estRevenue.toFixed(0)}</td>
-            <td style="color:#dc2626;">$${dailyLoss.toFixed(0)}</td>
-            <td><span class="badge ${statusBadgeClass}">${statusLabel}</span></td>
-            <td>${callButton}</td>
-        </tr>`;
-    }).join('');
-    
-    document.getElementById('lastUpdateTime').innerHTML = new Date().toLocaleString();
-    attachTooltips();
-    updateTableCheckboxes();
-}
-
-window.toggleKioskSelection = function(storeId, isChecked) {
-    if (isChecked) selectedKiosks.add(storeId);
-    else selectedKiosks.delete(storeId);
-    const row = document.querySelector(`.kiosk-checkbox[data-storeid="${storeId}"]`)?.closest('tr');
-    if (row) {
-        if (isChecked) row.classList.add('selected-row');
-        else row.classList.remove('selected-row');
-    }
-    if (currentView === 'map' && map) updateMapHighlights();
-    updateSelectAllCheckbox();
-};
-
-// Export functions
-function exportToExcelForBI(tool) {
-    const f = filterData();
-    const data = f.map(r => ({
-        Store: r.Store, Address: r.Address, City: r.City, Province: getRegion(r), Zone: getZone(r),
-        Status: r.KioskState, Volume: getVolume(r), 'Volume Priority': getVolumePriority(r),
-        'Traffic': getTrafficLevel(r), '7D Reject %': getReject7d(r), 'Impact Score': getImpactScore(r),
-        'TEMM': getTEMM(r), 'Paper ETA': getVPO(r), 'Uptime %': getUptime7d(r),
-        'Bin %': parseFloat(r.BinFull || 0), 'Days Since Service': getDaysSinceService(r) || '',
-        'Est. Revenue': getEstRevenue(r), 'Daily Loss': calcDailyLoss(r), 'Net Revenue': getNetRevenue(r),
-        'Status': getStatusLabel(r), 'Phone': getPhoneNumber(r)
-    }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Kiosk_Data');
-    XLSX.writeFile(wb, `kiosk_export_${tool.toLowerCase().replace(' ', '_')}_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`);
-    showToast(`Exported ${f.length} kiosks`);
-}
-
-async function takeScreenshot() {
-    showToast('Capturing...');
-    try {
-        const el = document.querySelector('.container');
-        const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#f0f2f5' });
-        canvas.toBlob(async b => {
-            try {
-                await navigator.clipboard.write([new ClipboardItem({ [b.type]: b })]);
-                showToast('Screenshot copied!');
-            } catch {
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(b);
-                a.download = `kiosk_snapshot_${Date.now()}.png`;
-                a.click();
-                showToast('Screenshot saved');
-            }
-        });
-    } catch(e) { showToast('Failed to capture'); }
-}
-
-// Event listeners
-document.getElementById('showUploadBtn')?.addEventListener('click', () => document.getElementById('csvFile').click());
-document.getElementById('uploadArea')?.addEventListener('click', () => document.getElementById('csvFile').click());
-
-document.getElementById('showMapBtn')?.addEventListener('click', () => {
-    currentView = 'map';
-    document.getElementById('showMapBtn').classList.add('active');
-    document.getElementById('showListBtn').classList.remove('active');
-    document.getElementById('map').style.display = 'block';
-    document.getElementById('mapLegend').style.display = 'flex';
-    document.getElementById('tableWrapper').style.display = 'none';
-    setTimeout(() => initMap(), 100);
-});
-document.getElementById('showListBtn')?.addEventListener('click', () => {
-    currentView = 'list';
-    document.getElementById('showListBtn').classList.add('active');
-    document.getElementById('showMapBtn').classList.remove('active');
-    document.getElementById('map').style.display = 'none';
-    document.getElementById('mapLegend').style.display = 'none';
-    document.getElementById('tableWrapper').style.display = 'block';
-});
-
-document.getElementById('planRouteBtn')?.addEventListener('click', planRoute);
-document.getElementById('openMapsBtn')?.addEventListener('click', openRouteInMaps);
-document.getElementById('copyRouteBtn')?.addEventListener('click', copyRoute);
-document.getElementById('selectAllCheckbox')?.addEventListener('change', selectAllKiosks);
-
-const uploadArea = document.getElementById('uploadArea');
-uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
-uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('drag-over'); });
-uploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadArea.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file && file.name.endsWith('.csv')) {
-        const reader = new FileReader();
-        reader.onload = ev => {
-            if (parseCSV(ev.target.result)) {
-                document.getElementById('uploadScreen').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                document.getElementById('actionButtons').style.display = 'flex';
-                populateFilters();
-                setupSorting();
-                setupPriorityButtons();
-                renderAll();
-                showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
-            }
-        };
-        reader.readAsText(file);
-    } else { showToast('Please drop a CSV file'); }
-});
-
-document.getElementById('csvFile').addEventListener('change', e => {
-    if (e.target.files[0]) {
-        const reader = new FileReader();
-        reader.onload = ev => {
-            if (parseCSV(ev.target.result)) {
-                document.getElementById('uploadScreen').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                document.getElementById('actionButtons').style.display = 'flex';
-                populateFilters();
-                setupSorting();
-                setupPriorityButtons();
-                renderAll();
-                showToast(`✅ Loaded ${allData.length} Canadian kiosks`);
-            }
-        };
-        reader.readAsText(e.target.files[0]);
-        showToast('Loading file...');
-    }
-});
-
-document.getElementById('qrBtn')?.addEventListener('click', () => {
-    document.getElementById('instructionModal').style.display = 'flex';
-    setTimeout(() => {
-        const qc = document.getElementById('qrcode');
-        if(qc) { qc.innerHTML = ''; new QRCode(qc, { text: window.location.href, width: 200, height: 200 }); }
-    }, 100);
-});
-
-document.getElementById('emailReportBtn')?.addEventListener('click', () => {
-    const totalLoss = allData.reduce((s, r) => s + calcDailyLoss(r), 0);
-    const critical = allData.filter(r => getStatusLevel(r) === 'Critical').length;
-    const warning = allData.filter(r => getStatusLevel(r) === 'Warning').length;
-    const offline = allData.filter(r => r.KioskState === 'Offline').length;
-    const avgUptime = allData.reduce((s, r) => s + getUptime7d(r), 0) / (allData.length || 1);
-    const top5 = [...allData].sort((a,b) => calcDailyLoss(b) - calcDailyLoss(a)).slice(0,5).map((r,i) => `${i+1}. ${r.Store}: $${calcDailyLoss(r).toFixed(0)}/day`).join('\n');
-    const body = `KIOSK PERFORMANCE REPORT - ${new Date().toLocaleDateString()}\n\nTotal Daily Loss: $${totalLoss.toFixed(0)} ($${(totalLoss*30).toFixed(0)}/month)\nCritical (≥8%): ${critical}\nWarning (4-8%): ${warning}\nOffline: ${offline}\nNetwork Uptime: ${avgUptime.toFixed(1)}%\n\nTOP 5 LOSSES:\n${top5}`;
-    window.location.href = `mailto:?subject=Kiosk Performance Report - ${new Date().toLocaleDateString()}&body=${encodeURIComponent(body)}`;
-    showToast('Email draft opened');
-});
-
-function setupSorting() {
-    document.querySelectorAll('#dataTable th').forEach(th => {
-        if (th.classList.contains('checkbox-col')) return;
-        th.addEventListener('click', () => {
-            const k = th.getAttribute('data-sort');
-            if (currentSort.column === k) currentSort.direction = currentSort.direction === 'desc' ? 'asc' : 'desc';
-            else { currentSort.column = k; currentSort.direction = 'desc'; }
-            renderAll();
-        });
-    });
-}
-
-function setupPriorityButtons() {
-    document.querySelectorAll('.priority-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentPriorityFilter = btn.getAttribute('data-filter');
-            renderAll();
-        });
-    });
-}
-
-function populateFilters() {
-    const regions = [...new Set(allData.map(r => getRegion(r)))].filter(r => r && r !== 'Unknown');
-    const zoneSelect = document.getElementById('zoneFilter');
-    const zones = [...new Set(allData.map(r => getZone(r)))].filter(z => z && z !== '—');
-    zoneSelect.innerHTML = '<option value="all">All Zones</option>' + zones.sort().map(z => `<option value="${z}">${z}</option>`).join('');
-    
-    const provSelect = document.getElementById('provinceFilter');
-    provSelect.innerHTML = '<option value="all">All Provinces</option>' + regions.sort().map(r => `<option value="${r}">${r}</option>`).join('');
-    
-    document.getElementById('provinceFilter').onchange = () => renderAll();
-    document.getElementById('zoneFilter').onchange = () => renderAll();
-    document.getElementById('riskFilter').onchange = () => renderAll();
-    document.getElementById('volumeFilter').onchange = () => renderAll();
-    document.getElementById('searchInput').oninput = () => renderAll();
-    document.getElementById('resetBtn').onclick = () => {
-        document.getElementById('provinceFilter').value = 'all';
-        document.getElementById('zoneFilter').value = 'all';
-        document.getElementById('riskFilter').value = 'all';
-        document.getElementById('volumeFilter').value = 'all';
-        document.getElementById('searchInput').value = '';
-        document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector('.priority-btn[data-filter="all"]')?.classList.add('active');
-        currentPriorityFilter = 'all';
-        renderAll();
-    };
-}
-
-document.getElementById('powerBIExportBtn')?.addEventListener('click', () => exportToExcelForBI('Power BI'));
-document.getElementById('tableauExportBtn')?.addEventListener('click', () => exportToExcelForBI('Tableau'));
-document.getElementById('snapshotBtn')?.addEventListener('click', takeScreenshot);
-window.closeModal = closeModal;
-window.closeNotesModal = closeNotesModal;
-
-function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]); }
-</script>
-</body>
-</html>
+    except FileNotFoundError:
+        print(f"Error: Could not find '{csv_file}'")
+        print(f"  Usage: python team_priority.py 'your_file.csv'")
+    except Exception as e:
+        print(f"Error: {e}")
