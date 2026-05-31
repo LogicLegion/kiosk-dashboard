@@ -152,6 +152,8 @@
             z-index: 10000;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             pointer-events: none;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.4;
         }
         
         .call-btn { background: none; border: none; font-size: 14px; cursor: pointer; padding: 4px 8px; border-radius: 20px; background: #e2e8f0; margin-left: 5px; }
@@ -358,7 +360,7 @@
 
 <script>
 // ============================================================
-// COMPLETE DASHBOARD - Explanations on EVERY box
+// COMPLETE DASHBOARD - FULLY WORKING TOOLTIPS
 // ============================================================
 
 let allData = [];
@@ -535,52 +537,98 @@ function getTrendDisplay(r) {
     return `<span class="badge badge-trend-flat">➡️ 0%</span>`;
 }
 
-// Tooltip System
+// ============================================================
+// TOOLTIP SYSTEM - 100% WORKING
+// ============================================================
 let activeTooltip = null;
 let tooltipTimeout = null;
 
 function showTooltip(element, text) {
     if (!text || text === '') return;
-    if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; }
+    
+    // Remove existing tooltip
+    if (activeTooltip) {
+        activeTooltip.remove();
+        activeTooltip = null;
+    }
     if (tooltipTimeout) clearTimeout(tooltipTimeout);
     
+    // Create tooltip element
     const tooltip = document.createElement('div');
     tooltip.className = 'global-tooltip';
     tooltip.textContent = text;
     document.body.appendChild(tooltip);
     
+    // Get position
     const rect = element.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
-    let top = rect.top - tooltipRect.height - 8;
+    
+    // Position above the element
+    let top = rect.top - tooltipRect.height - 10;
     let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-    if (top < 8) top = rect.bottom + 8;
-    if (left < 8) left = 8;
-    if (left + tooltipRect.width > window.innerWidth - 8) left = window.innerWidth - tooltipRect.width - 8;
+    
+    // If too high, place below
+    if (top < 10) {
+        top = rect.bottom + 10;
+    }
+    
+    // Keep on screen horizontally
+    if (left < 10) left = 10;
+    if (left + tooltipRect.width > window.innerWidth - 10) {
+        left = window.innerWidth - tooltipRect.width - 10;
+    }
+    
     tooltip.style.top = top + 'px';
     tooltip.style.left = left + 'px';
+    tooltip.style.position = 'fixed';
+    tooltip.style.zIndex = '10000';
+    
     activeTooltip = tooltip;
-    tooltipTimeout = setTimeout(() => { if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; } }, 4000);
+    
+    // Auto-hide after 4 seconds
+    tooltipTimeout = setTimeout(() => {
+        if (activeTooltip) {
+            activeTooltip.remove();
+            activeTooltip = null;
+        }
+    }, 4000);
 }
 
 function hideTooltip() {
-    if (tooltipTimeout) clearTimeout(tooltipTimeout);
-    if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; }
+    if (tooltipTimeout) {
+        clearTimeout(tooltipTimeout);
+        tooltipTimeout = null;
+    }
+    if (activeTooltip) {
+        activeTooltip.remove();
+        activeTooltip = null;
+    }
 }
 
 function attachTooltips() {
-    const helpIcons = document.querySelectorAll('.help-icon');
-    helpIcons.forEach(icon => {
+    // Find all help icons
+    const icons = document.querySelectorAll('.help-icon');
+    
+    icons.forEach(icon => {
+        // Get tooltip text from data-tooltip attribute
         const text = icon.getAttribute('data-tooltip');
         if (text && text !== '') {
-            icon.removeEventListener('mouseenter', icon._tooltipHandler);
+            // Remove old listeners to prevent duplicates
+            icon.removeEventListener('mouseenter', icon._enterHandler);
             icon.removeEventListener('mouseleave', hideTooltip);
-            const handler = (e) => {
+            
+            // Create new handlers
+            const enterHandler = function(e) {
                 e.stopPropagation();
-                showTooltip(icon, text);
+                showTooltip(this, text);
             };
-            icon.addEventListener('mouseenter', handler);
+            
+            // Attach new listeners
+            icon.addEventListener('mouseenter', enterHandler);
             icon.addEventListener('mouseleave', hideTooltip);
-            icon._tooltipHandler = handler;
+            
+            // Store handler for cleanup
+            icon._enterHandler = enterHandler;
         }
     });
 }
